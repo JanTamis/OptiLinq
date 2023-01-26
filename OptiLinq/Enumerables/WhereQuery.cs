@@ -340,6 +340,30 @@ public struct WhereQuery<T, TOperator, TBaseQuery, TBaseEnumerator> : IOptiQuery
 		return builder.ToArray();
 	}
 
+	public T[] ToArray(out int length)
+	{
+		if (_baseEnumerable.TryGetNonEnumeratedCount(out var count))
+		{
+			using var enumerator = _baseEnumerable.GetEnumerator();
+			var array = new T[count];
+
+			length = 0;
+
+			for (var i = 0; i < array.Length && enumerator.MoveNext(); i++)
+			{
+				if (TOperator.Eval(enumerator.Current))
+				{
+					length++;
+					array[i] = enumerator.Current;
+				}
+			}
+
+			return array;
+		}
+
+		return EnumerableHelper.ToArray<T, WhereQuery<T, TOperator, TBaseQuery, TBaseEnumerator>, WhereOperatorEnumerator<T, TOperator, TBaseEnumerator>>(this, out length);
+	}
+
 	public List<T> ToList()
 	{
 		var list = new List<T>();

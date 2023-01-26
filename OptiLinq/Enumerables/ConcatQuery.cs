@@ -85,6 +85,11 @@ public struct ConcatQuery<T> : IOptiQuery<T, ConcatEnumerator<T>>
 		throw new NotImplementedException();
 	}
 
+	public T[] ToArray(out int length)
+	{
+		throw new NotImplementedException();
+	}
+
 	public List<T> ToList()
 	{
 		throw new NotImplementedException();
@@ -99,4 +104,6 @@ public struct ConcatQuery<T> : IOptiQuery<T, ConcatEnumerator<T>>
 	{
 		throw new NotImplementedException();
 	}
+
+	
 }

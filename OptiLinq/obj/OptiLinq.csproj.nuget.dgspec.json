@@ -1,29 +1,29 @@
 {
   "format": 1,
   "restore": {
-    "/Users/jantamiskossen/RiderProjects/OptiLinq/OptiLinq/OptiLinq.csproj": {}
+    "C:\\Users\\jan.tamis\\source\\repos\\JanTamis\\OptiLinq\\OptiLinq\\OptiLinq.csproj": {}
   },
   "projects": {
-    "/Users/jantamiskossen/RiderProjects/OptiLinq/OptiLinq/OptiLinq.csproj": {
+    "C:\\Users\\jan.tamis\\source\\repos\\JanTamis\\OptiLinq\\OptiLinq\\OptiLinq.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/jantamiskossen/RiderProjects/OptiLinq/OptiLinq/OptiLinq.csproj",
+        "projectUniqueName": "C:\\Users\\jan.tamis\\source\\repos\\JanTamis\\OptiLinq\\OptiLinq\\OptiLinq.csproj",
         "projectName": "OptiLinq",
-        "projectPath": "/Users/jantamiskossen/RiderProjects/OptiLinq/OptiLinq/OptiLinq.csproj",
-        "packagesPath": "/Users/jantamiskossen/.nuget/packages/",
-        "outputPath": "/Users/jantamiskossen/RiderProjects/OptiLinq/OptiLinq/obj/",
+        "projectPath": "C:\\Users\\jan.tamis\\source\\repos\\JanTamis\\OptiLinq\\OptiLinq\\OptiLinq.csproj",
+        "packagesPath": "C:\\Users\\jan.tamis\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\jan.tamis\\source\\repos\\JanTamis\\OptiLinq\\OptiLinq\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/Users/jantamiskossen/.nuget/NuGet/NuGet.Config"
+          "C:\\Users\\jan.tamis\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net7.0"
         ],
         "sources": {
-          "/usr/local/share/dotnet/library-packs": {},
-          "https://api.nuget.org/v3/index.json": {},
-          "https://ci.appveyor.com/nuget/benchmarkdotnet": {},
-          "https://nuget.avaloniaui.net/repository/avalonia-nightly/index.json": {}
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "O:\\NuGet\\Dawesta": {},
+          "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net7.0": {
@@ -44,6 +44,10 @@
             "BenchmarkDotNet": {
               "target": "Package",
               "version": "[0.13.4, )"
+            },
+            "StructLinq": {
+              "target": "Package",
+              "version": "[0.28.1, )"
             }
           },
           "imports": [
@@ -62,7 +66,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/7.0.100/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.102\\RuntimeIdentifierGraph.json"
         }
       }
     }

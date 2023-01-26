@@ -85,6 +85,12 @@ public struct EmptyQuery<T> : IOptiQuery<T, EmptyEnumerator<T>>
 		return Array.Empty<T>();
 	}
 
+	public T[] ToArray(out int length)
+	{
+		length = 0;
+		return Array.Empty<T>();
+	}
+
 	public List<T> ToList()
 	{
 		return new List<T>();

@@ -134,6 +134,12 @@ public readonly struct EnumerableQuery<T> : IOptiQuery<T, EnumerableEnumerator<T
 		return _enumerable.ToArray();
 	}
 
+	public T[] ToArray(out int length)
+	{
+		length = 0;
+		return Array.Empty<T>();
+	}
+
 	public List<T> ToList()
 	{
 		return _enumerable.ToList();

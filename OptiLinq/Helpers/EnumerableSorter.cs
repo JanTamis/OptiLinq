@@ -313,6 +313,11 @@ internal abstract class EnumerableSorter<TElement>
 		return idx == 0 ? elements[Min(map, count)] : elements[QuickSelect(map, count - 1, idx)];
 	}
 
+	internal TElement ElementAt(TElement[] elements, int[] map, int count, int idx)
+	{
+		return idx == 0 ? elements[Min(map, count)] : elements[QuickSelect(map, count - 1, idx)];
+	}
+
 	protected abstract void QuickSort(int[] map, int left, int right);
 
 	// Sorts the k elements between minIdx and maxIdx without sorting all elements

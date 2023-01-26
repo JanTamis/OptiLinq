@@ -367,6 +367,30 @@ public struct WhereSelectQuery<T, TResult, TWhereOperator, TSelectOperator, TBas
 		return builder.ToArray();
 	}
 
+	public TResult[] ToArray(out int length)
+	{
+		if (_baseEnumerable.TryGetNonEnumeratedCount(out var count))
+		{
+			using var enumerator = _baseEnumerable.GetEnumerator();
+			var array = new TResult[count];
+
+			length = 0;
+
+			for (var i = 0; i < array.Length && enumerator.MoveNext(); i++)
+			{
+				if (TWhereOperator.Eval(enumerator.Current))
+				{
+					length++;
+					array[i] = TSelectOperator.Eval(enumerator.Current);
+				}
+			}
+
+			return array;
+		}
+
+		return EnumerableHelper.ToArray<TResult, WhereSelectQuery<T, TResult, TWhereOperator, TSelectOperator, TBaseQuery, TBaseEnumerator>, WhereSelectOperatorEnumerator<T, TResult, TWhereOperator, TSelectOperator, TBaseEnumerator>>(this, out length);
+	}
+
 	public List<TResult> ToList()
 	{
 		var list = new List<TResult>();

@@ -28,6 +28,8 @@ public interface IOptiQuery<T, out TEnumerator> where TEnumerator : struct, IOpt
 	T SingleOrDefault();
 
 	T[] ToArray();
+	T[] ToArray(out int length);
+
 	List<T> ToList();
 
 	bool TryGetNonEnumeratedCount(out int length);

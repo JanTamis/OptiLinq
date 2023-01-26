@@ -26,7 +26,7 @@ BenchmarkRunner.Run<Benchmark>();
 [Config(typeof(MyConfig))]
 public class Benchmark
 {
-	public const int Length = 10_000;
+	public const int Length = 1000;
 
 	private int[] array;
 
@@ -43,35 +43,35 @@ public class Benchmark
 	}
 
 	[Benchmark]
-	public double[] LINQ()
+	public double LINQ()
 	{
 		return array
 			.Where(w => w % 2 == 0)
 			.Select(s => Double.Sqrt(s))
 			.Order()
-			.ToArray();
+			.ElementAtOrDefault(5);
 	}
 
 	[Benchmark(Baseline = true)]
-	public double[] OPTILINQ()
+	public double OPTILINQ()
 	{
 		return array
 			.AsOptiQuery()
 			.Where<IsOdd>()
 			.Select<SquareRoot, double>()
 			.Order()
-			.ToArray();
+			.ElementAtOrDefault(5);
 	}
 
 	[Benchmark]
-	public double[] STRUCTLINQ()
+	public double STRUCTLINQ()
 	{
 		return StructEnumerable
 			.ToStructEnumerable(array)
 			.Where(w => w % 2 == 0, x => x)
 			.Select(s => Double.Sqrt(s), x => x)
 			.Order()
-			.ToArray();
+			.ElementAtOrDefault(5);
 	}
 
 	private class MyConfig : ManualConfig

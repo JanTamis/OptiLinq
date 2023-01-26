@@ -14,6 +14,7 @@ public struct OrderQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T, OrderEn
 	private readonly IComparer<T> _comparer;
 
 	private OrderedEnumerable<T, TBaseQuery, TBaseEnumerator> _orderedEnumerable;
+	private EnumerableSorter<T> _sorter;
 	
 	private int[]? _map;
 	private Buffer<T, TBaseQuery, TBaseEnumerator> _buffer;
@@ -36,7 +37,7 @@ public struct OrderQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T, OrderEn
 
 	public IEnumerable<T> AsEnumerable()
 	{
-		throw new NotImplementedException();
+		return new QueryAsEnumerable<T, OrderQuery<T, TBaseQuery, TBaseEnumerator>, OrderEnumerator<T, TBaseQuery, TBaseEnumerator>>(this);
 	}
 
 	public bool Contains(T item, IEqualityComparer<T>? comparer = null)
@@ -53,22 +54,18 @@ public struct OrderQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T, OrderEn
 	{
 		if (index >= TIndex.Zero)
 		{
-			if (_map is not null && Int32.CreateChecked(index) < _map.Length)
+			if (_orderedEnumerable is null)
 			{
-				return _buffer._items[_map[Int32.CreateChecked(index)]];
-			}
-			
-			using var enumerator = GetEnumerator();
+				_orderedEnumerable = GenerateEnumerable();
 
-			while (enumerator.MoveNext())
-			{
-				if (index == TIndex.Zero)
-				{
-					return enumerator.Current;
-				}
-
-				index--;
+				_buffer = new Buffer<T, TBaseQuery, TBaseEnumerator>(_baseEnumerable);
+				_map = _orderedEnumerable.GetEnumerableSorter(null).Sort(_buffer._items, _buffer._count);
 			}
+
+			var indexInt = Int32.CreateChecked(index);
+
+			if (indexInt < _map!.Length)
+				return _buffer._items[_map[indexInt]];
 		}
 
 		throw new IndexOutOfRangeException("Index was out of bounds");
@@ -78,22 +75,19 @@ public struct OrderQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T, OrderEn
 	{
 		if (index >= TIndex.Zero)
 		{
-			if (_map is not null && Int32.CreateChecked(index) < _map.Length)
+			if (_orderedEnumerable is null)
 			{
-				return _buffer._items[_map[Int32.CreateChecked(index)]];
+				_orderedEnumerable = GenerateEnumerable();
+
+				_buffer = new Buffer<T, TBaseQuery, TBaseEnumerator>(_baseEnumerable);
+				_map = _orderedEnumerable.GetEnumerableSorter(null).Sort(_buffer._items, _buffer._count);
 			}
 
-			using var enumerator = GetEnumerator();
+			var indexInt = Int32.CreateChecked(index);
 
-			while (enumerator.MoveNext())
-			{
-				if (index == TIndex.Zero)
-				{
-					return enumerator.Current;
-				}
+			if (indexInt < _map!.Length)
 
-				index--;
-			}
+			return _buffer._items[_map[indexInt]];
 		}
 
 		return default;
@@ -259,9 +253,30 @@ public struct OrderQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T, OrderEn
 
 		for (var i = 0; i < array.Length; i++)
 		{
-			array[i] = _buffer._items[_map[i]];
+			array[i] = _buffer._items[_map![i]];
 		}
 
+		return array;
+	}
+
+	public T[] ToArray(out int length)
+	{
+		if (_orderedEnumerable is null)
+		{
+			_orderedEnumerable = GenerateEnumerable();
+
+			_buffer = new Buffer<T, TBaseQuery, TBaseEnumerator>(_baseEnumerable);
+			_map = _orderedEnumerable.GetEnumerableSorter(null).Sort(_buffer._items, _buffer._count);
+		}
+
+		var array = new T[_buffer._count];
+
+		for (var i = 0; i < array.Length; i++)
+		{
+			array[i] = _buffer._items[_map![i]];
+		}
+
+		length = _buffer._count;
 		return array;
 	}
 

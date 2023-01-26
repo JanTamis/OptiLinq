@@ -131,6 +131,12 @@ public readonly struct RepeatQuery<T> : IOptiQuery<T, RepeatEnumerator<T>>
 		return array;
 	}
 
+	public T[] ToArray(out int length)
+	{
+		length = _count;
+		return ToArray();
+	}
+
 	public List<T> ToList()
 	{
 		var list = new List<T>(_count);

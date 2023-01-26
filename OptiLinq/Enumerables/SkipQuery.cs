@@ -1,4 +1,5 @@
 using System.Numerics;
+using Microsoft.Diagnostics.Runtime.Utilities;
 using OptiLinq.Helpers;
 using OptiLinq.Interfaces;
 
@@ -380,10 +381,14 @@ public struct SkipQuery<TCount, T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T, 
 		return builder.ToArray();
 	}
 
+	public T[] ToArray(out int length)
+	{
+		return EnumerableHelper.ToArray<T, SkipQuery<TCount, T, TBaseQuery, TBaseEnumerator>, SkipEnumerator<TCount, T, TBaseEnumerator>>(this, out length);
+	}
+
 	public List<T> ToList()
 	{
 		var list = new List<T>();
-
 		using var enumerator = _baseEnumerable.GetEnumerator();
 
 		for (var i = TCount.Zero; i < _count && enumerator.MoveNext(); i++)

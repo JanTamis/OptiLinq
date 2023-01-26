@@ -478,6 +478,29 @@
           "lib/netstandard2.0/Perfolizer.dll": {}
         }
       },
+      "StructLinq/0.28.1": {
+        "type": "package",
+        "dependencies": {
+          "System.Buffers": "4.5.1",
+          "System.Collections.Immutable": "5.0.0",
+          "System.ValueTuple": "4.5.0"
+        },
+        "compile": {
+          "lib/net7.0/StructLinq.dll": {}
+        },
+        "runtime": {
+          "lib/net7.0/StructLinq.dll": {}
+        }
+      },
+      "System.Buffers/4.5.1": {
+        "type": "package",
+        "compile": {
+          "ref/netcoreapp2.0/_._": {}
+        },
+        "runtime": {
+          "lib/netcoreapp2.0/_._": {}
+        }
+      },
       "System.CodeDom/6.0.0": {
         "type": "package",
         "compile": {
@@ -595,6 +618,15 @@
         },
         "runtime": {
           "lib/netcoreapp2.1/_._": {}
+        }
+      },
+      "System.ValueTuple/4.5.0": {
+        "type": "package",
+        "compile": {
+          "ref/netcoreapp2.0/_._": {}
+        },
+        "runtime": {
+          "lib/netcoreapp2.0/_._": {}
         }
       }
     }
@@ -1051,6 +1083,59 @@
         "perfolizer.nuspec"
       ]
     },
+    "StructLinq/0.28.1": {
+      "sha512": "34ENcRT60U/bA/zFDeQrjU5H3fy7q9ckEbe8jQFLT22wLOMU35QHhITqI1d1H3nPSDjMpjLW+PYy3+dG8XBqGw==",
+      "type": "package",
+      "path": "structlinq/0.28.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net452/StructLinq.dll",
+        "lib/net472/StructLinq.dll",
+        "lib/net48/StructLinq.dll",
+        "lib/net5.0/StructLinq.dll",
+        "lib/net6.0/StructLinq.dll",
+        "lib/net7.0/StructLinq.dll",
+        "lib/netcoreapp2.1/StructLinq.dll",
+        "lib/netcoreapp2.2/StructLinq.dll",
+        "lib/netcoreapp3.0/StructLinq.dll",
+        "lib/netcoreapp3.1/StructLinq.dll",
+        "lib/netstandard1.1/StructLinq.dll",
+        "structlinq.0.28.1.nupkg.sha512",
+        "structlinq.nuspec"
+      ]
+    },
+    "System.Buffers/4.5.1": {
+      "sha512": "Rw7ijyl1qqRS0YQD/WycNst8hUUMgrMH4FCn1nNm27M4VxchZ1js3fVjQaANHO5f3sN4isvP4a+Met9Y4YomAg==",
+      "type": "package",
+      "path": "system.buffers/4.5.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/net461/System.Buffers.dll",
+        "lib/net461/System.Buffers.xml",
+        "lib/netcoreapp2.0/_._",
+        "lib/netstandard1.1/System.Buffers.dll",
+        "lib/netstandard1.1/System.Buffers.xml",
+        "lib/netstandard2.0/System.Buffers.dll",
+        "lib/netstandard2.0/System.Buffers.xml",
+        "lib/uap10.0.16299/_._",
+        "ref/net45/System.Buffers.dll",
+        "ref/net45/System.Buffers.xml",
+        "ref/netcoreapp2.0/_._",
+        "ref/netstandard1.1/System.Buffers.dll",
+        "ref/netstandard1.1/System.Buffers.xml",
+        "ref/netstandard2.0/System.Buffers.dll",
+        "ref/netstandard2.0/System.Buffers.xml",
+        "ref/uap10.0.16299/_._",
+        "system.buffers.4.5.1.nupkg.sha512",
+        "system.buffers.nuspec",
+        "useSharedDesignerContext.txt",
+        "version.txt"
+      ]
+    },
     "System.CodeDom/6.0.0": {
       "sha512": "CPc6tWO1LAer3IzfZufDBRL+UZQcj5uS207NHALQzP84Vp/z6wF0Aa0YZImOQY8iStY0A2zI/e3ihKNPfUm8XA==",
       "type": "package",
@@ -1278,36 +1363,81 @@
         "useSharedDesignerContext.txt",
         "version.txt"
       ]
+    },
+    "System.ValueTuple/4.5.0": {
+      "sha512": "okurQJO6NRE/apDIP23ajJ0hpiNmJ+f0BwOlB/cSqTLQlw5upkf+5+96+iG2Jw40G1fCVCyPz/FhIABUjMR+RQ==",
+      "type": "package",
+      "path": "system.valuetuple/4.5.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/MonoAndroid10/_._",
+        "lib/MonoTouch10/_._",
+        "lib/net461/System.ValueTuple.dll",
+        "lib/net461/System.ValueTuple.xml",
+        "lib/net47/System.ValueTuple.dll",
+        "lib/net47/System.ValueTuple.xml",
+        "lib/netcoreapp2.0/_._",
+        "lib/netstandard1.0/System.ValueTuple.dll",
+        "lib/netstandard1.0/System.ValueTuple.xml",
+        "lib/netstandard2.0/_._",
+        "lib/portable-net40+sl4+win8+wp8/System.ValueTuple.dll",
+        "lib/portable-net40+sl4+win8+wp8/System.ValueTuple.xml",
+        "lib/uap10.0.16299/_._",
+        "lib/xamarinios10/_._",
+        "lib/xamarinmac20/_._",
+        "lib/xamarintvos10/_._",
+        "lib/xamarinwatchos10/_._",
+        "ref/MonoAndroid10/_._",
+        "ref/MonoTouch10/_._",
+        "ref/net461/System.ValueTuple.dll",
+        "ref/net47/System.ValueTuple.dll",
+        "ref/netcoreapp2.0/_._",
+        "ref/netstandard2.0/_._",
+        "ref/portable-net40+sl4+win8+wp8/System.ValueTuple.dll",
+        "ref/uap10.0.16299/_._",
+        "ref/xamarinios10/_._",
+        "ref/xamarinmac20/_._",
+        "ref/xamarintvos10/_._",
+        "ref/xamarinwatchos10/_._",
+        "system.valuetuple.4.5.0.nupkg.sha512",
+        "system.valuetuple.nuspec",
+        "useSharedDesignerContext.txt",
+        "version.txt"
+      ]
     }
   },
   "projectFileDependencyGroups": {
     "net7.0": [
-      "BenchmarkDotNet >= 0.13.4"
+      "BenchmarkDotNet >= 0.13.4",
+      "StructLinq >= 0.28.1"
     ]
   },
   "packageFolders": {
-    "/Users/jantamiskossen/.nuget/packages/": {}
+    "C:\\Users\\jan.tamis\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/jantamiskossen/RiderProjects/OptiLinq/OptiLinq/OptiLinq.csproj",
+      "projectUniqueName": "C:\\Users\\jan.tamis\\Source\\Repos\\JanTamis\\OptiLinq\\OptiLinq\\OptiLinq.csproj",
       "projectName": "OptiLinq",
-      "projectPath": "/Users/jantamiskossen/RiderProjects/OptiLinq/OptiLinq/OptiLinq.csproj",
-      "packagesPath": "/Users/jantamiskossen/.nuget/packages/",
-      "outputPath": "/Users/jantamiskossen/RiderProjects/OptiLinq/OptiLinq/obj/",
+      "projectPath": "C:\\Users\\jan.tamis\\Source\\Repos\\JanTamis\\OptiLinq\\OptiLinq\\OptiLinq.csproj",
+      "packagesPath": "C:\\Users\\jan.tamis\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\jan.tamis\\Source\\Repos\\JanTamis\\OptiLinq\\OptiLinq\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/Users/jantamiskossen/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\jan.tamis\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net7.0"
       ],
       "sources": {
-        "/usr/local/share/dotnet/library-packs": {},
-        "https://api.nuget.org/v3/index.json": {},
-        "https://ci.appveyor.com/nuget/benchmarkdotnet": {},
-        "https://nuget.avaloniaui.net/repository/avalonia-nightly/index.json": {}
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "O:\\NuGet\\Dawesta": {},
+        "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net7.0": {
@@ -1328,6 +1458,10 @@
           "BenchmarkDotNet": {
             "target": "Package",
             "version": "[0.13.4, )"
+          },
+          "StructLinq": {
+            "target": "Package",
+            "version": "[0.28.1, )"
           }
         },
         "imports": [
@@ -1346,7 +1480,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/7.0.100/RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.102\\RuntimeIdentifierGraph.json"
       }
     }
   }

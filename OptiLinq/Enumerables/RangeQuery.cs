@@ -213,6 +213,12 @@ public readonly struct RangeQuery : IOptiQuery<int, RangeEnumerator>
 		return array;
 	}
 
+	public int[] ToArray(out int length)
+	{
+		length = _count;
+		return ToArray();
+	}
+
 	public List<int> ToList()
 	{
 		var list = new List<int>(_count);

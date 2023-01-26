@@ -372,13 +372,7 @@ public struct SkipTakeQuery<TSkipCount, TTakeCount, T, TBaseQuery, TBaseEnumerat
 	public T[] ToArray()
 	{
 		LargeArrayBuilder<T> builder = new();
-
 		using var enumerator = _baseEnumerable.GetEnumerator();
-
-		for (var i = TSkipCount.Zero; i < _skipCount && enumerator.MoveNext(); i++)
-		{
-
-		}
 
 		for (var i = TTakeCount.Zero; i < _takeCount && enumerator.MoveNext(); i++)
 		{
@@ -386,6 +380,32 @@ public struct SkipTakeQuery<TSkipCount, TTakeCount, T, TBaseQuery, TBaseEnumerat
 		}
 
 		return builder.ToArray();
+	}
+
+	public T[] ToArray(out int length)
+	{
+		if (_baseEnumerable.TryGetNonEnumeratedCount(out var count))
+		{
+			using var enumerator = _baseEnumerable.GetEnumerator();
+			length = 0;
+
+			for (var i = TSkipCount.Zero; i < _skipCount && enumerator.MoveNext(); i++)
+			{
+				length++;
+			}
+
+			var array = new T[Int32.Min(count, Int32.CreateChecked(_takeCount))];
+
+			for (var i = 0; i < array.Length && enumerator.MoveNext(); i++)
+			{
+				length++;
+				array[i] = enumerator.Current;
+			}
+
+			return array;
+		}
+
+		return EnumerableHelper.ToArray<T, SkipTakeQuery<TSkipCount, TTakeCount, T, TBaseQuery, TBaseEnumerator>, SkipTakeEnumerator<TSkipCount, TTakeCount, T, TBaseEnumerator>>(this, out length);
 	}
 
 	public List<T> ToList()

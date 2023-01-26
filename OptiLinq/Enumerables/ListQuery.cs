@@ -265,6 +265,12 @@ public readonly struct ListQuery<T> : IOptiQuery<T, ListEnumerator<T>>
 		return array;
 	}
 
+	public T[] ToArray(out int length)
+	{
+		length = _list.Count;
+		return ToArray();
+	}
+
 	public List<T> ToList()
 	{
 		var list = new List<T>(_list.Count);

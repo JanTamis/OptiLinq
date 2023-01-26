@@ -321,6 +321,27 @@ public struct SelectQuery<T, TResult, TOperator, TBaseQuery, TBaseEnumerator> : 
 		return builder.ToArray();
 	}
 
+	public TResult[] ToArray(out int length)
+	{
+		using var enumerator = _baseEnumerable.GetEnumerator();
+
+		if (_baseEnumerable.TryGetNonEnumeratedCount(out var count))
+		{
+			var array = new TResult[count];
+			length = 0;
+
+			for (var i = 0; i < array.Length && enumerator.MoveNext(); i++)
+			{
+				length++;
+				array[i] = TOperator.Eval(enumerator.Current);
+			}
+
+			return array;
+		}
+
+		return EnumerableHelper.ToArray<TResult, SelectQuery<T, TResult, TOperator, TBaseQuery, TBaseEnumerator>, SelectOperatorEnumerator<T, TResult, TOperator, TBaseEnumerator>>(this, out length);
+	}
+
 	public List<TResult> ToList()
 	{
 		using var enumerator = _baseEnumerable.GetEnumerator();

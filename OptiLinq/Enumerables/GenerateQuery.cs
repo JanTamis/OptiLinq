@@ -122,6 +122,12 @@ public readonly struct GenerateQuery<T, TOperator> : IOptiQuery<T, GenerateEnume
 		throw new Exception("Sequence is infinite, use the Take method to make it non infinite");
 	}
 
+	public T[] ToArray(out int length)
+	{
+		length = 0;
+		return Array.Empty<T>();
+	}
+
 	public List<T> ToList()
 	{
 		throw new Exception("Sequence is infinite, use the Take method to make it non infinite");

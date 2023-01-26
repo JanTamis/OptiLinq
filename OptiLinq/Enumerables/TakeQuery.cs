@@ -342,6 +342,27 @@ public struct TakeQuery<TCount, T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T, 
 		return builder.ToArray();
 	}
 
+	public T[] ToArray(out int length)
+	{
+		if (_baseEnumerable.TryGetNonEnumeratedCount(out var count))
+		{
+			using var enumerator = _baseEnumerable.GetEnumerator();
+			var array = new T[Int32.Min(count, Int32.CreateChecked(_count))];
+
+			length = 0;
+
+			for (var i = 0; i < array.Length && enumerator.MoveNext(); i++)
+			{
+				length++;
+				array[i] = enumerator.Current;
+			}
+
+			return array;
+		}
+
+		return EnumerableHelper.ToArray<T, TakeQuery<TCount, T, TBaseQuery, TBaseEnumerator>, TakeEnumerator<TCount, T, TBaseEnumerator>>(this, out length);
+	}
+
 	public List<T> ToList()
 	{
 		using var enumerator = _baseEnumerable.GetEnumerator();
