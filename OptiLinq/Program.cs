@@ -3,57 +3,75 @@ using BenchmarkDotNet.Columns;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Running;
 using OptiLinq;
-using OptiLinq.Interfaces;
+using StructLinq;
 
-// var query = OptiQuery
-// 	.Range(0, 50)
-// 	.Where<IsOdd>()
-// 	.Select<MultiplyByFive>()
-// 	.Contains(5);
+// var array = new int[50];
+//
+// for (var i = 0; i < array.Length; i++)
+// {
+// 	array[i] = Random.Shared.Next();
+// }
+//
+// var temp = array
+// 	.AsOptiQuery()
+// 	.Where(w => w % 2 == 0)
+// 	.Select(s => Double.Sqrt(s))
+// 	.Order()
+// 	.ToArray();
 
 BenchmarkRunner.Run<Benchmark>();
-//Console.ReadLine();
 
 [MemoryDiagnoser(false)]
+// [ShortRunJob]
 [Config(typeof(MyConfig))]
 public class Benchmark
 {
-	private const int length = 10;
+	public const int Length = 10_000;
+
+	private int[] array;
+
+	[GlobalSetup]
+	public void Setup()
+	{
+		array = new int[Length];
+		var rng = new System.Random(420);
+
+		for (var i = 0; i < array.Length; i++)
+		{
+			array[i] = rng.Next();
+		}
+	}
 
 	[Benchmark]
-	public int LINQ()
+	public double[] LINQ()
 	{
-		return Enumerable
-			.Range(0, length)
+		return array
 			.Where(w => w % 2 == 0)
-			.Select(s => s * 5)
-			.Count();
+			.Select(s => Double.Sqrt(s))
+			.Order()
+			.ToArray();
 	}
 
 	[Benchmark(Baseline = true)]
-	public int OPTILINQ()
+	public double[] OPTILINQ()
 	{
-		return OptiQuery
-			.Range(0, length)
+		return array
+			.AsOptiQuery()
 			.Where<IsOdd>()
-			.Select<MultiplyByFive>()
-			.Count();
+			.Select<SquareRoot, double>()
+			.Order()
+			.ToArray();
 	}
 
 	[Benchmark]
-	public int TRADITIONAL()
+	public double[] STRUCTLINQ()
 	{
-		var count = 0;
-		
-		for (var i = 0; i < length; i++)
-		{
-			if (i % 2 == 0)
-			{
-				count++;
-			}
-		}
-
-		return count;
+		return StructEnumerable
+			.ToStructEnumerable(array)
+			.Where(w => w % 2 == 0, x => x)
+			.Select(s => Double.Sqrt(s), x => x)
+			.Order()
+			.ToArray();
 	}
 
 	private class MyConfig : ManualConfig
@@ -65,18 +83,28 @@ public class Benchmark
 	}
 }
 
-struct IsOdd : IWhereOperator<int>
+struct IsOdd : OptiLinq.Interfaces.IFunction<int, bool>
 {
-	public static bool IsAccepted(int item)
+	public static bool Eval(int item)
 	{
 		return item % 2 == 0;
 	}
 }
 
-struct MultiplyByFive : ISelectOperator<int, int>
+struct SquareRoot : OptiLinq.Interfaces.IFunction<int, double>
 {
-	public static int Transform(int item)
+	public static double Eval(int item)
 	{
-		return item * 5;
+		return Double.Sqrt(item);
+	}
+}
+
+struct Random : OptiLinq.Interfaces.IFunction<int, int>
+{
+	private static readonly System.Random rng = new System.Random(420);
+
+	public static int Eval(int item)
+	{
+		return rng.Next();
 	}
 }

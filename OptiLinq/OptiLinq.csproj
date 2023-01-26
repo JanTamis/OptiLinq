@@ -9,6 +9,7 @@
 
     <ItemGroup>
       <PackageReference Include="BenchmarkDotNet" Version="0.13.4" />
+      <PackageReference Include="StructLinq" Version="0.28.1" />
     </ItemGroup>
 
 </Project>

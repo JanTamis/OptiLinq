@@ -4,8 +4,8 @@ using OptiLinq.Interfaces;
 namespace OptiLinq;
 
 public struct WhereSelectOperatorEnumerator<T, TResult, TWhereOperator, TSelectOperator, TBaseEnumerator> : IOptiEnumerator<TResult>
-	where TWhereOperator : IWhereOperator<T>
-	where TSelectOperator : ISelectOperator<T, TResult>
+	where TWhereOperator : IFunction<T, bool>
+	where TSelectOperator : IFunction<T, TResult>
 	where TBaseEnumerator : struct, IOptiEnumerator<T>
 {
 	private TBaseEnumerator _baseEnumerator;
@@ -23,9 +23,9 @@ public struct WhereSelectOperatorEnumerator<T, TResult, TWhereOperator, TSelectO
 	{
 		while (_baseEnumerator.MoveNext())
 		{
-			if (TWhereOperator.IsAccepted(_baseEnumerator.Current))
+			if (TWhereOperator.Eval(_baseEnumerator.Current))
 			{
-				_current = TSelectOperator.Transform(_baseEnumerator.Current);
+				_current = TSelectOperator.Eval(_baseEnumerator.Current);
 				return true;
 			}
 		}

@@ -4,7 +4,7 @@ using OptiLinq.Interfaces;
 namespace OptiLinq;
 
 public struct SelectOperatorEnumerator<T, TResult, TOperator, TBaseEnumerator> : IOptiEnumerator<TResult>
-	where TOperator : ISelectOperator<T, TResult>
+	where TOperator : IFunction<T, TResult>
 	where TBaseEnumerator : struct, IOptiEnumerator<T>
 {
 	private TBaseEnumerator _baseEnumerator;
@@ -21,7 +21,7 @@ public struct SelectOperatorEnumerator<T, TResult, TOperator, TBaseEnumerator> :
 	{
 		if (_baseEnumerator.MoveNext())
 		{
-			_current = TOperator.Transform(_baseEnumerator.Current);
+			_current = TOperator.Eval(_baseEnumerator.Current);
 
 			return true;
 		}

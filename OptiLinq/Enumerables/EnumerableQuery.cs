@@ -1,111 +1,178 @@
-// using OptiLinq.Interfaces;
-//
-// namespace OptiLinq;
-//
-// public readonly struct EnumerableQuery<T> : IOptiQuery<T, IOptiEnumerator<T>>
-// {
-// 	private readonly IEnumerable<T> _enumerable;
-//
-// 	internal EnumerableQuery(IEnumerable<T> enumerable)
-// 	{
-// 		_enumerable = enumerable;
-// 	}
-//
-// 	public bool Contains(T item, IEqualityComparer<T>? comparer = null)
-// 	{
-// 		comparer ??= EqualityComparer<T>.Default;
-//
-// 		using var enumerator = GetEnumerator();
-//
-// 		while (enumerator.MoveNext())
-// 		{
-// 			if (comparer.Equals(item, enumerator.Current))
-// 			{
-// 				return true;
-// 			}
-// 		}
-//
-// 		return false;
-// 	}
-//
-// 	public int Count()
-// 	{
-// 		return _enumerable.Count();
-// 	}
-//
-// 	public IOptiEnumerator<T> GetEnumerator()
-// 	{
-// 		return _enumerable.GetEnumerator();
-// 	}
-//
-// 	public T[] ToArray(out int length)
-// 	{
-// 		if (_enumerable is ICollection<T> collection)
-// 		{
-// 			length = collection.Count;
-//
-// 			if (length == 0)
-// 			{
-// 				return Array.Empty<T>();
-// 			}
-//
-// 			var result = new T[length];
-// 			collection.CopyTo(result, arrayIndex: 0);
-//
-// 			return result;
-// 		}
-//
-// 		var enumerator = GetEnumerator();
-//
-// 		if (enumerator.MoveNext())
-// 		{
-// 			var arr = GC.AllocateUninitializedArray<T>(4);
-// 			var count = 1;
-//
-// 			arr[0] = enumerator.Current;
-//
-// 			while (enumerator.MoveNext())
-// 			{
-// 				if (count == arr.Length)
-// 				{
-// 					// This is the same growth logic as in List<T>:
-// 					// If the array is currently empty, we make it a default size.  Otherwise, we attempt to
-// 					// double the size of the array.  Doubling will overflow once the size of the array reaches
-// 					// 2^30, since doubling to 2^31 is 1 larger than Int32.MaxValue.  In that case, we instead
-// 					// constrain the length to be Array.MaxLength (this overflow check works because of the
-// 					// cast to uint).
-// 					var newLength = count << 1;
-// 					if ((uint)newLength > Array.MaxLength)
-// 					{
-// 						newLength = Array.MaxLength <= count ? count + 1 : Array.MaxLength;
-// 					}
-//
-// 					Array.Resize(ref arr, newLength);
-//
-// 					var lArr = arr;
-// 					arr = GC.AllocateUninitializedArray<T>(newLength);
-//
-// 					lArr.CopyTo(arr, 0);
-// 				}
-//
-// 				arr[count++] = enumerator.Current;
-// 			}
-//
-// 			length = count;
-// 			return arr;
-// 		}
-//
-// 		length = 0;
-// 		return Array.Empty<T>();
-// 	}
-//
-// 	public List<T> ToList()
-// 	{
-// 		return _enumerable.ToList();
-// 	}
-//
-// 	public bool TryGetNonEnumeratedCount(out int length)
-// 	{
-// 		return _enumerable.TryGetNonEnumeratedCount(out length);
-// 	}
-// }
+using System.Numerics;
+using OptiLinq.Interfaces;
+
+namespace OptiLinq;
+
+public readonly struct EnumerableQuery<T> : IOptiQuery<T, EnumerableEnumerator<T>>
+{
+	private readonly IEnumerable<T> _enumerable;
+
+	internal EnumerableQuery(IEnumerable<T> enumerable)
+	{
+		_enumerable = enumerable;
+	}
+
+	public static implicit operator EnumerableQuery<T>(T[] enumerable) => new EnumerableQuery<T>(enumerable);
+
+	public bool All<TAllOperator>() where TAllOperator : IFunction<T, bool>
+	{
+		using var enumerator = _enumerable.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			if (!TAllOperator.Eval(enumerator.Current))
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	public bool Any()
+	{
+		return _enumerable.Any();
+	}
+
+	public IEnumerable<T> AsEnumerable()
+	{
+		return _enumerable;
+	}
+
+	public bool Contains(T item, IEqualityComparer<T>? comparer = null)
+	{
+		return _enumerable.Contains(item, comparer);
+	}
+
+	public int Count()
+	{
+		return _enumerable.Count();
+	}
+
+	public T ElementAt<TIndex>(TIndex index) where TIndex : IBinaryInteger<TIndex>
+	{
+		if (index >= TIndex.Zero)
+		{
+			using var enumerator = _enumerable.GetEnumerator();
+			
+			while (enumerator.MoveNext())
+			{
+				if (index == TIndex.Zero)
+				{
+					return enumerator.Current;
+				}
+
+				index--;
+			}
+		}
+
+		throw new IndexOutOfRangeException("Index was out of bounds");
+	}
+
+	public T ElementAtOrDefault<TIndex>(TIndex index) where TIndex : IBinaryInteger<TIndex>
+	{
+		if (index >= TIndex.Zero)
+		{
+			using var enumerator = _enumerable.GetEnumerator();
+
+			while (enumerator.MoveNext())
+			{
+				if (index == TIndex.Zero)
+				{
+					return enumerator.Current;
+				}
+
+				index--;
+			}
+		}
+
+		return default;
+	}
+
+	public T First()
+	{
+		return _enumerable.First();
+	}
+
+	public T FirstOrDefault()
+	{
+		return _enumerable.FirstOrDefault();
+	}
+
+	public T Last()
+	{
+		return _enumerable.Last();
+	}
+
+	public T LastOrDefault()
+	{
+		return _enumerable.LastOrDefault();
+	}
+
+	public T Max()
+	{
+		return _enumerable.Max();
+	}
+
+	public T Min()
+	{
+		return _enumerable.Min();
+	}
+
+	public T Single()
+	{
+		return _enumerable.Single();
+	}
+
+	public T SingleOrDefault()
+	{
+		return _enumerable.SingleOrDefault();
+	}
+
+	public T[] ToArray()
+	{
+		return _enumerable.ToArray();
+	}
+
+	public List<T> ToList()
+	{
+		return _enumerable.ToList();
+	}
+
+	public bool TryGetNonEnumeratedCount(out int length)
+	{
+		return _enumerable.TryGetNonEnumeratedCount(out length);
+	}
+
+	public WhereQuery<T, TOperator, EnumerableQuery<T>, EnumerableEnumerator<T>> Where<TOperator>() where TOperator : IFunction<T, bool>
+	{
+		return new WhereQuery<T, TOperator, EnumerableQuery<T>, EnumerableEnumerator<T>>(this);
+	}
+
+	public SelectQuery<T, TResult, TOperator, EnumerableQuery<T>, EnumerableEnumerator<T>> Select<TOperator, TResult>() where TOperator : IFunction<T, TResult>
+	{
+		return new SelectQuery<T, TResult, TOperator, EnumerableQuery<T>, EnumerableEnumerator<T>>(this);
+	}
+
+	public SelectQuery<T, T, TOperator, EnumerableQuery<T>, EnumerableEnumerator<T>> Select<TOperator>() where TOperator : IFunction<T, T>
+	{
+		return new SelectQuery<T, T, TOperator, EnumerableQuery<T>, EnumerableEnumerator<T>>(this);
+	}
+
+	public SkipQuery<TCount, T, EnumerableQuery<T>, EnumerableEnumerator<T>> Skip<TCount>(TCount count)
+		where TCount : IBinaryInteger<TCount>
+	{
+		return new SkipQuery<TCount, T, EnumerableQuery<T>, EnumerableEnumerator<T>>(this, count);
+	}
+
+	public TakeQuery<TCount, T, EnumerableQuery<T>, EnumerableEnumerator<T>> Take<TCount>(TCount count)
+		where TCount : IBinaryInteger<TCount>
+	{
+		return new TakeQuery<TCount, T, EnumerableQuery<T>, EnumerableEnumerator<T>>(this, count);
+	}
+
+	public EnumerableEnumerator<T> GetEnumerator()
+	{
+		return new EnumerableEnumerator<T>(_enumerable.GetEnumerator());
+	}
+}
