@@ -194,11 +194,27 @@ internal sealed partial class OrderedImplicitlyStableEnumerable<TElement, TQuery
 // A comparer that chains comparisons, and pushes through the last element found to be
 // lower or higher (depending on use), so as to represent the sort of comparisons
 // done by OrderBy().ThenBy() combinations.
-internal abstract class CachingComparer<TElement>
+internal class CachingComparer<TElement>
 {
-	internal abstract int Compare(TElement element, bool cacheLower);
+	protected readonly IComparer<TElement> _comparer;
+	protected readonly bool _descending;
+	protected TElement? _lastElement;
+	
+	internal virtual int Compare(TElement element, bool cacheLower)
+	{
+		var cmp = _descending ? _comparer.Compare(_lastElement, element) : _comparer.Compare(element, _lastElement);
+		if (cacheLower == cmp < 0)
+		{
+			_lastElement = element;
+		}
 
-	internal abstract void SetElement(TElement element);
+		return cmp;
+	}
+
+	internal virtual void SetElement(TElement element)
+	{
+		_lastElement = element;
+	}
 }
 
 internal class CachingComparer<TElement, TKey> : CachingComparer<TElement>

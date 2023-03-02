@@ -1,0 +1,130 @@
+{
+  "format": 1,
+  "restore": {
+    "/Users/jantamiskossen/RiderProjects/OptiLinq/OptiLinq.Benchmark/OptiLinq.Benchmark.csproj": {}
+  },
+  "projects": {
+    "/Users/jantamiskossen/RiderProjects/OptiLinq/OptiLinq.Benchmark/OptiLinq.Benchmark.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/jantamiskossen/RiderProjects/OptiLinq/OptiLinq.Benchmark/OptiLinq.Benchmark.csproj",
+        "projectName": "OptiLinq.Benchmark",
+        "projectPath": "/Users/jantamiskossen/RiderProjects/OptiLinq/OptiLinq.Benchmark/OptiLinq.Benchmark.csproj",
+        "packagesPath": "/Users/jantamiskossen/.nuget/packages/",
+        "outputPath": "/Users/jantamiskossen/RiderProjects/OptiLinq/OptiLinq.Benchmark/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/jantamiskossen/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net7.0"
+        ],
+        "sources": {
+          "/usr/local/share/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {},
+          "https://ci.appveyor.com/nuget/benchmarkdotnet": {},
+          "https://nuget.avaloniaui.net/repository/avalonia-nightly/index.json": {}
+        },
+        "frameworks": {
+          "net7.0": {
+            "targetAlias": "net7.0",
+            "projectReferences": {
+              "/Users/jantamiskossen/RiderProjects/OptiLinq/OptiLinq/OptiLinq.csproj": {
+                "projectPath": "/Users/jantamiskossen/RiderProjects/OptiLinq/OptiLinq/OptiLinq.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net7.0": {
+          "targetAlias": "net7.0",
+          "dependencies": {
+            "BenchmarkDotNet": {
+              "target": "Package",
+              "version": "[0.13.4, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.100-preview.1.23115.2/RuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/jantamiskossen/RiderProjects/OptiLinq/OptiLinq/OptiLinq.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/jantamiskossen/RiderProjects/OptiLinq/OptiLinq/OptiLinq.csproj",
+        "projectName": "OptiLinq",
+        "projectPath": "/Users/jantamiskossen/RiderProjects/OptiLinq/OptiLinq/OptiLinq.csproj",
+        "packagesPath": "/Users/jantamiskossen/.nuget/packages/",
+        "outputPath": "/Users/jantamiskossen/RiderProjects/OptiLinq/OptiLinq/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/jantamiskossen/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net7.0"
+        ],
+        "sources": {
+          "/usr/local/share/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {},
+          "https://ci.appveyor.com/nuget/benchmarkdotnet": {},
+          "https://nuget.avaloniaui.net/repository/avalonia-nightly/index.json": {}
+        },
+        "frameworks": {
+          "net7.0": {
+            "targetAlias": "net7.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net7.0": {
+          "targetAlias": "net7.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.100-preview.1.23115.2/RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

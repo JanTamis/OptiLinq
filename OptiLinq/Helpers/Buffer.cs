@@ -13,7 +13,7 @@ internal readonly struct Buffer<TElement, TQuery, TEnumerable>
 	/// <summary>
 	/// The stored items.
 	/// </summary>
-	internal readonly TElement[] _items;
+	internal readonly TElement[]? _items;
 
 	/// <summary>
 	/// The number of stored items.

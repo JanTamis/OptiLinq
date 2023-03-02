@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 namespace OptiLinq.Helpers;
 
 internal struct ArrayBuilder<T>

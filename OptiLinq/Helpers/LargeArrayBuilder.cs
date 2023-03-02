@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using OptiLinq.Interfaces;
 
@@ -33,7 +32,7 @@ internal struct LargeArrayBuilder<T>
 	public LargeArrayBuilder(int initialCapacity)
 	{
 		this = default;
-		_first = _current = new T[initialCapacity];
+		_first = _current = GC.AllocateUninitializedArray<T>(initialCapacity);
 	}
 
 	/// <summary>
@@ -267,7 +266,7 @@ internal struct LargeArrayBuilder<T>
 			// We haven't passed ResizeLimit. Resize _first, copying over the previous items.
 			var nextCapacity = Math.Min(_count == 0 ? StartingCapacity : _count * 2, MaxCapacity);
 
-			_current = new T[nextCapacity];
+			_current = GC.AllocateUninitializedArray<T>(nextCapacity); // new T[nextCapacity];
 			Array.Copy(_first, _current, _count);
 			_first = _current;
 		}
