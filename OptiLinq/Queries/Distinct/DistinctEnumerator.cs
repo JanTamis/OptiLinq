@@ -3,15 +3,17 @@ using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public struct DistinctEnumerator<T, TBaseEnumerator> : IOptiEnumerator<T> where TBaseEnumerator : IOptiEnumerator<T>
+public struct DistinctEnumerator<T, TBaseEnumerator, TComparer> : IOptiEnumerator<T>
+	where TBaseEnumerator : IOptiEnumerator<T>
+	where TComparer : IEqualityComparer<T>
 {
 	private TBaseEnumerator _baseEnumerator;
-	private PooledSet<T, IEqualityComparer<T>> _set;
+	private PooledSet<T, TComparer> _set;
 
-	internal DistinctEnumerator(TBaseEnumerator baseEnumerator, IEqualityComparer<T> comparer, int capacity)
+	internal DistinctEnumerator(TBaseEnumerator baseEnumerator, TComparer comparer, int capacity)
 	{
 		_baseEnumerator = baseEnumerator;
-		_set = new PooledSet<T, IEqualityComparer<T>>(capacity, comparer);
+		_set = new PooledSet<T, TComparer>(capacity, comparer);
 	}
 
 	public T Current => _baseEnumerator.Current;

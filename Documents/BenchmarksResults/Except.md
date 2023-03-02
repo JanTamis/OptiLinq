@@ -1,7 +1,7 @@
 ﻿## Except
 
 ### Source
-[Except.cs](../../src/StructLinq.Benchmark/Except.cs)
+[Except.cs](../../src/OptiLinq.Benchmark/Except.cs)
 
 ### Results:
 ``` ini
@@ -16,7 +16,7 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 ```
 |      Method |     Mean |   Error |  StdDev |        Ratio | RatioSD |    Gen0 |    Gen1 |    Gen2 | Allocated |     Alloc Ratio |
 |------------ |---------:|--------:|--------:|-------------:|--------:|--------:|--------:|--------:|----------:|----------------:|
-| OptiLinqSum | 159.3 μs | 2.70 μs | 2.25 μs | 1.55x faster |   0.07x |       - |       - |       - |     208 B | 1,384.995x less |
-|     LinqSum | 235.6 μs | 0.65 μs | 0.55 μs | 1.05x faster |   0.04x | 45.4102 | 45.4102 | 45.4102 |  288079 B |     1.000x more |
-|        Linq | 250.5 μs | 4.98 μs | 7.76 μs |     baseline |         | 45.4102 | 45.4102 | 45.4102 |  288079 B |                 |
-|    OptiLinq | 254.1 μs | 4.95 μs | 6.26 μs | 1.02x slower |   0.04x | 62.0117 | 62.0117 | 62.0117 |  262468 B |     1.098x less |
+| OptiLinqSum | 126.1 μs | 1.44 μs | 1.28 μs | 1.70x faster |   0.04x |       - |       - |       - |     208 B | 1,384.995x less |
+|     LinqSum | 212.6 μs | 2.23 μs | 1.98 μs | 1.01x faster |   0.01x | 45.4102 | 45.4102 | 45.4102 |  288079 B |     1.000x more |
+|        Linq | 213.8 μs | 4.00 μs | 3.75 μs |     baseline |         | 45.4102 | 45.4102 | 45.4102 |  288079 B |                 |
+|    OptiLinq | 216.0 μs | 2.92 μs | 2.59 μs | 1.01x slower |   0.02x | 62.2559 | 62.2559 | 62.2559 |  269903 B |     1.067x less |

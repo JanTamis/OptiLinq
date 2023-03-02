@@ -1,7 +1,7 @@
 ﻿## Min
 
 ### Source
-[Min.cs](../../src/StructLinq.Benchmark/Min.cs)
+[Min.cs](../../src/OptiLinq.Benchmark/Min.cs)
 
 ### Results:
 ``` ini
@@ -14,9 +14,9 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|     Method |           Mean |       Error |        StdDev |         Median |         Ratio | RatioSD | Allocated | Alloc Ratio |
-|----------- |---------------:|------------:|--------------:|---------------:|--------------:|--------:|----------:|------------:|
-| StructLINQ |      0.0373 ns |   0.0264 ns |     0.0770 ns |      0.0000 ns |            NA |      NA |         - |          NA |
-|  Handmaded | 10,281.1507 ns | 133.1433 ns |   124.5423 ns | 10,231.5140 ns |      baseline |         |         - |          NA |
-| ConvertMin | 45,115.3728 ns | 550.1866 ns |   429.5495 ns | 44,857.3790 ns | 4.377x slower |   0.07x |      40 B |          NA |
-|       LINQ | 50,123.8932 ns | 995.2372 ns | 2,306.6136 ns | 49,790.1306 ns | 4.888x slower |   0.33x |      40 B |          NA |
+|     Method |           Mean |       Error |      StdDev |         Median |         Ratio | RatioSD | Allocated | Alloc Ratio |
+|----------- |---------------:|------------:|------------:|---------------:|--------------:|--------:|----------:|------------:|
+| StructLINQ |      0.0167 ns |   0.0253 ns |   0.0291 ns |      0.0000 ns |            NA |      NA |         - |          NA |
+|  Handmaded |  8,632.7079 ns | 165.4604 ns | 203.2002 ns |  8,550.9044 ns |      baseline |         |         - |          NA |
+| ConvertMin | 35,221.3509 ns | 305.9545 ns | 286.1901 ns | 35,196.4142 ns | 4.076x slower |   0.10x |      40 B |          NA |
+|       LINQ | 37,520.9693 ns | 404.2061 ns | 337.5304 ns | 37,516.2522 ns | 4.338x slower |   0.14x |      40 B |          NA |

@@ -1,7 +1,7 @@
 ﻿## TakeOnArrayWhere
 
 ### Source
-[TakeOnArrayWhere.cs](../../src/StructLinq.Benchmark/TakeOnArrayWhere.cs)
+[TakeOnArrayWhere.cs](../../src/OptiLinq.Benchmark/TakeOnArrayWhere.cs)
 
 ### Results:
 ``` ini
@@ -14,9 +14,9 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|      Method |     Mean |    Error |   StdDev | Ratio | Allocated | Alloc Ratio |
-|------------ |---------:|---------:|---------:|------:|----------:|------------:|
-|        Linq | 59.28 μs | 0.342 μs | 0.303 μs |  1.00 |     104 B |        1.00 |
-|     LinqSum | 60.86 μs | 0.391 μs | 0.346 μs |  1.03 |     104 B |        1.00 |
-|  StructLinq | 25.07 μs | 0.355 μs | 0.315 μs |  0.42 |         - |        0.00 |
-| OptiLinqSum | 24.75 μs | 0.082 μs | 0.064 μs |  0.42 |      40 B |        0.38 |
+|      Method |     Mean |    Error |   StdDev |        Ratio | RatioSD | Allocated | Alloc Ratio |
+|------------ |---------:|---------:|---------:|-------------:|--------:|----------:|------------:|
+|    OptiLinq | 20.98 μs | 0.284 μs | 0.251 μs | 2.29x faster |   0.04x |         - |          NA |
+| OptiLinqSum | 21.96 μs | 0.220 μs | 0.195 μs | 2.18x faster |   0.02x |      40 B |  2.60x less |
+|        Linq | 48.01 μs | 0.487 μs | 0.406 μs |     baseline |         |     104 B |             |
+|     LinqSum | 49.61 μs | 0.885 μs | 0.828 μs | 1.03x slower |   0.01x |     104 B |  1.00x more |

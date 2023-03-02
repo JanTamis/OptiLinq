@@ -1,7 +1,7 @@
 ﻿## SelectOnArray
 
 ### Source
-[SelectOnArray.cs](../../src/StructLinq.Benchmark/SelectOnArray.cs)
+[SelectOnArray.cs](../../src/OptiLinq.Benchmark/SelectOnArray.cs)
 
 ### Results:
 ``` ini
@@ -14,9 +14,9 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|               Method |     Mean |    Error |   StdDev |        Ratio | RatioSD | Allocated | Alloc Ratio |
-|--------------------- |---------:|---------:|---------:|-------------:|--------:|----------:|------------:|
-|            Handmaded | 13.24 μs | 0.632 μs | 1.862 μs |     baseline |         |         - |          NA |
-| OptiLINQWithFunction | 20.00 μs | 0.037 μs | 0.031 μs | 1.32x slower |   0.09x |         - |          NA |
-|             OptiLINQ | 28.90 μs | 0.543 μs | 0.534 μs | 1.93x slower |   0.13x |         - |          NA |
-|                 LINQ | 70.90 μs | 0.239 μs | 0.187 μs | 4.67x slower |   0.33x |      48 B |          NA |
+|               Method |      Mean |     Error |    StdDev |        Ratio | RatioSD | Allocated | Alloc Ratio |
+|--------------------- |----------:|----------:|----------:|-------------:|--------:|----------:|------------:|
+|            Handmaded |  9.532 μs | 0.1346 μs | 0.1259 μs |     baseline |         |         - |          NA |
+| OptiLINQWithFunction | 16.098 μs | 0.2566 μs | 0.2401 μs | 1.69x slower |   0.03x |         - |          NA |
+|             OptiLINQ | 22.116 μs | 0.4300 μs | 0.5438 μs | 2.34x slower |   0.04x |         - |          NA |
+|                 LINQ | 59.200 μs | 0.3324 μs | 0.2946 μs | 6.21x slower |   0.08x |      48 B |          NA |

@@ -1,7 +1,7 @@
 ﻿## TakeOnArray
 
 ### Source
-[TakeOnArray.cs](../../src/StructLinq.Benchmark/TakeOnArray.cs)
+[TakeOnArray.cs](../../src/OptiLinq.Benchmark/TakeOnArray.cs)
 
 ### Results:
 ``` ini
@@ -16,7 +16,7 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 ```
 |      Method |        Mean |     Error |    StdDev |           Ratio | RatioSD |   Gen0 | Allocated | Alloc Ratio |
 |------------ |------------:|----------:|----------:|----------------:|--------:|-------:|----------:|------------:|
-| OptiLinqSum |    297.7 ns |   1.52 ns |   1.35 ns | 152.073x faster |   1.14x | 0.0038 |      32 B |  1.50x less |
-|    OptiLinq | 13,016.2 ns |  79.96 ns |  70.88 ns |   3.473x faster |   0.03x |      - |         - |          NA |
-|        Linq | 45,262.6 ns | 288.79 ns | 225.47 ns |        baseline |         |      - |      48 B |             |
-|     LinqSum | 48,069.7 ns | 211.81 ns | 176.87 ns |   1.062x slower |   0.00x |      - |      48 B |  1.00x more |
+| OptiLinqSum |    240.4 ns |   3.23 ns |   2.70 ns | 151.885x faster |   2.90x | 0.0038 |      32 B |  1.50x less |
+|    OptiLinq |  6,332.1 ns |  51.08 ns |  39.88 ns |   5.761x faster |   0.08x |      - |         - |          NA |
+|        Linq | 36,456.8 ns | 510.05 ns | 452.14 ns |        baseline |         |      - |      48 B |             |
+|     LinqSum | 38,967.2 ns | 579.28 ns | 483.72 ns |   1.068x slower |   0.02x |      - |      48 B |  1.00x more |

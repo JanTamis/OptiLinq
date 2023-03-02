@@ -1,7 +1,7 @@
 ﻿## Intersect
 
 ### Source
-[Intersect.cs](../../src/StructLinq.Benchmark/Intersect.cs)
+[Intersect.cs](../../src/OptiLinq.Benchmark/Intersect.cs)
 
 ### Results:
 ``` ini
@@ -16,9 +16,9 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 ```
 |           Method |      Mean |    Error |   StdDev |        Ratio | RatioSD |    Gen0 |    Gen1 |    Gen2 | Allocated |   Alloc Ratio |
 |----------------- |----------:|---------:|---------:|-------------:|--------:|--------:|--------:|--------:|----------:|--------------:|
-|      OptiLinqSum |  91.26 μs | 1.039 μs | 0.921 μs | 1.20x faster |   0.01x |       - |       - |       - |     112 B | 836.643x less |
-|             Linq | 109.11 μs | 0.252 μs | 0.211 μs |     baseline |         | 11.1084 |  2.6855 |       - |   93704 B |               |
-|          LinqSum | 110.97 μs | 1.479 μs | 1.383 μs | 1.02x slower |   0.01x | 11.1084 |  2.6855 |       - |   93704 B |   1.000x more |
-|     LinqComparer | 131.28 μs | 1.649 μs | 1.542 μs | 1.20x slower |   0.02x | 10.9863 |  2.6855 |       - |   93728 B |   1.000x more |
-| OptiLinqComparer | 190.18 μs | 2.769 μs | 2.590 μs | 1.74x slower |   0.02x | 62.2559 | 62.2559 | 62.2559 |  266546 B |   2.845x more |
-|         OptiLinq | 230.60 μs | 2.842 μs | 3.159 μs | 2.12x slower |   0.03x | 62.2559 | 62.2559 | 62.2559 |  266496 B |   2.844x more |
+|      OptiLinqSum |  82.99 μs | 0.927 μs | 0.868 μs | 1.17x faster |   0.02x |       - |       - |       - |     112 B | 836.643x less |
+|          LinqSum |  97.07 μs | 0.742 μs | 0.658 μs | 1.00x faster |   0.01x | 11.1084 |  2.6855 |       - |   93704 B |   1.000x more |
+|             Linq |  97.39 μs | 0.921 μs | 0.719 μs |     baseline |         | 11.1084 |  2.6855 |       - |   93704 B |               |
+|     LinqComparer | 116.96 μs | 0.632 μs | 0.591 μs | 1.20x slower |   0.01x | 11.1084 |  2.6855 |       - |   93728 B |   1.000x more |
+| OptiLinqComparer | 174.54 μs | 1.425 μs | 1.113 μs | 1.79x slower |   0.02x | 62.2559 | 62.2559 | 62.2559 |  269943 B |   2.881x more |
+|         OptiLinq | 212.63 μs | 1.757 μs | 1.557 μs | 2.19x slower |   0.02x | 62.2559 | 62.2559 | 62.2559 |  270163 B |   2.883x more |

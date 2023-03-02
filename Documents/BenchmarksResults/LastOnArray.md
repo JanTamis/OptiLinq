@@ -1,7 +1,7 @@
 ﻿## LastOnArray
 
 ### Source
-[LastOnArray.cs](../../src/StructLinq.Benchmark/LastOnArray.cs)
+[LastOnArray.cs](../../src/OptiLinq.Benchmark/LastOnArray.cs)
 
 ### Results:
 ``` ini
@@ -16,6 +16,6 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 ```
 |         Method |      Mean |     Error |    StdDev |         Ratio | RatioSD | Allocated | Alloc Ratio |
 |--------------- |----------:|----------:|----------:|--------------:|--------:|----------:|------------:|
-|       OptiLinq |  1.450 ns | 0.0117 ns | 0.0097 ns | 14.02x faster |   0.30x |         - |          NA |
-| EnumerableLinq | 20.089 ns | 0.1695 ns | 0.1415 ns |  1.01x faster |   0.02x |         - |          NA |
-|           Linq | 20.314 ns | 0.3984 ns | 0.3531 ns |      baseline |         |         - |          NA |
+|       OptiLinq |  1.300 ns | 0.0217 ns | 0.0181 ns | 13.43x faster |   0.22x |         - |          NA |
+|           Linq | 17.445 ns | 0.1430 ns | 0.1194 ns |      baseline |         |         - |          NA |
+| EnumerableLinq | 17.518 ns | 0.1648 ns | 0.1461 ns |  1.01x slower |   0.01x |         - |          NA |

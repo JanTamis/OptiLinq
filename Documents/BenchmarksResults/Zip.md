@@ -1,7 +1,7 @@
 ﻿## Zip
 
 ### Source
-[Zip.cs](../../src/StructLinq.Benchmark/Zip.cs)
+[Zip.cs](../../src/OptiLinq.Benchmark/Zip.cs)
 
 ### Results:
 ``` ini
@@ -16,11 +16,11 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 ```
 |              Method |     Mean |    Error |   StdDev |        Ratio | RatioSD | Allocated | Alloc Ratio |
 |-------------------- |---------:|---------:|---------:|-------------:|--------:|----------:|------------:|
-|                Linq | 70.96 μs | 1.331 μs | 1.307 μs |     baseline |         |     144 B |             |
-| OptiLinqFunctionSum | 74.60 μs | 0.492 μs | 0.411 μs | 1.05x slower |   0.02x |     104 B |  1.38x less |
-|        LinqFunction | 75.17 μs | 0.477 μs | 0.423 μs | 1.06x slower |   0.02x |     160 B |  1.11x more |
-|             LinqSum | 76.78 μs | 0.411 μs | 0.365 μs | 1.08x slower |   0.02x |     144 B |  1.00x more |
-|    OptiLinqFunction | 79.94 μs | 0.898 μs | 0.796 μs | 1.13x slower |   0.02x |      64 B |  2.25x less |
-|     LinqFunctionSum | 79.98 μs | 0.588 μs | 0.521 μs | 1.13x slower |   0.02x |     160 B |  1.11x more |
-|         OptiLinqSum | 88.86 μs | 0.985 μs | 0.921 μs | 1.25x slower |   0.03x |     104 B |  1.38x less |
-|            OptiLinq | 88.89 μs | 0.990 μs | 0.878 μs | 1.26x slower |   0.03x |      64 B |  2.25x less |
+| OptiLinqFunctionSum | 43.35 μs | 0.666 μs | 0.623 μs | 1.46x faster |   0.03x |      72 B |  2.00x less |
+|    OptiLinqFunction | 44.62 μs | 0.784 μs | 0.733 μs | 1.42x faster |   0.04x |      32 B |  4.50x less |
+|            OptiLinq | 49.63 μs | 0.525 μs | 0.466 μs | 1.28x faster |   0.02x |      32 B |  4.50x less |
+|         OptiLinqSum | 49.74 μs | 0.903 μs | 0.801 μs | 1.28x faster |   0.03x |      72 B |  2.00x less |
+|                Linq | 63.26 μs | 1.239 μs | 1.272 μs |     baseline |         |     144 B |             |
+|        LinqFunction | 67.62 μs | 0.805 μs | 0.753 μs | 1.07x slower |   0.02x |     160 B |  1.11x more |
+|             LinqSum | 67.79 μs | 0.853 μs | 0.756 μs | 1.07x slower |   0.02x |     144 B |  1.00x more |
+|     LinqFunctionSum | 70.95 μs | 1.370 μs | 1.281 μs | 1.12x slower |   0.04x |     160 B |  1.11x more |

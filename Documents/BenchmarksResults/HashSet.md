@@ -1,7 +1,7 @@
 ﻿## HashSet
 
 ### Source
-[HashSet.cs](../../src/StructLinq.Benchmark/HashSet.cs)
+[HashSet.cs](../../src/OptiLinq.Benchmark/HashSet.cs)
 
 ### Results:
 ``` ini
@@ -14,19 +14,19 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|      Method | ItemCount |         Mean |      Error |     StdDev |        Ratio | RatioSD |   Gen0 | Allocated | Alloc Ratio |
-|------------ |---------- |-------------:|-----------:|-----------:|-------------:|--------:|-------:|----------:|------------:|
-|        LINQ |         2 |     8.985 ns |  0.2105 ns |  0.1969 ns |     baseline |         |      - |         - |          NA |
-|    OptiLINQ |         2 |    37.248 ns |  0.1380 ns |  0.1223 ns | 4.15x slower |   0.10x | 0.0048 |      40 B |          NA |
-|     LinqSum |         2 |    38.178 ns |  0.0872 ns |  0.0773 ns | 4.25x slower |   0.09x | 0.0048 |      40 B |          NA |
-| OptiLINQSum |         2 |    48.019 ns |  0.8347 ns |  0.7808 ns | 5.35x slower |   0.18x | 0.0076 |      64 B |          NA |
-|             |           |              |            |            |              |         |        |           |             |
-|        LINQ |       100 |   308.717 ns |  0.5208 ns |  0.4617 ns |     baseline |         |      - |         - |          NA |
-|    OptiLINQ |       100 |   826.612 ns | 16.0060 ns | 14.9720 ns | 2.67x slower |   0.05x | 0.0048 |      40 B |          NA |
-| OptiLINQSum |       100 |   852.869 ns |  1.6290 ns |  1.2718 ns | 2.76x slower |   0.01x | 0.0076 |      64 B |          NA |
-|     LinqSum |       100 |   890.121 ns |  1.6813 ns |  1.4040 ns | 2.88x slower |   0.01x | 0.0048 |      40 B |          NA |
-|             |           |              |            |            |              |         |        |           |             |
-|        LINQ |      1000 | 2,981.798 ns |  4.7778 ns |  3.7302 ns |     baseline |         |      - |         - |          NA |
-|    OptiLINQ |      1000 | 8,163.051 ns | 24.4744 ns | 20.4372 ns | 2.74x slower |   0.01x |      - |      40 B |          NA |
-| OptiLINQSum |      1000 | 8,168.857 ns | 18.6970 ns | 16.5744 ns | 2.74x slower |   0.01x |      - |      64 B |          NA |
-|     LinqSum |      1000 | 8,451.649 ns | 16.0580 ns | 14.2350 ns | 2.83x slower |   0.00x |      - |      40 B |          NA |
+|      Method | ItemCount |         Mean |       Error |      StdDev |        Ratio | RatioSD |   Gen0 | Allocated | Alloc Ratio |
+|------------ |---------- |-------------:|------------:|------------:|-------------:|--------:|-------:|----------:|------------:|
+|        LINQ |         2 |     7.847 ns |   0.0670 ns |   0.0627 ns |     baseline |         |      - |         - |          NA |
+|    OptiLINQ |         2 |    30.502 ns |   0.3222 ns |   0.2857 ns | 3.89x slower |   0.04x | 0.0048 |      40 B |          NA |
+|     LinqSum |         2 |    31.911 ns |   0.3624 ns |   0.3390 ns | 4.07x slower |   0.05x | 0.0048 |      40 B |          NA |
+| OptiLINQSum |         2 |    47.299 ns |   0.6099 ns |   0.5407 ns | 6.03x slower |   0.09x | 0.0076 |      64 B |          NA |
+|             |           |              |             |             |              |         |        |           |             |
+|        LINQ |       100 |   268.795 ns |   3.0223 ns |   2.6792 ns |     baseline |         |      - |         - |          NA |
+| OptiLINQSum |       100 |   748.168 ns |   5.8919 ns |   4.9200 ns | 2.78x slower |   0.03x | 0.0076 |      64 B |          NA |
+|    OptiLINQ |       100 |   756.218 ns |   6.1175 ns |   5.4230 ns | 2.81x slower |   0.04x | 0.0048 |      40 B |          NA |
+|     LinqSum |       100 |   800.794 ns |   7.7969 ns |   6.9118 ns | 2.98x slower |   0.04x | 0.0048 |      40 B |          NA |
+|             |           |              |             |             |              |         |        |           |             |
+|        LINQ |      1000 | 2,761.487 ns |  54.1218 ns |  47.9776 ns |     baseline |         |      - |         - |          NA |
+|    OptiLINQ |      1000 | 7,065.783 ns |  40.1914 ns |  35.6287 ns | 2.56x slower |   0.05x |      - |      40 B |          NA |
+|     LinqSum |      1000 | 7,334.317 ns |  39.6327 ns |  35.1334 ns | 2.66x slower |   0.04x |      - |      40 B |          NA |
+| OptiLINQSum |      1000 | 7,884.208 ns | 135.4368 ns | 126.6877 ns | 2.86x slower |   0.06x | 0.0076 |      64 B |          NA |

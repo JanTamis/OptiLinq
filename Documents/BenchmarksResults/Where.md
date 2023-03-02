@@ -1,7 +1,7 @@
 ﻿## Where
 
 ### Source
-[Where.cs](../../src/StructLinq.Benchmark/Where.cs)
+[Where.cs](../../src/OptiLinq.Benchmark/Where.cs)
 
 ### Results:
 ``` ini
@@ -14,8 +14,8 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|         Method |       Mean |     Error |    StdDev |         Ratio | RatioSD | Allocated | Alloc Ratio |
-|--------------- |-----------:|----------:|----------:|--------------:|--------:|----------:|------------:|
-|   StructSelect |   9.993 μs | 0.1941 μs | 0.2455 μs | 10.63x faster |   0.30x |      32 B |  3.00x less |
-| DelegateSelect |  22.577 μs | 0.0621 μs | 0.0519 μs |  4.72x faster |   0.03x |      32 B |  3.00x less |
-|      SysSelect | 106.556 μs | 0.5472 μs | 0.4569 μs |      baseline |         |      96 B |             |
+|         Method |      Mean |     Error |    StdDev |         Ratio | RatioSD | Allocated | Alloc Ratio |
+|--------------- |----------:|----------:|----------:|--------------:|--------:|----------:|------------:|
+|   StructSelect |  8.897 μs | 0.1703 μs | 0.1422 μs | 10.61x faster |   0.20x |      32 B |  3.00x less |
+| DelegateSelect | 20.736 μs | 0.3920 μs | 0.4514 μs |  4.58x faster |   0.13x |      32 B |  3.00x less |
+|      SysSelect | 94.373 μs | 1.4175 μs | 1.1837 μs |      baseline |         |      96 B |             |

@@ -5,8 +5,8 @@ namespace OptiLinq;
 
 public partial struct EmptyQuery<T>
 {
-	public EmptyQuery<T> Concat<TOtherQuery>(in TOtherQuery other) where TOtherQuery : struct, IOptiQuery<T>
+	public TOtherQuery Concat<TOtherQuery>(in TOtherQuery other) where TOtherQuery : struct, IOptiQuery<T>
 	{
-		return this;
+		return other;
 	}
 }

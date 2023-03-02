@@ -1,7 +1,7 @@
 ﻿## Union
 
 ### Source
-[Union.cs](../../src/StructLinq.Benchmark/Union.cs)
+[Union.cs](../../src/OptiLinq.Benchmark/Union.cs)
 
 ### Results:
 ``` ini
@@ -16,8 +16,8 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 ```
 |              Method |      Mean |    Error |   StdDev |        Ratio | RatioSD |    Gen0 |    Gen1 |    Gen2 | Allocated |     Alloc Ratio |
 |-------------------- |----------:|---------:|---------:|-------------:|--------:|--------:|--------:|--------:|----------:|----------------:|
-| OptiLinqComparerSum |  74.93 μs | 1.190 μs | 1.055 μs | 4.64x faster |   0.08x |       - |       - |       - |     144 B | 3,741.111x less |
-|    OptiLinqComparer | 109.81 μs | 1.156 μs | 1.025 μs | 3.16x faster |   0.04x |       - |       - |       - |      96 B | 5,611.667x less |
-|         OptiLinqSum | 115.08 μs | 2.078 μs | 1.944 μs | 3.02x faster |   0.06x |       - |       - |       - |     144 B | 3,741.111x less |
-|            OptiLinq | 169.84 μs | 2.986 μs | 2.647 μs | 2.04x faster |   0.03x |       - |       - |       - |     128 B | 4,208.750x less |
-|                Linq | 347.52 μs | 4.035 μs | 3.369 μs |     baseline |         | 95.2148 | 95.2148 | 95.2148 |  538720 B |                 |
+| OptiLinqComparerSum |  67.48 μs | 1.324 μs | 1.301 μs | 4.13x faster |   0.08x |       - |       - |       - |     144 B | 3,741.111x less |
+|    OptiLinqComparer |  95.41 μs | 1.377 μs | 1.150 μs | 2.92x faster |   0.04x |       - |       - |       - |      96 B | 5,611.667x less |
+|         OptiLinqSum |  99.05 μs | 0.721 μs | 0.639 μs | 2.82x faster |   0.03x |       - |       - |       - |     144 B | 3,741.111x less |
+|            OptiLinq | 143.61 μs | 1.597 μs | 1.416 μs | 1.94x faster |   0.03x |       - |       - |       - |     128 B | 4,208.750x less |
+|                Linq | 278.97 μs | 2.997 μs | 2.340 μs |     baseline |         | 95.2148 | 95.2148 | 95.2148 |  538720 B |                 |

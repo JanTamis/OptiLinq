@@ -1,7 +1,7 @@
 ﻿## ArrayWhereCount
 
 ### Source
-[ArrayWhereCount.cs](../../src/StructLinq.Benchmark/ArrayWhereCount.cs)
+[ArrayWhereCount.cs](../../src/OptiLinq.Benchmark/ArrayWhereCount.cs)
 
 ### Results:
 ``` ini
@@ -14,9 +14,9 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|         Method |      Mean |     Error |    StdDev | Ratio | RatioSD | Allocated | Alloc Ratio |
-|--------------- |----------:|----------:|----------:|------:|--------:|----------:|------------:|
-|  HandmadedCode |  7.372 μs | 0.0834 μs | 0.0780 μs |  1.00 |    0.00 |         - |          NA |
-|        SysLinq | 25.544 μs | 0.4137 μs | 0.3870 μs |  3.47 |    0.07 |      48 B |          NA |
-|  DelegateWhere | 25.091 μs | 0.4975 μs | 0.6642 μs |  3.40 |    0.11 |         - |          NA |
-| IFunctionWhere |  7.445 μs | 0.1469 μs | 0.1692 μs |  1.01 |    0.02 |         - |          NA |
+|         Method |      Mean |     Error |    StdDev |    Median |        Ratio | RatioSD | Allocated | Alloc Ratio |
+|--------------- |----------:|----------:|----------:|----------:|-------------:|--------:|----------:|------------:|
+|  HandmadedCode |  6.791 μs | 0.1332 μs | 0.2535 μs |  6.748 μs |     baseline |         |         - |          NA |
+| IFunctionWhere |  6.879 μs | 0.0425 μs | 0.0355 μs |  6.891 μs | 1.02x faster |   0.04x |         - |          NA |
+|  DelegateWhere | 23.443 μs | 0.2072 μs | 0.1836 μs | 23.410 μs | 3.35x slower |   0.13x |         - |          NA |
+|        SysLinq | 24.969 μs | 0.5603 μs | 1.6521 μs | 24.151 μs | 3.81x slower |   0.30x |      48 B |          NA |

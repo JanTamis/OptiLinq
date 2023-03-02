@@ -1,7 +1,7 @@
 ﻿## ImmutableArrayWhereSelectSum
 
 ### Source
-[ImmutableArrayWhereSelectSum.cs](../../src/StructLinq.Benchmark/ImmutableArrayWhereSelectSum.cs)
+[ImmutableArrayWhereSelectSum.cs](../../src/OptiLinq.Benchmark/ImmutableArrayWhereSelectSum.cs)
 
 ### Results:
 ``` ini
@@ -14,8 +14,8 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|           Method |      Mean |    Error |    StdDev |   Median |        Ratio | RatioSD | Allocated | Alloc Ratio |
-|----------------- |----------:|---------:|----------:|---------:|-------------:|--------:|----------:|------------:|
-|             LINQ |  53.36 μs | 0.708 μs |  0.662 μs | 53.03 μs |     baseline |         |     104 B |             |
-| OptiLinqFunction |  78.18 μs | 3.665 μs | 10.575 μs | 75.28 μs | 1.40x slower |   0.21x |      88 B |  1.18x less |
-|         OptiLinq | 103.11 μs | 3.416 μs | 10.073 μs | 99.61 μs | 1.99x slower |   0.23x |      96 B |  1.08x less |
+|           Method |     Mean |    Error |   StdDev |        Ratio | RatioSD | Allocated | Alloc Ratio |
+|----------------- |---------:|---------:|---------:|-------------:|--------:|----------:|------------:|
+|             LINQ | 47.32 μs | 0.468 μs | 0.415 μs |     baseline |         |     104 B |             |
+| OptiLinqFunction | 59.01 μs | 0.508 μs | 0.424 μs | 1.25x slower |   0.01x |      88 B |  1.18x less |
+|         OptiLinq | 81.91 μs | 0.598 μs | 0.499 μs | 1.73x slower |   0.02x |      96 B |  1.08x less |

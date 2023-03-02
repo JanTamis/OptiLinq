@@ -3,20 +3,20 @@ using OptiLinq.Operators;
 
 namespace OptiLinq;
 
-public partial struct ZipQuery<T, TResult, TOperator, TFirstQuery, TSecondQuery>
+public partial struct ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumerator, TSecondQuery>
 {
-	public SelectQuery<TResult, TOtherResult, TSelectOperator, ZipQuery<T, TResult, TOperator, TFirstQuery, TSecondQuery>, ZipEnumerator<T, TResult, TOperator>> Select<TSelectOperator, TOtherResult>(TSelectOperator selector = default) where TSelectOperator : struct, IFunction<TResult, TOtherResult>
+	public SelectQuery<TResult, TOtherResult, TSelectOperator, ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumerator, TSecondQuery>, ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IOptiEnumerator<T>>> Select<TSelectOperator, TOtherResult>(TSelectOperator selector = default) where TSelectOperator : struct, IFunction<TResult, TOtherResult>
 	{
-		return new SelectQuery<TResult, TOtherResult, TSelectOperator, ZipQuery<T, TResult, TOperator, TFirstQuery, TSecondQuery>, ZipEnumerator<T, TResult, TOperator>>(ref this, selector);
+		return new SelectQuery<TResult, TOtherResult, TSelectOperator, ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumerator, TSecondQuery>, ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IOptiEnumerator<T>>>(ref this, selector);
 	}
 
-	public SelectQuery<TResult, TResult, TSelectOperator, ZipQuery<T, TResult, TOperator, TFirstQuery, TSecondQuery>, ZipEnumerator<T, TResult, TOperator>> Select<TSelectOperator>(TSelectOperator selector = default) where TSelectOperator : struct, IFunction<TResult, TResult>
+	public SelectQuery<TResult, TResult, TSelectOperator, ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumerator, TSecondQuery>, ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IOptiEnumerator<T>>> Select<TSelectOperator>(TSelectOperator selector = default) where TSelectOperator : struct, IFunction<TResult, TResult>
 	{
-		return new SelectQuery<TResult, TResult, TSelectOperator, ZipQuery<T, TResult, TOperator, TFirstQuery, TSecondQuery>, ZipEnumerator<T, TResult, TOperator>>(ref this, selector);
+		return new SelectQuery<TResult, TResult, TSelectOperator, ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumerator, TSecondQuery>, ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IOptiEnumerator<T>>>(ref this, selector);
 	}
 
-	public SelectQuery<TResult, TOtherResult, FuncAsIFunction<TResult, TOtherResult>, ZipQuery<T, TResult, TOperator, TFirstQuery, TSecondQuery>, ZipEnumerator<T, TResult, TOperator>> Select<TOtherResult>(Func<TResult, TOtherResult> selector)
+	public SelectQuery<TResult, TOtherResult, FuncAsIFunction<TResult, TOtherResult>, ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumerator, TSecondQuery>, ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IOptiEnumerator<T>>> Select<TOtherResult>(Func<TResult, TOtherResult> selector)
 	{
-		return new SelectQuery<TResult, TOtherResult, FuncAsIFunction<TResult, TOtherResult>, ZipQuery<T, TResult, TOperator, TFirstQuery, TSecondQuery>, ZipEnumerator<T, TResult, TOperator>>(ref this, new FuncAsIFunction<TResult, TOtherResult>(selector));
+		return new SelectQuery<TResult, TOtherResult, FuncAsIFunction<TResult, TOtherResult>, ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumerator, TSecondQuery>, ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IOptiEnumerator<T>>>(ref this, new FuncAsIFunction<TResult, TOtherResult>(selector));
 	}
 }

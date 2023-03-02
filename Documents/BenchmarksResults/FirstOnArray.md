@@ -1,7 +1,7 @@
 ﻿## FirstOnArray
 
 ### Source
-[FirstOnArray.cs](../../src/StructLinq.Benchmark/FirstOnArray.cs)
+[FirstOnArray.cs](../../src/OptiLinq.Benchmark/FirstOnArray.cs)
 
 ### Results:
 ``` ini
@@ -14,8 +14,8 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|         Method |      Mean |     Error |    StdDev |         Ratio | RatioSD | Allocated | Alloc Ratio |
-|--------------- |----------:|----------:|----------:|--------------:|--------:|----------:|------------:|
-|       OptiLinq |  1.578 ns | 0.0676 ns | 0.1012 ns | 14.21x faster |   1.12x |         - |          NA |
-|           Linq | 22.261 ns | 0.1269 ns | 0.1060 ns |      baseline |         |         - |          NA |
-| EnumerableLinq | 22.809 ns | 0.1508 ns | 0.1260 ns |  1.02x slower |   0.01x |         - |          NA |
+|         Method |      Mean |     Error |    StdDev |    Median |         Ratio | RatioSD | Allocated | Alloc Ratio |
+|--------------- |----------:|----------:|----------:|----------:|--------------:|--------:|----------:|------------:|
+|       OptiLinq |  1.298 ns | 0.0240 ns | 0.0201 ns |  1.297 ns | 13.40x faster |   0.27x |         - |          NA |
+|           Linq | 17.389 ns | 0.2008 ns | 0.1878 ns | 17.347 ns |      baseline |         |         - |          NA |
+| EnumerableLinq | 18.215 ns | 0.4436 ns | 1.2941 ns | 17.510 ns |  1.06x slower |   0.08x |         - |          NA |

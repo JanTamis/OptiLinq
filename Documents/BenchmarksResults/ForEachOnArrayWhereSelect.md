@@ -1,7 +1,7 @@
 ﻿## ForEachOnArrayWhereSelect
 
 ### Source
-[ForEachOnArrayWhereSelect.cs](../../src/StructLinq.Benchmark/ForEachOnArrayWhereSelect.cs)
+[ForEachOnArrayWhereSelect.cs](../../src/OptiLinq.Benchmark/ForEachOnArrayWhereSelect.cs)
 
 ### Results:
 ``` ini
@@ -14,10 +14,10 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|                           Method |     Mean |    Error |   StdDev |   Median | Allocated |
-|--------------------------------- |---------:|---------:|---------:|---------:|----------:|
-|                         OptiLinq | 18.86 μs | 0.029 μs | 0.024 μs | 18.86 μs |         - |
-|             OptiLinqAsEnumerable | 38.53 μs | 0.062 μs | 0.055 μs | 38.52 μs |      80 B |
-|             OptiLinqWithDelegate | 49.65 μs | 0.871 μs | 2.184 μs | 48.65 μs |         - |
-|                          SysLinq | 55.85 μs | 0.401 μs | 0.335 μs | 55.69 μs |     104 B |
-| OptiLinqWithDelegateAsEnumerable | 59.15 μs | 0.157 μs | 0.131 μs | 59.15 μs |      96 B |
+|                           Method |     Mean |    Error |   StdDev | Allocated |
+|--------------------------------- |---------:|---------:|---------:|----------:|
+|                         OptiLinq | 22.83 μs | 0.149 μs | 0.132 μs |         - |
+|             OptiLinqAsEnumerable | 35.29 μs | 0.337 μs | 0.299 μs |      80 B |
+|             OptiLinqWithDelegate | 45.54 μs | 0.646 μs | 0.572 μs |         - |
+|                          SysLinq | 49.15 μs | 0.352 μs | 0.312 μs |     104 B |
+| OptiLinqWithDelegateAsEnumerable | 59.71 μs | 0.544 μs | 0.781 μs |      96 B |

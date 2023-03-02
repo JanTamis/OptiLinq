@@ -63,7 +63,7 @@ public interface IOptiQuery<T>
 	IOptiEnumerator<T> GetEnumerator();
 }
 
-public interface IOptiQuery<T, out TEnumerator> : IOptiQuery<T> where TEnumerator : struct, IOptiEnumerator<T>
+public interface IOptiQuery<T, out TEnumerator> : IOptiQuery<T> where TEnumerator : IOptiEnumerator<T>
 {
 	new TEnumerator GetEnumerator();
 }

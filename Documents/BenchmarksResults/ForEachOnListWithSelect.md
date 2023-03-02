@@ -1,7 +1,7 @@
 ﻿## ForEachOnListWithSelect
 
 ### Source
-[ForEachOnListWithSelect.cs](../../src/StructLinq.Benchmark/ForEachOnListWithSelect.cs)
+[ForEachOnListWithSelect.cs](../../src/OptiLinq.Benchmark/ForEachOnListWithSelect.cs)
 
 ### Results:
 ``` ini
@@ -16,8 +16,8 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 ```
 |                             Method |     Mean |    Error |   StdDev |        Ratio | RatioSD | Allocated | Alloc Ratio |
 |----------------------------------- |---------:|---------:|---------:|-------------:|--------:|----------:|------------:|
-|             OptiLinqWithStructFunc | 28.30 μs | 0.225 μs | 0.199 μs | 2.71x faster |   0.05x |         - |          NA |
-|                   OptiLinqWithFunc | 32.57 μs | 0.408 μs | 0.382 μs | 2.36x faster |   0.04x |         - |          NA |
-| OptiLinqWithStructFuncAsEnumerable | 76.14 μs | 0.991 μs | 0.927 μs | 1.01x faster |   0.01x |      80 B |  1.11x more |
-|                               LINQ | 76.75 μs | 1.160 μs | 1.028 μs |     baseline |         |      72 B |             |
-|       OptiLinqWithFuncAsEnumerable | 89.71 μs | 1.060 μs | 0.991 μs | 1.17x slower |   0.02x |      80 B |  1.11x more |
+|             OptiLinqWithStructFunc | 17.38 μs | 0.148 μs | 0.124 μs | 3.97x faster |   0.06x |         - |          NA |
+|                   OptiLinqWithFunc | 23.94 μs | 0.267 μs | 0.237 μs | 2.88x faster |   0.04x |         - |          NA |
+| OptiLinqWithStructFuncAsEnumerable | 61.76 μs | 1.234 μs | 1.848 μs | 1.11x faster |   0.04x |      72 B |  1.00x more |
+|                               LINQ | 68.96 μs | 0.660 μs | 0.585 μs |     baseline |         |      72 B |             |
+|       OptiLinqWithFuncAsEnumerable | 75.61 μs | 0.511 μs | 0.399 μs | 1.10x slower |   0.01x |      72 B |  1.00x more |

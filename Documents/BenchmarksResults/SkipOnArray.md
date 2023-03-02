@@ -1,7 +1,7 @@
 ﻿## SkipOnArray
 
 ### Source
-[SkipOnArray.cs](../../src/StructLinq.Benchmark/SkipOnArray.cs)
+[SkipOnArray.cs](../../src/OptiLinq.Benchmark/SkipOnArray.cs)
 
 ### Results:
 ``` ini
@@ -14,7 +14,7 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|   Method |     Mean |    Error |    StdDev |        Ratio | RatioSD | Allocated | Alloc Ratio |
-|--------- |---------:|---------:|----------:|-------------:|--------:|----------:|------------:|
-| OptiLinq | 14.62 μs | 0.032 μs |  0.025 μs | 7.19x faster |   0.63x |         - |          NA |
-|     Linq | 97.26 μs | 4.250 μs | 12.464 μs |     baseline |         |      48 B |             |
+|   Method |     Mean |    Error |   StdDev |        Ratio | RatioSD | Allocated | Alloc Ratio |
+|--------- |---------:|---------:|---------:|-------------:|--------:|----------:|------------:|
+| OptiLinq | 11.96 μs | 0.085 μs | 0.075 μs | 5.56x faster |   0.09x |         - |          NA |
+|     Linq | 66.44 μs | 0.964 μs | 0.902 μs |     baseline |         |      48 B |             |

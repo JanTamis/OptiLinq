@@ -1,7 +1,7 @@
 ﻿## ToArrayComparison
 
 ### Source
-[ToArrayComparison.cs](../../src/StructLinq.Benchmark/ToArrayComparison.cs)
+[ToArrayComparison.cs](../../src/OptiLinq.Benchmark/ToArrayComparison.cs)
 
 ### Results:
 ``` ini
@@ -16,6 +16,6 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 ```
 |             Method |      Mean |     Error |    StdDev |    Gen0 |   Gen1 | Allocated |
 |------------------- |----------:|----------:|----------:|--------:|-------:|----------:|
-|    OptiLinqToArray |  1.954 μs | 0.0160 μs | 0.0134 μs |  4.7607 | 0.5951 |  39.09 KB |
-| UseCountForToArray |  7.404 μs | 0.0708 μs | 0.0591 μs |  4.7607 | 0.5951 |  39.09 KB |
-|  ToListThenToArray | 28.299 μs | 0.3293 μs | 0.2919 μs | 20.3857 | 2.5330 | 167.41 KB |
+|    OptiLinqToArray |  1.533 μs | 0.0305 μs | 0.0327 μs |  4.7607 | 0.5951 |  39.09 KB |
+| UseCountForToArray |  6.011 μs | 0.0733 μs | 0.0650 μs |  4.7607 | 0.5951 |  39.09 KB |
+|  ToListThenToArray | 22.931 μs | 0.4506 μs | 0.3994 μs | 20.3857 | 2.5330 | 167.41 KB |

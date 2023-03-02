@@ -1,11 +1,12 @@
 using System.Numerics;
+using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public partial struct ConcatQuery<T, TFirstQuery, TSecondQuery>
+public partial struct ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery>
 {
-	public TakeLastQuery<T, ConcatQuery<T, TFirstQuery, TSecondQuery>, ConcatEnumerator<T>> TakeLast(int count)
+	public TakeLastQuery<T, ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery>, ConcatEnumerator<T, TFirstEnumerator, IOptiEnumerator<T>>> TakeLast(int count)
 	{
-		return new TakeLastQuery<T, ConcatQuery<T, TFirstQuery, TSecondQuery>, ConcatEnumerator<T>>(this, count);
+		return new TakeLastQuery<T, ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery>, ConcatEnumerator<T, TFirstEnumerator, IOptiEnumerator<T>>>(this, count);
 	}
 }

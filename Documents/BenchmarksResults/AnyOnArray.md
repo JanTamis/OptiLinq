@@ -1,7 +1,7 @@
 ﻿## AnyOnArray
 
 ### Source
-[AnyOnArray.cs](../../src/StructLinq.Benchmark/AnyOnArray.cs)
+[AnyOnArray.cs](../../src/OptiLinq.Benchmark/AnyOnArray.cs)
 
 ### Results:
 ``` ini
@@ -14,9 +14,9 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|            Method |       Mean |    Error |   StdDev | Ratio |   Gen0 | Allocated | Alloc Ratio |
-|------------------ |-----------:|---------:|---------:|------:|-------:|----------:|------------:|
-|               For |   279.6 ns |  4.10 ns |  3.84 ns |  0.09 |      - |         - |        0.00 |
-|              Linq | 3,219.1 ns | 43.69 ns | 40.87 ns |  1.00 | 0.0038 |      32 B |        1.00 |
-|  DelegateOptiLinq | 1,113.3 ns | 17.75 ns | 16.60 ns |  0.35 | 0.0019 |      24 B |        0.75 |
-| IFunctionOptiLinq |   279.0 ns |  3.13 ns |  2.77 ns |  0.09 |      - |         - |        0.00 |
+|            Method |       Mean |    Error |   StdDev |         Ratio | RatioSD |   Gen0 | Allocated | Alloc Ratio |
+|------------------ |-----------:|---------:|---------:|--------------:|--------:|-------:|----------:|------------:|
+|               For |   261.1 ns |  4.18 ns |  4.10 ns | 11.14x faster |   0.21x |      - |         - |          NA |
+| IFunctionOptiLinq |   263.4 ns |  4.95 ns |  4.39 ns | 11.04x faster |   0.20x |      - |         - |          NA |
+|  DelegateOptiLinq | 1,025.8 ns | 10.42 ns |  8.70 ns |  2.84x faster |   0.03x | 0.0019 |      24 B |  1.33x less |
+|              Linq | 2,912.9 ns | 16.59 ns | 12.95 ns |      baseline |         | 0.0038 |      32 B |             |

@@ -4,7 +4,7 @@ namespace OptiLinq;
 
 public struct ArrayEnumerator<T> : IOptiEnumerator<T>
 {
-	private readonly T[] _array;
+	private T[] _array;
 	private int _index;
 
 	internal ArrayEnumerator(T[] list)
@@ -13,12 +13,26 @@ public struct ArrayEnumerator<T> : IOptiEnumerator<T>
 		_index = -1;
 	}
 
-	public T Current => _array[_index];
+	public T Current
+	{
+		get
+		{
+			var index = _index;
+			var array = _array;
+
+			if ((uint)index >= (uint)array.Length)
+			{
+				throw new InvalidOperationException();
+			}
+
+			return array[index];
+		}
+	}
 
 	public bool MoveNext()
 	{
 		var index = _index + 1;
-
+		
 		if ((uint)index >= (uint)_array.Length)
 		{
 			_index = _array.Length;

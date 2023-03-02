@@ -1,7 +1,7 @@
 ﻿## ArraySelectCount
 
 ### Source
-[ArraySelectCount.cs](../../src/StructLinq.Benchmark/ArraySelectCount.cs)
+[ArraySelectCount.cs](../../src/OptiLinq.Benchmark/ArraySelectCount.cs)
 
 ### Results:
 ``` ini
@@ -14,8 +14,8 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|          Method |           Mean |       Error |      StdDev | Ratio | Allocated | Alloc Ratio |
-|---------------- |---------------:|------------:|------------:|------:|----------:|------------:|
-|            Linq | 20,652.5252 ns | 325.7875 ns | 288.8021 ns | 1.000 |      48 B |        1.00 |
-|  DelegateSelect |      0.7355 ns |   0.0132 ns |   0.0117 ns | 0.000 |         - |        0.00 |
-| IFunctionSelect |      0.0308 ns |   0.0139 ns |   0.0123 ns | 0.000 |         - |        0.00 |
+|          Method |           Mean |       Error |      StdDev |              Ratio | RatioSD | Allocated | Alloc Ratio |
+|---------------- |---------------:|------------:|------------:|-------------------:|--------:|----------:|------------:|
+| IFunctionSelect |      0.0179 ns |   0.0177 ns |   0.0148 ns |                 NA |      NA |         - |          NA |
+|  DelegateSelect |      0.6325 ns |   0.0198 ns |   0.0166 ns | 28,077.367x faster | 663.97x |         - |          NA |
+|            Linq | 17,750.6053 ns | 239.1388 ns | 199.6917 ns |           baseline |         |      48 B |             |

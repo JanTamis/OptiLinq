@@ -1,7 +1,7 @@
 ﻿## WhereOnArrayOfClass
 
 ### Source
-[WhereOnArrayOfClass.cs](../../src/StructLinq.Benchmark/WhereOnArrayOfClass.cs)
+[WhereOnArrayOfClass.cs](../../src/OptiLinq.Benchmark/WhereOnArrayOfClass.cs)
 
 ### Results:
 ``` ini
@@ -16,10 +16,10 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 ```
 |                  Method |       Mean |     Error |    StdDev |         Ratio | RatioSD | Allocated | Alloc Ratio |
 |------------------------ |-----------:|----------:|----------:|--------------:|--------:|----------:|------------:|
-|               Handmaded |   8.078 μs | 0.1608 μs | 0.1720 μs |      baseline |         |         - |          NA |
-|                    LINQ |  53.407 μs | 0.1529 μs | 0.1355 μs |  6.60x slower |   0.15x |      48 B |          NA |
-|                 LinqSum |  61.485 μs | 0.2831 μs | 0.2510 μs |  7.59x slower |   0.18x |      48 B |          NA |
-|    OptiLinqWithFunction |  90.221 μs | 1.7408 μs | 2.3828 μs | 11.22x slower |   0.34x |         - |          NA |
-| OptiLinqWithFunctionSum | 125.524 μs | 0.2989 μs | 0.2649 μs | 15.50x slower |   0.36x |      32 B |          NA |
-|                OptiLinq | 137.143 μs | 0.3330 μs | 0.2780 μs | 16.91x slower |   0.39x |         - |          NA |
-|             OptiLinqSum | 167.445 μs | 1.9707 μs | 1.7470 μs | 20.68x slower |   0.40x |      32 B |          NA |
+|               Handmaded |   6.912 μs | 0.0690 μs | 0.0645 μs |      baseline |         |         - |          NA |
+|                    LINQ |  46.586 μs | 0.4736 μs | 0.4430 μs |  6.74x slower |   0.08x |      48 B |          NA |
+|                 LinqSum |  53.736 μs | 0.4936 μs | 0.4375 μs |  7.78x slower |   0.10x |      48 B |          NA |
+|    OptiLinqWithFunction |  78.945 μs | 0.8509 μs | 0.7959 μs | 11.42x slower |   0.20x |         - |          NA |
+| OptiLinqWithFunctionSum | 110.914 μs | 0.9400 μs | 0.7849 μs | 16.05x slower |   0.17x |      32 B |          NA |
+|                OptiLinq | 120.520 μs | 2.1833 μs | 2.0422 μs | 17.44x slower |   0.30x |         - |          NA |
+|             OptiLinqSum | 151.322 μs | 2.7864 μs | 5.4346 μs | 22.18x slower |   1.15x |      32 B |          NA |

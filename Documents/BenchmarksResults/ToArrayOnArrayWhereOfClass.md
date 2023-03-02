@@ -1,7 +1,7 @@
 ﻿## ToArrayOnArrayWhereOfClass
 
 ### Source
-[ToArrayOnArrayWhereOfClass.cs](../../src/StructLinq.Benchmark/ToArrayOnArrayWhereOfClass.cs)
+[ToArrayOnArrayWhereOfClass.cs](../../src/OptiLinq.Benchmark/ToArrayOnArrayWhereOfClass.cs)
 
 ### Results:
 ``` ini
@@ -14,8 +14,8 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|               Method |      Mean |    Error |   StdDev |    Median |        Ratio | RatioSD |    Gen0 |   Gen1 | Allocated | Alloc Ratio |
-|--------------------- |----------:|---------:|---------:|----------:|-------------:|--------:|--------:|-------:|----------:|------------:|
-|                 Linq |  72.67 μs | 0.900 μs | 0.702 μs |  72.42 μs |     baseline |         | 12.5732 | 2.0752 | 103.73 KB |             |
-| OptiLinqWithFunction | 134.84 μs | 1.539 μs | 1.440 μs | 135.02 μs | 1.86x slower |   0.03x | 12.4512 | 1.7090 | 103.69 KB |  1.00x less |
-|             OptiLinq | 176.99 μs | 3.425 μs | 4.453 μs | 174.39 μs | 2.47x slower |   0.06x | 12.4512 | 1.7090 | 103.69 KB |  1.00x less |
+|               Method |      Mean |    Error |   StdDev |        Ratio | RatioSD |    Gen0 |   Gen1 | Allocated | Alloc Ratio |
+|--------------------- |----------:|---------:|---------:|-------------:|--------:|--------:|-------:|----------:|------------:|
+|                 Linq |  51.56 μs | 0.581 μs | 0.515 μs |     baseline |         | 12.6343 | 2.0752 | 103.73 KB |             |
+| OptiLinqWithFunction | 108.83 μs | 1.166 μs | 1.033 μs | 2.11x slower |   0.03x | 12.5732 | 1.7090 | 103.69 KB |  1.00x less |
+|             OptiLinq | 149.22 μs | 1.852 μs | 1.642 μs | 2.89x slower |   0.04x | 12.4512 | 1.7090 | 103.69 KB |  1.00x less |

@@ -6,9 +6,10 @@ using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public partial struct ConcatQuery<T, TFirstQuery, TSecondQuery> : IOptiQuery<T, ConcatEnumerator<T>>
-	where TFirstQuery : struct, IOptiQuery<T>
+public partial struct ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery> : IOptiQuery<T, ConcatEnumerator<T, TFirstEnumerator, IOptiEnumerator<T>>>
+	where TFirstQuery : struct, IOptiQuery<T, TFirstEnumerator>
 	where TSecondQuery : struct, IOptiQuery<T>
+	where TFirstEnumerator : struct, IOptiEnumerator<T>
 {
 	private TFirstQuery _firstQuery;
 	private TSecondQuery _secondQuery;
@@ -48,7 +49,7 @@ public partial struct ConcatQuery<T, TFirstQuery, TSecondQuery> : IOptiQuery<T, 
 
 	public IEnumerable<T> AsEnumerable()
 	{
-		return new QueryAsEnumerable<T, ConcatQuery<T, TFirstQuery, TSecondQuery>, ConcatEnumerator<T>>(this);
+		return new QueryAsEnumerable<T, ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery>, ConcatEnumerator<T, TFirstEnumerator, IOptiEnumerator<T>>>(this);
 	}
 
 	public bool Contains<TComparer>(T item, TComparer comparer) where TComparer : IEqualityComparer<T>
@@ -369,9 +370,9 @@ public partial struct ConcatQuery<T, TFirstQuery, TSecondQuery> : IOptiQuery<T, 
 		return false;
 	}
 
-	public ConcatEnumerator<T> GetEnumerator()
+	public ConcatEnumerator<T, TFirstEnumerator, IOptiEnumerator<T>> GetEnumerator()
 	{
-		return new ConcatEnumerator<T>(_firstQuery.GetEnumerator(), _secondQuery.GetEnumerator());
+		return new ConcatEnumerator<T, TFirstEnumerator, IOptiEnumerator<T>>(_firstQuery.GetEnumerator(), _secondQuery.GetEnumerator());
 	}
 
 	IOptiEnumerator<T> IOptiQuery<T>.GetEnumerator() => GetEnumerator();

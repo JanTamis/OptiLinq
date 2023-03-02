@@ -1,9 +1,11 @@
+using OptiLinq.Interfaces;
+
 namespace OptiLinq;
 
-public partial struct ConcatQuery<T, TFirstQuery, TSecondQuery>
+public partial struct ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery>
 {
-	public ReverseQuery<T, ConcatQuery<T, TFirstQuery, TSecondQuery>, ConcatEnumerator<T>> Reverse()
+	public ReverseQuery<T, ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery>, ConcatEnumerator<T, TFirstEnumerator, IOptiEnumerator<T>>> Reverse()
 	{
-		return new ReverseQuery<T, ConcatQuery<T, TFirstQuery, TSecondQuery>, ConcatEnumerator<T>>(ref this);
+		return new ReverseQuery<T, ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery>, ConcatEnumerator<T, TFirstEnumerator, IOptiEnumerator<T>>>(ref this);
 	}
 }

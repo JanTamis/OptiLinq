@@ -1,7 +1,7 @@
 ﻿## ArrayOfClassSum
 
 ### Source
-[ArrayOfClassSum.cs](../../src/StructLinq.Benchmark/ArrayOfClassSum.cs)
+[ArrayOfClassSum.cs](../../src/OptiLinq.Benchmark/ArrayOfClassSum.cs)
 
 ### Results:
 ``` ini
@@ -14,9 +14,9 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|       Method |        Mean |    Error |   StdDev | Ratio | Allocated | Alloc Ratio |
-|------------- |------------:|---------:|---------:|------:|----------:|------------:|
-|    Handmaded |    505.7 ns |  1.45 ns |  1.21 ns |  0.07 |         - |        0.00 |
-|      LINQSum |  7,430.6 ns | 14.87 ns | 12.42 ns |  1.00 |      48 B |        1.00 |
-|  DelegateSum | 11,332.7 ns | 30.63 ns | 25.58 ns |  1.53 |      32 B |        0.67 |
-| IFunctionSum |  3,713.8 ns |  3.02 ns |  2.36 ns |  0.50 |      24 B |        0.50 |
+|       Method |        Mean |     Error |    StdDev |         Ratio | RatioSD | Allocated | Alloc Ratio |
+|------------- |------------:|----------:|----------:|--------------:|--------:|----------:|------------:|
+|    Handmaded |    452.1 ns |   4.99 ns |   4.67 ns | 14.68x faster |   0.18x |         - |          NA |
+| IFunctionSum |  3,295.4 ns |  17.28 ns |  14.43 ns |  2.01x faster |   0.02x |      24 B |  2.00x less |
+|      LINQSum |  6,635.7 ns |  77.12 ns |  64.40 ns |      baseline |         |      48 B |             |
+|  DelegateSum | 10,866.1 ns | 184.64 ns | 281.97 ns |  1.65x slower |   0.05x |      32 B |  1.50x less |

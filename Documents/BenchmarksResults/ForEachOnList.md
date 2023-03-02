@@ -1,7 +1,7 @@
 ﻿## ForEachOnList
 
 ### Source
-[ForEachOnList.cs](../../src/StructLinq.Benchmark/ForEachOnList.cs)
+[ForEachOnList.cs](../../src/OptiLinq.Benchmark/ForEachOnList.cs)
 
 ### Results:
 ``` ini
@@ -14,7 +14,7 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|   Method |     Mean |    Error |   StdDev |        Ratio | RatioSD | Allocated | Alloc Ratio |
-|--------- |---------:|---------:|---------:|-------------:|--------:|----------:|------------:|
-|  Default | 11.11 μs | 0.131 μs | 0.122 μs |     baseline |         |         - |          NA |
-| OptiLinq | 16.84 μs | 0.027 μs | 0.024 μs | 1.51x slower |   0.02x |         - |          NA |
+|   Method |      Mean |     Error |    StdDev |        Ratio | RatioSD | Allocated | Alloc Ratio |
+|--------- |----------:|----------:|----------:|-------------:|--------:|----------:|------------:|
+|  Default |  9.849 μs | 0.1047 μs | 0.0874 μs |     baseline |         |         - |          NA |
+| OptiLinq | 15.487 μs | 0.3076 μs | 0.4697 μs | 1.60x slower |   0.05x |         - |          NA |

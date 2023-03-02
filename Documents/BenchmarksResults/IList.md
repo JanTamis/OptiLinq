@@ -1,7 +1,7 @@
 ﻿## IList
 
 ### Source
-[IList.cs](../../src/StructLinq.Benchmark/IList.cs)
+[IList.cs](../../src/OptiLinq.Benchmark/IList.cs)
 
 ### Results:
 ``` ini
@@ -16,5 +16,5 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 ```
 |   Method |     Mean |    Error |   StdDev |        Ratio | RatioSD | Allocated | Alloc Ratio |
 |--------- |---------:|---------:|---------:|-------------:|--------:|----------:|------------:|
-| OptiLinq | 75.96 μs | 0.115 μs | 0.102 μs | 1.08x faster |   0.05x |      40 B |  1.00x more |
-|     Linq | 87.30 μs | 2.259 μs | 6.589 μs |     baseline |         |      40 B |             |
+| OptiLinq | 72.04 μs | 1.428 μs | 2.048 μs | 1.02x faster |   0.03x |      40 B |  1.00x more |
+|     Linq | 73.80 μs | 1.042 μs | 0.975 μs |     baseline |         |      40 B |             |

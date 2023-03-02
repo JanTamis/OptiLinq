@@ -2,12 +2,14 @@ using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public struct ConcatEnumerator<T> : IOptiEnumerator<T>
+public struct ConcatEnumerator<T, TFirstEnumerator, TSecondEnumerator> : IOptiEnumerator<T>
+	where TFirstEnumerator : IOptiEnumerator<T>
+	where TSecondEnumerator : IOptiEnumerator<T>
 {
-	private readonly IOptiEnumerator<T> _firstEnumerator;
-	private readonly IOptiEnumerator<T> _secondEnumerator;
+	private TFirstEnumerator _firstEnumerator;
+	private TSecondEnumerator _secondEnumerator;
 
-	public ConcatEnumerator(IOptiEnumerator<T> firstEnumerator, IOptiEnumerator<T> secondEnumerator)
+	public ConcatEnumerator(TFirstEnumerator firstEnumerator, TSecondEnumerator secondEnumerator)
 	{
 		_firstEnumerator = firstEnumerator;
 		_secondEnumerator = secondEnumerator;

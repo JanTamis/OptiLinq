@@ -1,7 +1,7 @@
 ﻿## SumOnSelectMany
 
 ### Source
-[SumOnSelectMany.cs](../../src/StructLinq.Benchmark/SumOnSelectMany.cs)
+[SumOnSelectMany.cs](../../src/OptiLinq.Benchmark/SumOnSelectMany.cs)
 
 ### Results:
 ``` ini
@@ -14,10 +14,10 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|                           Method |       Mean |    Error |  StdDev |         Ratio | RatioSD |   Gen0 | Allocated |     Alloc Ratio |
-|--------------------------------- |-----------:|---------:|--------:|--------------:|--------:|-------:|----------:|----------------:|
-|                         OptiLINQ |   288.5 μs |  1.47 μs | 1.38 μs | 17.78x faster |   0.08x | 2.4414 |   24032 B |     1.335x less |
-|             OptiLinqWithFunction |   307.6 μs |  0.42 μs | 0.35 μs | 16.67x faster |   0.04x |      - |      32 B | 1,002.219x less |
-| StructLINQWhereReturnIsOptiQuery | 1,142.7 μs |  0.91 μs | 0.71 μs |  4.49x faster |   0.01x |      - |      34 B |   943.265x less |
-|  OptiLINQWithFunctionWithForeach | 4,444.2 μs | 10.91 μs | 9.11 μs |  1.15x faster |   0.00x |      - |   32007 B |     1.002x less |
-|                             LINQ | 5,128.5 μs | 10.08 μs | 8.42 μs |      baseline |         |      - |   32071 B |                 |
+|                          Method |       Mean |    Error |   StdDev |         Ratio | RatioSD |   Gen0 | Allocated |     Alloc Ratio |
+|-------------------------------- |-----------:|---------:|---------:|--------------:|--------:|-------:|----------:|----------------:|
+|                        OptiLINQ |   229.3 μs |  2.09 μs |  1.85 μs | 17.56x faster |   0.22x | 2.6855 |   24032 B |     1.335x less |
+|            OptiLinqWithFunction |   257.3 μs |  3.19 μs |  2.66 μs | 15.66x faster |   0.31x |      - |      32 B | 1,002.219x less |
+|  OptiLINQWhereReturnIsOptiQuery |   835.4 μs |  8.66 μs |  7.68 μs |  4.82x faster |   0.07x |      - |      33 B |   971.848x less |
+| OptiLINQWithFunctionWithForeach | 3,891.3 μs | 25.60 μs | 22.69 μs |  1.03x faster |   0.02x |      - |   32004 B |     1.002x less |
+|                            LINQ | 4,025.4 μs | 60.67 μs | 53.78 μs |      baseline |         |      - |   32071 B |                 |

@@ -1,7 +1,7 @@
 ﻿## SelectManyOnArray
 
 ### Source
-[SelectManyOnArray.cs](../../src/StructLinq.Benchmark/SelectManyOnArray.cs)
+[SelectManyOnArray.cs](../../src/OptiLinq.Benchmark/SelectManyOnArray.cs)
 
 ### Results:
 ``` ini
@@ -16,6 +16,6 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 ```
 |               Method |     Mean |     Error |    StdDev |        Ratio | RatioSD | Allocated | Alloc Ratio |
 |--------------------- |---------:|----------:|----------:|-------------:|--------:|----------:|------------:|
-| OptiLINQWithDelegate | 4.712 ms | 0.0154 ms | 0.0129 ms | 1.06x faster |   0.01x |  31.26 KB |  1.00x less |
-| OptiLINQWithFunction | 4.760 ms | 0.0907 ms | 0.0970 ms | 1.05x faster |   0.03x |  31.26 KB |  1.00x less |
-|                 LINQ | 4.979 ms | 0.0686 ms | 0.0608 ms |     baseline |         |  31.32 KB |             |
+|                 LINQ | 4.079 ms | 0.0379 ms | 0.0336 ms |     baseline |         |  31.32 KB |             |
+| OptiLINQWithDelegate | 4.082 ms | 0.0695 ms | 0.0616 ms | 1.00x slower |   0.02x |  31.26 KB |  1.00x less |
+| OptiLINQWithFunction | 4.105 ms | 0.0578 ms | 0.0512 ms | 1.01x slower |   0.02x |  31.26 KB |  1.00x less |

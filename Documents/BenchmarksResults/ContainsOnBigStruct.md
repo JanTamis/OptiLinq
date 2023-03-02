@@ -1,7 +1,7 @@
 ﻿## ContainsOnBigStruct
 
 ### Source
-[ContainsOnBigStruct.cs](../../src/StructLinq.Benchmark/ContainsOnBigStruct.cs)
+[ContainsOnBigStruct.cs](../../src/OptiLinq.Benchmark/ContainsOnBigStruct.cs)
 
 ### Results:
 ``` ini
@@ -14,9 +14,9 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|                     Method |         Mean |      Error |     StdDev | Ratio | RatioSD |     Gen0 | Allocated | Alloc Ratio |
-|--------------------------- |-------------:|-----------:|-----------:|------:|--------:|---------:|----------:|------------:|
-|                       Linq | 1,560.013 μs | 22.8059 μs | 21.3326 μs | 1.000 |    0.00 | 152.3438 | 1280650 B |        1.00 |
-|                      Array | 1,512.675 μs |  5.2832 μs |  4.9419 μs | 0.970 |    0.01 | 152.3438 | 1280650 B |        1.00 |
-|                   OptiLinq | 1,477.412 μs | 25.2317 μs | 23.6017 μs | 0.947 |    0.02 | 152.3438 | 1280650 B |        1.00 |
-| OptiLinqWithCustomComparer |     7.296 μs |  0.0098 μs |  0.0081 μs | 0.005 |    0.00 |        - |         - |        0.00 |
+|                     Method |         Mean |      Error |     StdDev |           Ratio | RatioSD |     Gen0 | Allocated | Alloc Ratio |
+|--------------------------- |-------------:|-----------:|-----------:|----------------:|--------:|---------:|----------:|------------:|
+| OptiLinqWithCustomComparer |     6.296 μs |  0.0458 μs |  0.0406 μs | 218.905x faster |   4.18x |        - |         - |          NA |
+|                   OptiLinq | 1,270.410 μs | 12.2474 μs | 10.8570 μs |   1.085x faster |   0.02x | 152.3438 | 1280650 B |  1.00x more |
+|                      Array | 1,373.311 μs | 13.1138 μs | 12.2666 μs |   1.002x faster |   0.02x | 152.3438 | 1280650 B |  1.00x more |
+|                       Linq | 1,375.833 μs | 23.6665 μs | 22.1377 μs |        baseline |         | 152.3438 | 1280650 B |             |

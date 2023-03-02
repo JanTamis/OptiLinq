@@ -5,10 +5,11 @@ using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public partial struct ZipQuery<T, TResult, TOperator, TFirstQuery, TSecondQuery> : IOptiQuery<TResult, ZipEnumerator<T, TResult, TOperator>>
+public partial struct ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumerator, TSecondQuery> : IOptiQuery<TResult, ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IOptiEnumerator<T>>>
 	where TOperator : struct, IFunction<T, T, TResult>
-	where TFirstQuery : struct, IOptiQuery<T>
+	where TFirstQuery : struct, IOptiQuery<T, TFirstEnumerator>
 	where TSecondQuery : struct, IOptiQuery<T>
+	where TFirstEnumerator : struct, IOptiEnumerator<T>
 {
 	private readonly TOperator _operator;
 	private TFirstQuery _firstQuery;
@@ -273,12 +274,12 @@ public partial struct ZipQuery<T, TResult, TOperator, TFirstQuery, TSecondQuery>
 
 	public TResult Max()
 	{
-		return EnumerableHelper.Max<TResult, ZipEnumerator<T, TResult, TOperator>>(GetEnumerator());
+		return EnumerableHelper.Max<TResult, ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IOptiEnumerator<T>>>(GetEnumerator());
 	}
 
 	public TResult Min()
 	{
-		return EnumerableHelper.Min<TResult, ZipEnumerator<T, TResult, TOperator>>(GetEnumerator());
+		return EnumerableHelper.Min<TResult, ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IOptiEnumerator<T>>>(GetEnumerator());
 	}
 
 	public bool TryGetSingle(out TResult item)
@@ -319,12 +320,12 @@ public partial struct ZipQuery<T, TResult, TOperator, TFirstQuery, TSecondQuery>
 
 	public TResult[] ToArray()
 	{
-		return EnumerableHelper.ToArray<TResult, ZipQuery<T, TResult, TOperator, TFirstQuery, TSecondQuery>, ZipEnumerator<T, TResult, TOperator>>(this, out _);
+		return EnumerableHelper.ToArray<TResult, ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumerator, TSecondQuery>, ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IOptiEnumerator<T>>>(this, out _);
 	}
 
 	public TResult[] ToArray(out int length)
 	{
-		return EnumerableHelper.ToArray<TResult, ZipQuery<T, TResult, TOperator, TFirstQuery, TSecondQuery>, ZipEnumerator<T, TResult, TOperator>>(this, out length);
+		return EnumerableHelper.ToArray<TResult, ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumerator, TSecondQuery>, ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IOptiEnumerator<T>>>(this, out length);
 	}
 
 	public HashSet<TResult> ToHashSet(IEqualityComparer<TResult>? comparer = default)
@@ -375,9 +376,9 @@ public partial struct ZipQuery<T, TResult, TOperator, TFirstQuery, TSecondQuery>
 		return false;
 	}
 
-	public ZipEnumerator<T, TResult, TOperator> GetEnumerator()
+	public ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IOptiEnumerator<T>> GetEnumerator()
 	{
-		return new ZipEnumerator<T, TResult, TOperator>(in _operator, _firstQuery.GetEnumerator(), _secondQuery.GetEnumerator());
+		return new ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IOptiEnumerator<T>>(in _operator, _firstQuery.GetEnumerator(), _secondQuery.GetEnumerator());
 	}
 
 	IOptiEnumerator<TResult> IOptiQuery<TResult>.GetEnumerator() => GetEnumerator();

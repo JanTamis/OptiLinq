@@ -1,7 +1,7 @@
 ﻿## ForEachDuckTyping
 
 ### Source
-[ForEachDuckTyping.cs](../../src/StructLinq.Benchmark/ForEachDuckTyping.cs)
+[ForEachDuckTyping.cs](../../src/OptiLinq.Benchmark/ForEachDuckTyping.cs)
 
 ### Results:
 ``` ini
@@ -16,9 +16,9 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 ```
 |                                      Method |      Mean |     Error |    StdDev |        Ratio | RatioSD | Allocated | Alloc Ratio |
 |-------------------------------------------- |----------:|----------:|----------:|-------------:|--------:|----------:|------------:|
-|                              ForEachOnArray |  3.458 μs | 0.0053 μs | 0.0047 μs | 1.41x faster |   0.00x |         - |          NA |
-|                                  ForOnArray |  4.871 μs | 0.0058 μs | 0.0049 μs |     baseline |         |         - |          NA |
-|              ForEachOnArrayStructEnumerable |  5.601 μs | 0.0565 μs | 0.0528 μs | 1.15x slower |   0.01x |         - |          NA |
-|                        ForEachOnIEnumerable | 44.940 μs | 0.3955 μs | 0.3700 μs | 9.22x slower |   0.08x |      32 B |          NA |
-|                    ForEachOnYieldEnumerable | 45.266 μs | 0.3817 μs | 0.3384 μs | 9.30x slower |   0.07x |      56 B |          NA |
-| ForEachOnArrayStructEnumerableAsIEnumerable | 45.408 μs | 0.5109 μs | 0.4779 μs | 9.32x slower |   0.11x |      32 B |          NA |
+|                              ForEachOnArray |  3.044 μs | 0.0170 μs | 0.0142 μs | 1.43x faster |   0.01x |         - |          NA |
+|                                  ForOnArray |  4.341 μs | 0.0312 μs | 0.0277 μs |     baseline |         |         - |          NA |
+|              ForEachOnArrayStructEnumerable |  4.999 μs | 0.0543 μs | 0.0481 μs | 1.15x slower |   0.01x |         - |          NA |
+|                    ForEachOnYieldEnumerable | 40.335 μs | 0.3106 μs | 0.2425 μs | 9.29x slower |   0.07x |      56 B |          NA |
+| ForEachOnArrayStructEnumerableAsIEnumerable | 40.534 μs | 0.6276 μs | 0.5240 μs | 9.33x slower |   0.15x |      32 B |          NA |
+|                        ForEachOnIEnumerable | 40.545 μs | 0.4628 μs | 0.4103 μs | 9.34x slower |   0.11x |      32 B |          NA |

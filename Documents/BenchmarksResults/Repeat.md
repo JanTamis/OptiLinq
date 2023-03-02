@@ -1,7 +1,7 @@
 ﻿## Repeat
 
 ### Source
-[Repeat.cs](../../src/StructLinq.Benchmark/Repeat.cs)
+[Repeat.cs](../../src/OptiLinq.Benchmark/Repeat.cs)
 
 ### Results:
 ``` ini
@@ -16,5 +16,5 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 ```
 |           Method |      Mean |     Error |    StdDev |         Ratio | RatioSD | Allocated | Alloc Ratio |
 |----------------- |----------:|----------:|----------:|--------------:|--------:|----------:|------------:|
-|  OptiLinqeRepeat |  2.873 μs | 0.0365 μs | 0.0341 μs | 14.74x faster |   0.90x |         - |          NA |
-| EnumerableRepeat | 44.510 μs | 1.8063 μs | 5.2403 μs |      baseline |         |      32 B |             |
+|  OptiLinqeRepeat |  2.393 μs | 0.0447 μs | 0.0418 μs | 13.66x faster |   0.25x |         - |          NA |
+| EnumerableRepeat | 32.745 μs | 0.2343 μs | 0.1957 μs |      baseline |         |      32 B |             |

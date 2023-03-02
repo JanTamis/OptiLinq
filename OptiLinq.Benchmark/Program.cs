@@ -31,7 +31,7 @@ static void SaveSummary(Summary summary)
 	logger.WriteLine();
 
 	logger.WriteLine("### Source");
-	var sourceLink = new StringBuilder("../../src/StructLinq.Benchmark");
+	var sourceLink = new StringBuilder("../../src/OptiLinq.Benchmark");
 	_ = sourceLink.Append($"/{targetType.Name}.cs");
 	logger.WriteLine($"[{targetType.Name}.cs]({sourceLink})");
 

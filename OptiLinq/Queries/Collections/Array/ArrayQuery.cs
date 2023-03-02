@@ -8,7 +8,7 @@ namespace OptiLinq;
 
 public partial struct ArrayQuery<T> : IOptiQuery<T, ArrayEnumerator<T>>
 {
-	private readonly T[] _array;
+	private T[] _array;
 
 	internal ArrayQuery(T[] list)
 	{

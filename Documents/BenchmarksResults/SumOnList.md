@@ -1,7 +1,7 @@
 ﻿## SumOnList
 
 ### Source
-[SumOnList.cs](../../src/StructLinq.Benchmark/SumOnList.cs)
+[SumOnList.cs](../../src/OptiLinq.Benchmark/SumOnList.cs)
 
 ### Results:
 ``` ini
@@ -14,8 +14,8 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|            Method |      Mean |     Error |    StdDev |    Median |        Ratio | RatioSD | Allocated | Alloc Ratio |
-|------------------ |----------:|----------:|----------:|----------:|-------------:|--------:|----------:|------------:|
-|              Linq |  5.155 μs | 0.2041 μs | 0.5986 μs |  5.012 μs |     baseline |         |         - |          NA |
-| OptiLinqOptimized | 14.693 μs | 0.5724 μs | 1.6878 μs | 14.217 μs | 2.90x slower |   0.51x |         - |          NA |
-|          OptiLinq | 15.985 μs | 0.4746 μs | 1.3918 μs | 15.865 μs | 3.13x slower |   0.40x |      24 B |          NA |
+|            Method |      Mean |     Error |    StdDev |        Ratio | RatioSD | Allocated | Alloc Ratio |
+|------------------ |----------:|----------:|----------:|-------------:|--------:|----------:|------------:|
+|              Linq |  3.331 μs | 0.0241 μs | 0.0202 μs |     baseline |         |         - |          NA |
+| OptiLinqOptimized |  9.357 μs | 0.0854 μs | 0.0757 μs | 2.81x slower |   0.03x |         - |          NA |
+|          OptiLinq | 11.741 μs | 0.1477 μs | 0.1310 μs | 3.52x slower |   0.05x |      24 B |          NA |

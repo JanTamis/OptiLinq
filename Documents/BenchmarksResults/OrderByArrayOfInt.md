@@ -1,7 +1,7 @@
 ﻿## OrderByArrayOfInt
 
 ### Source
-[OrderByArrayOfInt.cs](../../src/StructLinq.Benchmark/OrderByArrayOfInt.cs)
+[OrderByArrayOfInt.cs](../../src/OptiLinq.Benchmark/OrderByArrayOfInt.cs)
 
 ### Results:
 ``` ini
@@ -16,7 +16,7 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 ```
 |                Method |         Mean |      Error |     StdDev |           Ratio | RatioSD |    Gen0 |   Gen1 | Allocated |     Alloc Ratio |
 |---------------------- |-------------:|-----------:|-----------:|----------------:|--------:|--------:|-------:|----------:|----------------:|
-|      OptiLinqOrderSum |     6.032 μs |  0.0918 μs |  0.0859 μs | 255.323x faster |   3.83x |       - |      - |      40 B | 3,007.850x less |
-|         OptiLinqOrder |   554.591 μs |  0.9602 μs |  0.8512 μs |   2.783x faster |   0.01x |  3.9063 |      - |   40377 B |     2.980x less |
-| OptiLinqOrderComparer |   946.786 μs | 12.7841 μs | 11.9582 μs |   1.631x faster |   0.02x |  3.9063 |      - |   40466 B |     2.973x less |
-|                  LINQ | 1,543.446 μs |  4.1496 μs |  3.2397 μs |        baseline |         | 13.6719 | 1.9531 |  120314 B |                 |
+|      OptiLinqOrderSum |     4.969 μs |  0.0410 μs |  0.0343 μs | 259.386x faster |   3.14x |       - |      - |      40 B | 3,007.850x less |
+|         OptiLinqOrder |   459.023 μs |  3.3816 μs |  2.6401 μs |   2.810x faster |   0.03x |  4.3945 | 0.4883 |   40409 B |     2.977x less |
+| OptiLinqOrderComparer |   759.909 μs |  5.1008 μs |  4.7713 μs |   1.695x faster |   0.02x |  3.9063 |      - |   40529 B |     2.969x less |
+|                  LINQ | 1,288.318 μs | 12.4429 μs | 11.6391 μs |        baseline |         | 13.6719 | 1.9531 |  120314 B |                 |

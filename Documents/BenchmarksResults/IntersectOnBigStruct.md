@@ -1,7 +1,7 @@
 ﻿## IntersectOnBigStruct
 
 ### Source
-[IntersectOnBigStruct.cs](../../src/StructLinq.Benchmark/IntersectOnBigStruct.cs)
+[IntersectOnBigStruct.cs](../../src/OptiLinq.Benchmark/IntersectOnBigStruct.cs)
 
 ### Results:
 ``` ini
@@ -14,8 +14,8 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|                    Method |     Mean |   Error |  StdDev |        Ratio | RatioSD |     Gen0 |     Gen1 |     Gen2 | Allocated | Alloc Ratio |
-|-------------------------- |---------:|--------:|--------:|-------------:|--------:|---------:|---------:|---------:|----------:|------------:|
-| RefStructLinqWithComparer | 226.4 μs | 4.52 μs | 4.84 μs | 1.91x faster |   0.05x | 145.7520 | 137.6953 | 137.6953 | 769.15 KB |  2.28x more |
-|                      Linq | 433.1 μs | 6.82 μs | 6.38 μs |     baseline |         |  76.6602 |  76.6602 |  76.6602 | 336.71 KB |             |
-|                StructLinq | 442.5 μs | 6.39 μs | 5.67 μs | 1.02x slower |   0.02x | 165.5273 | 153.3203 | 149.9023 |  831.3 KB |  2.47x more |
+|               Method |     Mean |   Error |  StdDev |        Ratio | RatioSD |     Gen0 |     Gen1 |     Gen2 | Allocated | Alloc Ratio |
+|--------------------- |---------:|--------:|--------:|-------------:|--------:|---------:|---------:|---------:|----------:|------------:|
+| OptiLinqWithComparer | 218.6 μs | 1.78 μs | 1.67 μs | 1.76x faster |   0.02x | 151.6113 | 149.1699 | 141.6016 | 801.14 KB |  2.38x more |
+|                 Linq | 384.0 μs | 3.75 μs | 3.32 μs |     baseline |         |  76.6602 |  76.6602 |  76.6602 | 336.71 KB |             |
+|             OptiLinq | 424.0 μs | 4.95 μs | 4.39 μs | 1.10x slower |   0.01x | 193.8477 | 191.4063 | 176.2695 | 890.68 KB |  2.65x more |

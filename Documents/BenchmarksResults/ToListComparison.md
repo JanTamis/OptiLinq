@@ -1,7 +1,7 @@
 ﻿## ToListComparison
 
 ### Source
-[ToListComparison.cs](../../src/StructLinq.Benchmark/ToListComparison.cs)
+[ToListComparison.cs](../../src/OptiLinq.Benchmark/ToListComparison.cs)
 
 ### Results:
 ``` ini
@@ -16,5 +16,5 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 ```
 |    Method |      Mean |     Error |    StdDev |    Gen0 |   Gen1 | Allocated |
 |---------- |----------:|----------:|----------:|--------:|-------:|----------:|
-|    ToList |  1.633 μs | 0.0166 μs | 0.0147 μs |  4.7607 | 0.5951 |  39.12 KB |
-| AddInList | 25.476 μs | 0.1817 μs | 0.1610 μs | 15.6250 | 3.1128 | 128.32 KB |
+|    ToList |  1.288 μs | 0.0228 μs | 0.0202 μs |  4.7607 | 0.5951 |  39.12 KB |
+| AddInList | 20.468 μs | 0.2618 μs | 0.2321 μs | 15.6250 | 3.1128 | 128.32 KB |

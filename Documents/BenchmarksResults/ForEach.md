@@ -1,7 +1,7 @@
 ﻿## ForEach
 
 ### Source
-[ForEach.cs](../../src/StructLinq.Benchmark/ForEach.cs)
+[ForEach.cs](../../src/OptiLinq.Benchmark/ForEach.cs)
 
 ### Results:
 ``` ini
@@ -14,9 +14,9 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|                      Method |      Mean |     Error |    StdDev |    Median |         Ratio | RatioSD | Allocated | Alloc Ratio |
-|---------------------------- |----------:|----------:|----------:|----------:|--------------:|--------:|----------:|------------:|
-|                  WithStruct |  27.94 μs |  0.244 μs |  0.228 μs |  28.05 μs | 18.11x faster |   1.61x |         - |          NA |
-| ToTypedEnumerableWithStruct | 430.50 μs |  4.596 μs |  4.299 μs | 432.67 μs |  1.17x faster |   0.10x |      40 B |  1.00x more |
-|                  ClrForEach | 440.90 μs | 19.443 μs | 56.099 μs | 412.22 μs |      baseline |         |      40 B |             |
-|                  WithAction | 907.04 μs | 15.062 μs | 14.089 μs | 902.04 μs |  1.81x slower |   0.16x |      49 B |  1.23x more |
+|                      Method |      Mean |    Error |   StdDev |         Ratio | RatioSD | Allocated | Alloc Ratio |
+|---------------------------- |----------:|---------:|---------:|--------------:|--------:|----------:|------------:|
+|                  WithStruct |  24.89 μs | 0.159 μs | 0.141 μs | 13.22x faster |   0.25x |         - |          NA |
+|                  ClrForEach | 329.16 μs | 5.490 μs | 4.867 μs |      baseline |         |      40 B |             |
+| ToTypedEnumerableWithStruct | 383.32 μs | 3.104 μs | 2.592 μs |  1.17x slower |   0.01x |      40 B |  1.00x more |
+|                  WithAction | 800.38 μs | 8.773 μs | 7.326 μs |  2.43x slower |   0.05x |      49 B |  1.23x more |

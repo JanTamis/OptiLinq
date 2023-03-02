@@ -1,7 +1,7 @@
 ﻿## Contains
 
 ### Source
-[Contains.cs](../../src/StructLinq.Benchmark/Contains.cs)
+[Contains.cs](../../src/OptiLinq.Benchmark/Contains.cs)
 
 ### Results:
 ``` ini
@@ -14,8 +14,8 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|   Method |     Mean |   Error |  StdDev | Ratio | Allocated | Alloc Ratio |
-|--------- |---------:|--------:|--------:|------:|----------:|------------:|
-|    Array | 427.2 ns | 1.70 ns | 1.51 ns |  1.00 |         - |          NA |
-|     Linq | 426.0 ns | 0.98 ns | 0.77 ns |  1.00 |         - |          NA |
-| OptiLinq | 427.6 ns | 0.37 ns | 0.31 ns |  1.00 |         - |          NA |
+|   Method |     Mean |   Error |  StdDev |        Ratio | RatioSD | Allocated | Alloc Ratio |
+|--------- |---------:|--------:|--------:|-------------:|--------:|----------:|------------:|
+| OptiLinq | 309.1 ns | 2.33 ns | 2.18 ns | 1.23x faster |   0.01x |         - |          NA |
+|     Linq | 379.2 ns | 3.56 ns | 3.33 ns | 1.00x faster |   0.01x |         - |          NA |
+|    Array | 380.0 ns | 2.77 ns | 2.46 ns |     baseline |         |         - |          NA |
