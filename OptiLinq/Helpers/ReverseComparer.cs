@@ -1,4 +1,4 @@
-namespace OptiLinq.Helpers;
+namespace OptiLinq.Collections;
 
 public readonly struct ReverseComparer<T, TBaseComparer> : IComparer<T> where TBaseComparer : IComparer<T>
 {

@@ -1,14 +1,15 @@
 using System.Buffers;
+using System.Collections;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using OptiLinq.Helpers;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public partial struct ReverseQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T, ReverseEnumerator<T, TBaseEnumerator>>
-	where TBaseEnumerator : struct, IOptiEnumerator<T>
+public partial struct ReverseQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T, ReverseEnumerator<T>>
+	where TBaseEnumerator : IEnumerator<T>
 	where TBaseQuery : struct, IOptiQuery<T, TBaseEnumerator>
 {
 	private TBaseQuery _baseQuery;
@@ -47,24 +48,19 @@ public partial struct ReverseQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 
 	public IEnumerable<T> AsEnumerable()
 	{
-		return new QueryAsEnumerable<T, ReverseQuery<T, TBaseQuery, TBaseEnumerator>, ReverseEnumerator<T, TBaseEnumerator>>(this);
+		return this;
 	}
 
-	public bool Contains<TComparer>(T item, TComparer comparer) where TComparer : IEqualityComparer<T>
+	public bool Contains<TComparer>(in T item, TComparer comparer) where TComparer : IEqualityComparer<T>
 	{
 		return _baseQuery.Contains(item, comparer);
 	}
 
-	public bool Contains(T item)
+	public bool Contains(in T item)
 	{
 		return _baseQuery.Contains(item);
 	}
-
-	public bool Contains(T item, IEqualityComparer<T>? comparer = null)
-	{
-		return _baseQuery.Contains(item, comparer);
-	}
-
+	
 	public int CopyTo(Span<T> data)
 	{
 		var length = _baseQuery.CopyTo(data);
@@ -88,6 +84,26 @@ public partial struct ReverseQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 	public long LongCount()
 	{
 		return _baseQuery.LongCount();
+	}
+
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<T, bool>
+	{
+		return _baseQuery.Count<TCountOperator, TNumber>(@operator);
+	}
+
+	public TNumber Count<TNumber>(Func<T, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		return _baseQuery.Count<TNumber>(predicate);
+	}
+
+	public int Count(Func<T, bool> predicate)
+	{
+		return _baseQuery.Count(predicate);
+	}
+
+	public long CountLong(Func<T, bool> predicate)
+	{
+		return _baseQuery.CountLong(predicate);
 	}
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out T item) where TIndex : IBinaryInteger<TIndex>
@@ -232,6 +248,38 @@ public partial struct ReverseQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 		return list;
 	}
 
+	public PooledList<T> ToPooledList()
+	{
+		var list = _baseQuery.ToPooledList();
+
+		list.Items.AsSpan(0, list.Count).Reverse();
+
+		return list;
+	}
+
+	public PooledQueue<T> ToPooledQueue()
+	{
+		var queue = _baseQuery.ToPooledQueue();
+
+		queue._array.AsSpan(0, queue.Count).Reverse();
+
+		return queue;
+	}
+
+	public PooledStack<T> ToPooledStack()
+	{
+		var stack = _baseQuery.ToPooledStack();
+
+		stack._array.AsSpan(0, stack.Count).Reverse();
+
+		return stack;
+	}
+
+	public PooledSet<T, TComparer> ToPooledSet<TComparer>(TComparer comparer) where TComparer : IEqualityComparer<T>
+	{
+		return _baseQuery.ToPooledSet(comparer);
+	}
+
 	public bool TryGetNonEnumeratedCount(out int length)
 	{
 		return _baseQuery.TryGetNonEnumeratedCount(out length);
@@ -243,11 +291,11 @@ public partial struct ReverseQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 		return false;
 	}
 
-	public ReverseEnumerator<T, TBaseEnumerator> GetEnumerator()
+	public ReverseEnumerator<T> GetEnumerator()
 	{
-		_baseQuery.TryGetNonEnumeratedCount(out var count);
-		return new ReverseEnumerator<T, TBaseEnumerator>(_baseQuery.GetEnumerator(), Math.Max(4, count));
+		return new ReverseEnumerator<T>(_baseQuery.ToPooledList());
 	}
 
-	IOptiEnumerator<T> IOptiQuery<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

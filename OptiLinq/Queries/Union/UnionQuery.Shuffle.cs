@@ -1,9 +1,9 @@
 namespace OptiLinq;
 
-public partial struct UnionQuery<T, TFirstQuery, TSecondQuery, TComparer>
+public partial struct UnionQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery, TComparer>
 {
-	public ShuffleQuery<T, UnionQuery<T, TFirstQuery, TSecondQuery, TComparer>, UnionEnumerator<T, TComparer>> Shuffle(int? seed = null)
+	public ShuffleQuery<T, UnionQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery, TComparer>, UnionEnumerator<T, TFirstEnumerator, TComparer>> Shuffle(int? seed = null)
 	{
-		return new ShuffleQuery<T, UnionQuery<T, TFirstQuery, TSecondQuery, TComparer>, UnionEnumerator<T, TComparer>>(ref this, seed);
+		return new ShuffleQuery<T, UnionQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery, TComparer>, UnionEnumerator<T, TFirstEnumerator, TComparer>>(ref this, seed);
 	}
 }

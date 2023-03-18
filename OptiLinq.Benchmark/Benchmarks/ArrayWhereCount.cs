@@ -32,7 +32,7 @@ public class ArrayWhereCount
 		}
 
 		return count;
-	}
+	} 
 
 	[Benchmark]
 	public int SysLinq()
@@ -51,11 +51,42 @@ public class ArrayWhereCount
 	}
 
 	[Benchmark]
+	public int SysLinqWithoutWhere()
+	{
+		return array
+			.Count(x => (x & 1) == 0);
+	}
+
+	[Benchmark]
+	public int DelegateWithoutWhere()
+	{
+		return array
+			.AsOptiQuery()
+			.Count(x => (x & 1) == 0);
+	}
+
+	[Benchmark]
 	public int IFunctionWhere()
 	{
 		return array
 			.AsOptiQuery()
 			.Where<IsEven<int>>()
 			.Count();
+	}
+
+	[Benchmark]
+	public int OptiLinqOptimized()
+	{
+		return array
+			.AsOptiQuery()
+			.Count<IsEven<int>, int>();
+	}
+
+	[Benchmark]
+	public int OptiLinqIFunctionOptimized()
+	{
+		return array
+			.AsOptiQuery()
+			.Count<int, int>(x => (x & 1) == 0);
 	}
 }

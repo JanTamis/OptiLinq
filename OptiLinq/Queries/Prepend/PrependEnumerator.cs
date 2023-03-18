@@ -1,8 +1,9 @@
+using System.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public struct PrependEnumerator<T, TBaseEnumerator> : IOptiEnumerator<T> where TBaseEnumerator : struct, IOptiEnumerator<T>
+public struct PrependEnumerator<T, TBaseEnumerator> : IEnumerator<T> where TBaseEnumerator : IEnumerator<T>
 {
 	private bool _hasAppended;
 	private readonly T _element;
@@ -15,6 +16,8 @@ public struct PrependEnumerator<T, TBaseEnumerator> : IOptiEnumerator<T> where T
 		_hasAppended = false;
 	}
 
+	object IEnumerator.Current => Current;
+
 	public T Current => _hasAppended ? _baseEnumerator.Current : _element;
 
 	public bool MoveNext()
@@ -26,6 +29,12 @@ public struct PrependEnumerator<T, TBaseEnumerator> : IOptiEnumerator<T> where T
 
 		_hasAppended = true;
 		return true;
+	}
+
+	public void Reset()
+	{
+		_baseEnumerator.Reset();
+		_hasAppended = false;
 	}
 
 	public void Dispose()

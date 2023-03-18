@@ -1,9 +1,9 @@
 using System.Numerics;
-using OptiLinq.Operators;
+using OptiLinq.Collections;
 
 namespace OptiLinq.Interfaces;
 
-public interface IOptiQuery<T>
+public interface IOptiQuery<T> : IEnumerable<T>
 {
 	TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default)
 		where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
@@ -18,14 +18,22 @@ public interface IOptiQuery<T>
 
 	IEnumerable<T> AsEnumerable();
 
-	bool Contains<TComparer>(T item, TComparer comparer) where TComparer : IEqualityComparer<T>;
-	bool Contains(T item);
+	bool Contains<TComparer>(in T item, TComparer comparer) where TComparer : IEqualityComparer<T>;
+	bool Contains(in T item);
 
 	int CopyTo(Span<T> data);
 
 	TNumber Count<TNumber>() where TNumber : INumberBase<TNumber>;
 	int Count();
 	long LongCount();
+
+	TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default)
+		where TNumber : INumberBase<TNumber>
+		where TCountOperator : struct, IFunction<T, bool>;
+
+	TNumber Count<TNumber>(Func<T, bool> predicate) where TNumber : INumberBase<TNumber>;
+	int Count(Func<T, bool> predicate);
+	long CountLong(Func<T, bool> predicate);
 
 	bool TryGetElementAt<TIndex>(TIndex index, out T item) where TIndex : IBinaryInteger<TIndex>;
 	T ElementAt<TIndex>(TIndex index) where TIndex : IBinaryInteger<TIndex>;
@@ -56,14 +64,17 @@ public interface IOptiQuery<T>
 
 	List<T> ToList();
 
+	PooledList<T> ToPooledList();
+	PooledQueue<T> ToPooledQueue();
+	PooledStack<T> ToPooledStack();
+	PooledSet<T, TComparer> ToPooledSet<TComparer>(TComparer comparer) where TComparer : IEqualityComparer<T>;
+
 	bool TryGetNonEnumeratedCount(out int length);
 
 	bool TryGetSpan(out ReadOnlySpan<T> span);
-
-	IOptiEnumerator<T> GetEnumerator();
 }
 
-public interface IOptiQuery<T, out TEnumerator> : IOptiQuery<T> where TEnumerator : IOptiEnumerator<T>
+public interface IOptiQuery<T, out TEnumerator> : IOptiQuery<T> where TEnumerator : IEnumerator<T>
 {
 	new TEnumerator GetEnumerator();
 }

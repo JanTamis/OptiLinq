@@ -24,7 +24,21 @@ public class UnionOnBigStruct
 	public int Linq()
 	{
 		var sum = 0;
+		
 		foreach (var i in array1.Union(array2))
+		{
+			sum += i.Element;
+		}
+
+		return sum;
+	}
+
+	[Benchmark]
+	public int LinqWithComparer()
+	{
+		var sum = 0;
+
+		foreach (var i in array1.Union(array2, new StructEqualityComparer()))
 		{
 			sum += i.Element;
 		}
@@ -36,6 +50,7 @@ public class UnionOnBigStruct
 	public int OptiLinq()
 	{
 		var sum = 0;
+		
 		foreach (var i in array1.AsOptiQuery().Union(array2.AsOptiQuery()))
 		{
 			sum += i.Element;
@@ -48,8 +63,8 @@ public class UnionOnBigStruct
 	public int OptiLinqWithComparer()
 	{
 		var sum = 0;
-		var comparer = new StructEqualityComparer();
-		foreach (var i in array1.AsOptiQuery().Union(array2.AsOptiQuery(), comparer))
+
+		foreach (var i in array1.AsOptiQuery().Union(array2.AsOptiQuery(), new StructEqualityComparer()))
 		{
 			sum += i.Element;
 		}

@@ -1,10 +1,11 @@
+using System.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public struct ConcatEnumerator<T, TFirstEnumerator, TSecondEnumerator> : IOptiEnumerator<T>
-	where TFirstEnumerator : IOptiEnumerator<T>
-	where TSecondEnumerator : IOptiEnumerator<T>
+public struct ConcatEnumerator<T, TFirstEnumerator, TSecondEnumerator> : IEnumerator<T>
+	where TFirstEnumerator : IEnumerator<T>
+	where TSecondEnumerator : IEnumerator<T>
 {
 	private TFirstEnumerator _firstEnumerator;
 	private TSecondEnumerator _secondEnumerator;
@@ -15,6 +16,8 @@ public struct ConcatEnumerator<T, TFirstEnumerator, TSecondEnumerator> : IOptiEn
 		_secondEnumerator = secondEnumerator;
 	}
 
+	object IEnumerator.Current => Current;
+	
 	public T Current { get; private set; } = default!;
 
 	public bool MoveNext()
@@ -32,6 +35,12 @@ public struct ConcatEnumerator<T, TFirstEnumerator, TSecondEnumerator> : IOptiEn
 		}
 
 		return false;
+	}
+
+	public void Reset()
+	{
+		_firstEnumerator.Reset();
+		_secondEnumerator.Reset();
 	}
 
 	public void Dispose()

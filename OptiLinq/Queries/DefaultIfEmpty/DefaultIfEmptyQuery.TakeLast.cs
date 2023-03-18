@@ -1,5 +1,3 @@
-using System.Numerics;
-
 namespace OptiLinq;
 
 public partial struct DefaultIfEmptyQuery<T, TBaseQuery, TBaseEnumerator>

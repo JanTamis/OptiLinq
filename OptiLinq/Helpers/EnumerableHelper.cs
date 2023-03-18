@@ -1,9 +1,10 @@
 ﻿using System.Buffers;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using OptiLinq.Interfaces;
 
-namespace OptiLinq.Helpers;
+namespace OptiLinq.Collections;
 
 public static class EnumerableHelper
 {
@@ -15,7 +16,7 @@ public static class EnumerableHelper
 	/// which is the actual number of elements in the array.
 	/// </returns>
 	internal static TElement[] ToArray<TElement, TQuery, TEnumerable>(this TQuery source, out int length)
-		where TEnumerable : struct, IOptiEnumerator<TElement>
+		where TEnumerable : IEnumerator<TElement>
 		where TQuery : struct, IOptiQuery<TElement, TEnumerable>
 	{
 		if (source.TryGetNonEnumeratedCount(out length))
@@ -36,7 +37,7 @@ public static class EnumerableHelper
 	}
 
 	internal static TElement[] ToArray<TElement, TEnumerable>(TEnumerable enumerable, ArrayPool<TElement> pool, int initialLength, out int length)
-		where TEnumerable : IOptiEnumerator<TElement>
+		where TEnumerable : IEnumerator<TElement>
 	{
 		using var list = new PooledList<TElement>(initialLength, pool);
 
@@ -52,7 +53,7 @@ public static class EnumerableHelper
 	}
 
 	internal static List<TElement> ToList<TElement, TQuery, TEnumerable>(this TQuery source, out int length)
-		where TEnumerable : struct, IOptiEnumerator<TElement>
+		where TEnumerable : IEnumerator<TElement>
 		where TQuery : struct, IOptiQuery<TElement, TEnumerable>
 	{
 		List<TElement> result;
@@ -79,7 +80,7 @@ public static class EnumerableHelper
 	}
 
 	internal static string Join<TElement, TEnumerable>(this TEnumerable enumerable, string separator)
-		where TEnumerable : IOptiEnumerator<TElement>
+		where TEnumerable : IEnumerator<TElement>
 	{
 		if (!enumerable.MoveNext())
 		{
@@ -142,7 +143,7 @@ public static class EnumerableHelper
 	}
 
 	public static TSource Min<TSource, TEnumerator>(TEnumerator source)
-		where TEnumerator : struct, IOptiEnumerator<TSource>
+		where TEnumerator : IEnumerator<TSource>
 	{
 		TSource value = default!;
 
@@ -195,7 +196,7 @@ public static class EnumerableHelper
 	}
 
 	public static TSource Max<TSource, TEnumerator>(TEnumerator source)
-		where TEnumerator : struct, IOptiEnumerator<TSource>
+		where TEnumerator : IEnumerator<TSource>
 	{
 		TSource value = default!;
 
@@ -248,7 +249,7 @@ public static class EnumerableHelper
 
 	public static bool TryGetElementAt<TSource, TEnumerator, TIndex>(TEnumerator enumerator, TIndex index, out TSource item)
 		where TIndex : IBinaryInteger<TIndex>
-		where TEnumerator : struct, IOptiEnumerator<TSource>
+		where TEnumerator : IEnumerator<TSource>
 	{
 		using (enumerator)
 		{
@@ -272,7 +273,7 @@ public static class EnumerableHelper
 	}
 
 	public static bool TryGetFirst<TSource, TEnumerator>(TEnumerator enumerator, out TSource item)
-		where TEnumerator : struct, IOptiEnumerator<TSource>
+		where TEnumerator : IEnumerator<TSource>
 	{
 		using (enumerator)
 		{
@@ -288,7 +289,7 @@ public static class EnumerableHelper
 	}
 
 	public static bool TryGetLast<TSource, TEnumerator>(TEnumerator enumerator, out TSource item)
-		where TEnumerator : struct, IOptiEnumerator<TSource>
+		where TEnumerator : IEnumerator<TSource>
 	{
 		using (enumerator)
 		{

@@ -1,10 +1,11 @@
-using OptiLinq.Helpers;
+using System.Collections;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public struct TakeLastEnumerator<T, TBaseEnumerator> : IOptiEnumerator<T>
-	where TBaseEnumerator : struct, IOptiEnumerator<T>
+public struct TakeLastEnumerator<T, TBaseEnumerator> : IEnumerator<T>
+	where TBaseEnumerator : IEnumerator<T>
 {
 	private TBaseEnumerator _baseEnumerator;
 	private readonly int _count;
@@ -19,6 +20,7 @@ public struct TakeLastEnumerator<T, TBaseEnumerator> : IOptiEnumerator<T>
 		_queue = new PooledQueue<T>(count);
 	}
 
+	object IEnumerator.Current { get; }
 	public T Current { get; private set; } = default!;
 
 	public bool MoveNext()
@@ -45,6 +47,13 @@ public struct TakeLastEnumerator<T, TBaseEnumerator> : IOptiEnumerator<T>
 		}
 
 		return false;
+	}
+
+	public void Reset()
+	{
+		_isInitialized = false;
+		_baseEnumerator.Reset();
+		_queue.Clear();
 	}
 
 	public void Dispose()

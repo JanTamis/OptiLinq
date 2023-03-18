@@ -1,9 +1,9 @@
 namespace OptiLinq;
 
-public partial struct IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery>
+public partial struct IntersectQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>
 {
-	public ShuffleQuery<T, IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery>, IntersectEnumerator<T, TComparer>> Shuffle(int? seed = null)
+	public ShuffleQuery<T, IntersectQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, IntersectEnumerator<T, TFirstEnumerator, TComparer>> Shuffle(int? seed = null)
 	{
-		return new ShuffleQuery<T, IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery>, IntersectEnumerator<T, TComparer>>(ref this, seed);
+		return new ShuffleQuery<T, IntersectQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, IntersectEnumerator<T, TFirstEnumerator, TComparer>>(ref this, seed);
 	}
 }

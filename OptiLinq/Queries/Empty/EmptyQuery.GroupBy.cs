@@ -1,5 +1,4 @@
 using OptiLinq.Interfaces;
-using OptiLinq.Operators;
 
 namespace OptiLinq;
 

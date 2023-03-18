@@ -1,9 +1,10 @@
+using System.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public struct ChunkEnumerator<T, TBaseEnumerator> : IOptiEnumerator<T[]>
-	where TBaseEnumerator : struct, IOptiEnumerator<T>
+public struct ChunkEnumerator<T, TBaseEnumerator> : IEnumerator<T[]>
+	where TBaseEnumerator : IEnumerator<T>
 {
 	private TBaseEnumerator _baseEnumerator;
 	private readonly int _chunkSize;
@@ -14,7 +15,9 @@ public struct ChunkEnumerator<T, TBaseEnumerator> : IOptiEnumerator<T[]>
 		_chunkSize = chunkSize;
 	}
 
-	public T[] Current { get; private set; } = null!;
+	object IEnumerator.Current => Current;
+
+	public T[] Current { get; private set; } = Array.Empty<T>();
 
 	public bool MoveNext()
 	{
@@ -68,6 +71,12 @@ public struct ChunkEnumerator<T, TBaseEnumerator> : IOptiEnumerator<T[]>
 		
 		Current = Array.Empty<T>();
 		return false;
+	}
+
+	public void Reset()
+	{
+		_baseEnumerator.Reset();
+		Current = Array.Empty<T>();
 	}
 	
 	public void Dispose()

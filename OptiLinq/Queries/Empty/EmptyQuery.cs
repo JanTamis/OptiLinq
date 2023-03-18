@@ -1,6 +1,8 @@
 using System.Buffers;
+using System.Collections;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
@@ -36,15 +38,15 @@ public partial struct EmptyQuery<T> : IOptiQuery<T, EmptyEnumerator<T>>
 
 	public IEnumerable<T> AsEnumerable()
 	{
-		return new QueryAsEnumerable<T, EmptyQuery<T>, EmptyEnumerator<T>>(this);
+		return this;
 	}
 
-	public bool Contains<TComparer>(T item, TComparer comparer) where TComparer : IEqualityComparer<T>
+	public bool Contains<TComparer>(in T item, TComparer comparer) where TComparer : IEqualityComparer<T>
 	{
 		return false;
 	}
 
-	public bool Contains(T item)
+	public bool Contains(in T item)
 	{
 		return false;
 	}
@@ -68,6 +70,26 @@ public partial struct EmptyQuery<T> : IOptiQuery<T, EmptyEnumerator<T>>
 	public long LongCount()
 	{
 		return Count<long>();
+	}
+
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<T, bool>
+	{
+		return TNumber.Zero;
+	}
+
+	public TNumber Count<TNumber>(Func<T, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		return TNumber.Zero;
+	}
+
+	public int Count(Func<T, bool> predicate)
+	{
+		return 0;
+	}
+
+	public long CountLong(Func<T, bool> predicate)
+	{
+		return 0L;
 	}
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out T item) where TIndex : IBinaryInteger<TIndex>
@@ -180,6 +202,26 @@ public partial struct EmptyQuery<T> : IOptiQuery<T, EmptyEnumerator<T>>
 		return new List<T>();
 	}
 
+	public PooledList<T> ToPooledList()
+	{
+		return new PooledList<T>();
+	}
+
+	public PooledQueue<T> ToPooledQueue()
+	{
+		return new PooledQueue<T>();
+	}
+
+	public PooledStack<T> ToPooledStack()
+	{
+		return new PooledStack<T>();
+	}
+
+	public PooledSet<T, TComparer> ToPooledSet<TComparer>(TComparer comparer) where TComparer : IEqualityComparer<T>
+	{
+		return new PooledSet<T, TComparer>(comparer);
+	}
+
 	public bool TryGetNonEnumeratedCount(out int length)
 	{
 		length = 0;
@@ -197,5 +239,6 @@ public partial struct EmptyQuery<T> : IOptiQuery<T, EmptyEnumerator<T>>
 		return new EmptyEnumerator<T>();
 	}
 
-	IOptiEnumerator<T> IOptiQuery<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

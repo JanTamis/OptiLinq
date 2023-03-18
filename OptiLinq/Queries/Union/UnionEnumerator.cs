@@ -1,34 +1,30 @@
-using OptiLinq.Helpers;
+using System.Collections;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public struct UnionEnumerator<T, TComparer> : IOptiEnumerator<T> where TComparer : IEqualityComparer<T>
+public struct UnionEnumerator<T, TEnumerator, TComparer> : IEnumerator<T>
+	where TComparer : IEqualityComparer<T>
+	where TEnumerator : IEnumerator<T>
 {
-	private IOptiEnumerator<T> _firstEnumerator;
-
+	private TEnumerator _firstEnumerator;
 	private PooledSet<T, TComparer> _set;
 
-	internal UnionEnumerator(IOptiEnumerator<T> firstEnumerator, IOptiEnumerator<T> secondEnumerator, TComparer comparer, int capacity)
+	internal UnionEnumerator(TEnumerator firstEnumerator, PooledSet<T, TComparer> set)
 	{
 		_firstEnumerator = firstEnumerator;
-		_set = new PooledSet<T, TComparer>(capacity, comparer);
-
-		while (secondEnumerator.MoveNext())
-		{
-			_set.AddIfNotPresent(secondEnumerator.Current);
-		}
-
-		secondEnumerator.Dispose();
+		_set = set;
 	}
 
+	object IEnumerator.Current { get; }
 	public T Current { get; private set; }
 
 	public bool MoveNext()
 	{
 		while (_firstEnumerator.MoveNext())
 		{
-			if (_set.AddIfNotPresent(_firstEnumerator.Current))
+			if (_set.Add(_firstEnumerator.Current))
 			{
 				Current = _firstEnumerator.Current;
 				return true;
@@ -37,6 +33,12 @@ public struct UnionEnumerator<T, TComparer> : IOptiEnumerator<T> where TComparer
 
 		Current = default!;
 		return false;
+	}
+
+	public void Reset()
+	{
+		_firstEnumerator.Reset();
+		_set.Clear();
 	}
 
 	public void Dispose()

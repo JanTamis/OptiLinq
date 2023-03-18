@@ -1,12 +1,13 @@
 using System.Buffers;
+using System.Collections;
 using System.Runtime.CompilerServices;
-using OptiLinq.Helpers;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public struct OrderEnumerator<T, TComparer, TBaseEnumerator> : IOptiEnumerator<T>
-	where TBaseEnumerator : struct, IOptiEnumerator<T>
+public struct OrderEnumerator<T, TComparer, TBaseEnumerator> : IEnumerator<T>
+	where TBaseEnumerator : IEnumerator<T>
 	where TComparer : IComparer<T>
 {
 	private readonly T[] _data;
@@ -25,6 +26,8 @@ public struct OrderEnumerator<T, TComparer, TBaseEnumerator> : IOptiEnumerator<T
 		enumerator.Dispose();
 	}
 
+	object IEnumerator.Current => Current;
+
 	public T Current => _data[_index];
 
 	public bool MoveNext()
@@ -36,6 +39,11 @@ public struct OrderEnumerator<T, TComparer, TBaseEnumerator> : IOptiEnumerator<T
 		}
 
 		return false;
+	}
+
+	public void Reset()
+	{
+		_index = -1;
 	}
 
 	public void Dispose()

@@ -21,8 +21,9 @@ public class ArrayOfBigStructSum
 	[Benchmark]
 	public int Handmaded()
 	{
-		int sum = 0;
-		for (int i = 0; i < Count; i++)
+		var sum = 0;
+
+		for (var i = 0; i < Count; i++)
 		{
 			sum += array[i].Element;
 		}
@@ -60,7 +61,7 @@ internal struct StructContainerSelect : IFunction<StructContainer, int>
 	}
 }
 
-internal struct StructContainer
+internal readonly struct StructContainer
 {
 	public readonly int Element;
 

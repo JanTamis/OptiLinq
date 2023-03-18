@@ -1,13 +1,13 @@
+using System.Collections;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Text;
-using OptiLinq.Helpers;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
 public partial struct DefaultIfEmptyQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T, DefaultIfEmptyEnumerator<T, TBaseEnumerator>>
-	where TBaseEnumerator : struct, IOptiEnumerator<T>
+	where TBaseEnumerator : IEnumerator<T>
 	where TBaseQuery : struct, IOptiQuery<T, TBaseEnumerator>
 {
 	private TBaseQuery _baseQuery;
@@ -66,10 +66,10 @@ public partial struct DefaultIfEmptyQuery<T, TBaseQuery, TBaseEnumerator> : IOpt
 
 	public IEnumerable<T> AsEnumerable()
 	{
-		return new QueryAsEnumerable<T, DefaultIfEmptyQuery<T, TBaseQuery, TBaseEnumerator>, DefaultIfEmptyEnumerator<T, TBaseEnumerator>>(this);
+		return this;
 	}
 
-	public bool Contains<TComparer>(T item, TComparer comparer) where TComparer : IEqualityComparer<T>
+	public bool Contains<TComparer>(in T item, TComparer comparer) where TComparer : IEqualityComparer<T>
 	{
 		if (_baseQuery.Any())
 		{
@@ -79,7 +79,7 @@ public partial struct DefaultIfEmptyQuery<T, TBaseQuery, TBaseEnumerator> : IOpt
 		return comparer.Equals(item, _defaultValue);
 	}
 
-	public bool Contains(T item)
+	public bool Contains(in T item)
 	{
 		if (_baseQuery.Any())
 		{
@@ -123,6 +123,33 @@ public partial struct DefaultIfEmptyQuery<T, TBaseQuery, TBaseEnumerator> : IOpt
 	public long LongCount()
 	{
 		return Count<long>();
+	}
+
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<T, bool>
+	{
+		var count = _baseQuery.Count<TCountOperator, TNumber>(@operator);
+
+		if (TNumber.IsZero(count))
+		{
+			count = TNumber.One;
+		}
+
+		return count;
+	}
+
+	public TNumber Count<TNumber>(Func<T, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		return TNumber.MaxMagnitude(_baseQuery.Count<TNumber>(), TNumber.One);
+	}
+
+	public int Count(Func<T, bool> predicate)
+	{
+		return Int32.Max(_baseQuery.Count(predicate), 1);
+	}
+
+	public long CountLong(Func<T, bool> predicate)
+	{
+		return Int64.Max(_baseQuery.CountLong(predicate), 1L);
 	}
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out T item) where TIndex : IBinaryInteger<TIndex>
@@ -325,6 +352,54 @@ public partial struct DefaultIfEmptyQuery<T, TBaseQuery, TBaseEnumerator> : IOpt
 		};
 	}
 
+	public PooledList<T> ToPooledList()
+	{
+		var list = _baseQuery.ToPooledList();
+
+		if (list.Count == 0)
+		{
+			list.Add(_defaultValue);
+		}
+
+		return list;
+	}
+
+	public PooledQueue<T> ToPooledQueue()
+	{
+		var queue = _baseQuery.ToPooledQueue();
+
+		if (queue.Count == 0)
+		{
+			queue.Enqueue(_defaultValue);
+		}
+
+		return queue;
+	}
+
+	public PooledStack<T> ToPooledStack()
+	{
+		var stack = _baseQuery.ToPooledStack();
+
+		if (stack.Count == 0)
+		{
+			stack.Push(_defaultValue);
+		}
+
+		return stack;
+	}
+
+	public PooledSet<T, TComparer> ToPooledSet<TComparer>(TComparer comparer) where TComparer : IEqualityComparer<T>
+	{
+		var set = _baseQuery.ToPooledSet(comparer);
+
+		if (set.Count == 0)
+		{
+			set.Add(_defaultValue);
+		}
+
+		return set;
+	}
+
 	public bool TryGetNonEnumeratedCount(out int length)
 	{
 		if (_baseQuery.TryGetNonEnumeratedCount(out length))
@@ -356,5 +431,6 @@ public partial struct DefaultIfEmptyQuery<T, TBaseQuery, TBaseEnumerator> : IOpt
 		return new DefaultIfEmptyEnumerator<T, TBaseEnumerator>(_baseQuery.GetEnumerator(), _defaultValue);
 	}
 
-	IOptiEnumerator<T> IOptiQuery<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

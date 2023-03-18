@@ -39,7 +39,6 @@ public class ContainsOnBigStruct
 	[Benchmark]
 	public bool OptiLinqWithCustomComparer()
 	{
-		var comparer = new StructEqualityComparer();
-		return array.AsOptiQuery().Contains(StructContainer.Create(5_000), comparer);
+		return array.AsOptiQuery().Contains<StructEqualityComparer>(StructContainer.Create(5_000));
 	}
 }

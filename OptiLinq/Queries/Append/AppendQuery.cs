@@ -1,12 +1,13 @@
+using System.Collections;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using OptiLinq.Helpers;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
 public partial struct AppendQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T, AppendEnumerator<T, TBaseEnumerator>>
-	where TBaseEnumerator : struct, IOptiEnumerator<T>
+	where TBaseEnumerator : IEnumerator<T>
 	where TBaseQuery : struct, IOptiQuery<T, TBaseEnumerator>
 {
 	private TBaseQuery _baseQuery;
@@ -45,15 +46,15 @@ public partial struct AppendQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T
 
 	public IEnumerable<T> AsEnumerable()
 	{
-		return new QueryAsEnumerable<T, AppendQuery<T, TBaseQuery, TBaseEnumerator>, AppendEnumerator<T, TBaseEnumerator>>(this);
+		return this;
 	}
 
-	public bool Contains<TComparer>(T item, TComparer comparer) where TComparer : IEqualityComparer<T>
+	public bool Contains<TComparer>(in T item, TComparer comparer) where TComparer : IEqualityComparer<T>
 	{
 		return _baseQuery.Contains(item, comparer) || comparer.Equals(item, _element);
 	}
 
-	public bool Contains(T item)
+	public bool Contains(in T item)
 	{
 		return _baseQuery.Contains(item) || EqualityComparer<T>.Default.Equals(item, _element);
 	}
@@ -85,6 +86,26 @@ public partial struct AppendQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T
 	public long LongCount()
 	{
 		return Count<long>();
+	}
+
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<T, bool>
+	{
+		return _baseQuery.Count<TCountOperator, TNumber>(@operator) + (@operator.Eval(_element) ? TNumber.One : TNumber.Zero);
+	}
+
+	public TNumber Count<TNumber>(Func<T, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		return _baseQuery.Count<TNumber>(predicate) + (predicate(_element) ? TNumber.One : TNumber.Zero);
+	}
+
+	public int Count(Func<T, bool> predicate)
+	{
+		return Count<int>(predicate);
+	}
+
+	public long CountLong(Func<T, bool> predicate)
+	{
+		return Count<long>(predicate);
 	}
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out T item) where TIndex : IBinaryInteger<TIndex>
@@ -270,6 +291,34 @@ public partial struct AppendQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T
 		return list;
 	}
 
+	public PooledList<T> ToPooledList()
+	{
+		var list = _baseQuery.ToPooledList();
+		list.Add(_element);
+		return list;
+	}
+
+	public PooledQueue<T> ToPooledQueue()
+	{
+		var queue = _baseQuery.ToPooledQueue();
+		queue.Enqueue(_element);
+		return queue;
+	}
+
+	public PooledStack<T> ToPooledStack()
+	{
+		var stack = _baseQuery.ToPooledStack();
+		stack.Push(_element);
+		return stack;
+	}
+
+	public PooledSet<T, TComparer> ToPooledSet<TComparer>(TComparer comparer) where TComparer : IEqualityComparer<T>
+	{
+		var set = _baseQuery.ToPooledSet(comparer);
+		set.Add(_element);
+		return set;
+	}
+
 	public bool TryGetNonEnumeratedCount(out int length)
 	{
 		if (_baseQuery.TryGetNonEnumeratedCount(out length))
@@ -293,5 +342,6 @@ public partial struct AppendQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T
 		return new AppendEnumerator<T, TBaseEnumerator>(_baseQuery.GetEnumerator(), _element);
 	}
 
-	IOptiEnumerator<T> IOptiQuery<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

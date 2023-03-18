@@ -1,5 +1,3 @@
-using System.Numerics;
-
 namespace OptiLinq;
 
 public partial struct ChunkQuery<T, TBaseQuery, TBaseEnumerator>

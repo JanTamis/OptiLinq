@@ -1,4 +1,4 @@
-namespace OptiLinq.Helpers;
+namespace OptiLinq.Collections;
 
 public ref struct LookupEnumerator<TKey, TValue>
 {

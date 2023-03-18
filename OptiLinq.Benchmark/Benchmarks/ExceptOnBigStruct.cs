@@ -24,6 +24,7 @@ public class ExceptOnBigStruct
 	public int Linq()
 	{
 		var sum = 0;
+		
 		foreach (var i in array1.Except(array2))
 		{
 			sum += i.Element;
@@ -36,6 +37,7 @@ public class ExceptOnBigStruct
 	public int LinqWithComparer()
 	{
 		var sum = 0;
+		
 		foreach (var i in array1.Except(array2, new StructEqualityComparer()))
 		{
 			sum += i.Element;

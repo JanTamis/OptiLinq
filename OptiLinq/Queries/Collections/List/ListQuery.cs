@@ -1,12 +1,13 @@
+using System.Collections;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using OptiLinq.Helpers;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public partial struct ListQuery<T> : IOptiQuery<T, ListEnumerator<T>>
+public partial struct ListQuery<T> : IOptiQuery<T, List<T>.Enumerator>
 {
 	private readonly List<T> _list;
 
@@ -73,7 +74,7 @@ public partial struct ListQuery<T> : IOptiQuery<T, ListEnumerator<T>>
 		return _list;
 	}
 
-	public bool Contains<TComparer>(T item, TComparer comparer) where TComparer : IEqualityComparer<T>
+	public bool Contains<TComparer>(in T item, TComparer comparer) where TComparer : IEqualityComparer<T>
 	{
 		for (var i = 0; i < _list.Count; i++)
 		{
@@ -86,7 +87,7 @@ public partial struct ListQuery<T> : IOptiQuery<T, ListEnumerator<T>>
 		return true;
 	}
 
-	public bool Contains(T item)
+	public bool Contains(in T item)
 	{
 		for (var i = 0; i < _list.Count; i++)
 		{
@@ -131,12 +132,52 @@ public partial struct ListQuery<T> : IOptiQuery<T, ListEnumerator<T>>
 
 	public int Count()
 	{
-		return Count<int>();
+		return _list.Count;
 	}
 
 	public long LongCount()
 	{
-		return Count<long>();
+		return _list.Count;
+	}
+
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<T, bool>
+	{
+		var count = TNumber.Zero;
+
+		for (var i = 0; i < _list.Count; i++)
+		{
+			if (@operator.Eval(_list[i]))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public TNumber Count<TNumber>(Func<T, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		var count = TNumber.Zero;
+
+		for (var i = 0; i < _list.Count; i++)
+		{
+			if (predicate(_list[i]))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public int Count(Func<T, bool> predicate)
+	{
+		return Count<int>(predicate);
+	}
+
+	public long CountLong(Func<T, bool> predicate)
+	{
+		return Count<long>(predicate);
 	}
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out T item) where TIndex : IBinaryInteger<TIndex>
@@ -269,12 +310,12 @@ public partial struct ListQuery<T> : IOptiQuery<T, ListEnumerator<T>>
 
 	public T Max()
 	{
-		return EnumerableHelper.Max<T, ListEnumerator<T>>(GetEnumerator());
+		return EnumerableHelper.Max<T, List<T>.Enumerator>(GetEnumerator());
 	}
 
 	public T Min()
 	{
-		return EnumerableHelper.Min<T, ListEnumerator<T>>(GetEnumerator());
+		return EnumerableHelper.Min<T, List<T>.Enumerator>(GetEnumerator());
 	}
 
 	public bool TryGetSingle(out T item)
@@ -346,8 +387,56 @@ public partial struct ListQuery<T> : IOptiQuery<T, ListEnumerator<T>>
 			span[i] = _list[i];
 		}
 
+		return list;
+	}
+
+	public PooledList<T> ToPooledList()
+	{
+		var list = new PooledList<T>(_list.Count)
+		{
+			Count = _list.Count,
+		};
+
+		var span = CollectionsMarshal.AsSpan(_list);
+		span.CopyTo(list.Items);
 
 		return list;
+	}
+
+	public PooledQueue<T> ToPooledQueue()
+	{
+		var queue = new PooledQueue<T>(_list.Count);
+
+		for (var i = 0; i < _list.Count; i++)
+		{
+			queue.Enqueue(_list[i]);
+		}
+
+		return queue;
+	}
+
+	public PooledStack<T> ToPooledStack()
+	{
+		var stack = new PooledStack<T>(_list.Count);
+
+		for (var i = 0; i < _list.Count; i++)
+		{
+			stack.Push(_list[i]);
+		}
+
+		return stack;
+	}
+
+	public PooledSet<T, TComparer> ToPooledSet<TComparer>(TComparer comparer) where TComparer : IEqualityComparer<T>
+	{
+		var set = new PooledSet<T, TComparer>(comparer);
+
+		for (var i = 0; i < _list.Count; i++)
+		{
+			set.Add(_list[i]);
+		}
+
+		return set;
 	}
 
 	public bool TryGetNonEnumeratedCount(out int length)
@@ -359,13 +448,14 @@ public partial struct ListQuery<T> : IOptiQuery<T, ListEnumerator<T>>
 	public bool TryGetSpan(out ReadOnlySpan<T> span)
 	{
 		span = CollectionsMarshal.AsSpan(_list);
-		return false;
+		return true;
 	}
 
-	public ListEnumerator<T> GetEnumerator()
+	public List<T>.Enumerator GetEnumerator()
 	{
-		return new ListEnumerator<T>(_list);
+		return _list.GetEnumerator();
 	}
 
-	IOptiEnumerator<T> IOptiQuery<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

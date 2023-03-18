@@ -1,15 +1,16 @@
 using System.Buffers;
+using System.Collections;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using OptiLinq.Helpers;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
 public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> : IOptiQuery<T, DistinctEnumerator<T, TBaseEnumerator, TComparer>>
 	where TBaseQuery : struct, IOptiQuery<T, TBaseEnumerator>
-	where TBaseEnumerator : struct, IOptiEnumerator<T>
+	where TBaseEnumerator : IEnumerator<T>
 	where TComparer : IEqualityComparer<T>
 {
 	private TBaseQuery _baseQuery;
@@ -31,7 +32,7 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 
 		while (enumerator.MoveNext())
 		{
-			if (set.AddIfNotPresent(enumerator.Current))
+			if (set.Add(enumerator.Current))
 			{
 				seed = func.Eval(seed, enumerator.Current);
 				_count++;
@@ -50,7 +51,7 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 
 		while (enumerator.MoveNext())
 		{
-			if (set.AddIfNotPresent(enumerator.Current))
+			if (set.Add(enumerator.Current))
 			{
 				seed = @operator.Eval(seed, enumerator.Current);
 
@@ -68,7 +69,7 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 
 		while (enumerator.MoveNext())
 		{
-			if (set.AddIfNotPresent(enumerator.Current) && !@operator.Eval(enumerator.Current))
+			if (set.Add(enumerator.Current) && !@operator.Eval(enumerator.Current))
 			{
 				return false;
 			}
@@ -89,7 +90,7 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 
 		while (enumerator.MoveNext())
 		{
-			if (set.AddIfNotPresent(enumerator.Current) && @operator.Eval(enumerator.Current))
+			if (set.Add(enumerator.Current) && @operator.Eval(enumerator.Current))
 			{
 				return true;
 			}
@@ -100,17 +101,17 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 
 	public IEnumerable<T> AsEnumerable()
 	{
-		return new QueryAsEnumerable<T, DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, DistinctEnumerator<T, TBaseEnumerator, TComparer>>(this);
+		return this;
 	}
 
-	public bool Contains<TComparer1>(T item, TComparer1 comparer) where TComparer1 : IEqualityComparer<T>
+	public bool Contains<TComparer1>(in T item, TComparer1 comparer) where TComparer1 : IEqualityComparer<T>
 	{
-		return _baseQuery.Contains(item, comparer);
+		return _baseQuery.Contains(in item, comparer);
 	}
 
-	public bool Contains(T item)
+	public bool Contains(in T item)
 	{
-		return _baseQuery.Contains(item);
+		return _baseQuery.Contains(in item);
 	}
 
 	public int CopyTo(Span<T> data)
@@ -122,7 +123,7 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 
 		while (enumerator.MoveNext() && index < data.Length)
 		{
-			if (set.AddIfNotPresent(enumerator.Current))
+			if (set.Add(enumerator.Current))
 			{
 				data[index++] = enumerator.Current;
 			}
@@ -146,7 +147,7 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 
 		while (enumerator.MoveNext())
 		{
-			if (set.AddIfNotPresent(enumerator.Current))
+			if (set.Add(enumerator.Current))
 			{
 				length++;
 			}
@@ -168,6 +169,56 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 	public long LongCount()
 	{
 		return Count<long>();
+	}
+
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<T, bool>
+	{
+		var length = TNumber.Zero;
+
+		using var enumerator = _baseQuery.GetEnumerator();
+		using var set = new PooledSet<T, TComparer>(Math.Max(_count, 0), _comparer);
+
+		while (enumerator.MoveNext())
+		{
+			if (set.Add(enumerator.Current) && @operator.Eval(enumerator.Current))
+			{
+				length++;
+			}
+		}
+
+		_count = set.Count;
+
+		return length;
+	}
+
+	public TNumber Count<TNumber>(Func<T, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		var count = TNumber.Zero;
+
+		using var enumerator = _baseQuery.GetEnumerator();
+		using var set = new PooledSet<T, TComparer>(Math.Max(_count, 0), _comparer);
+
+		while (enumerator.MoveNext())
+		{
+			if (set.Add(enumerator.Current) && predicate(enumerator.Current))
+			{
+				count++;
+			}
+		}
+
+		_count = set.Count;
+
+		return count;
+	}
+
+	public int Count(Func<T, bool> predicate)
+	{
+		return Count<int>(predicate);
+	}
+
+	public long CountLong(Func<T, bool> predicate)
+	{
+		return Count<long>(predicate);
 	}
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out T item) where TIndex : IBinaryInteger<TIndex>
@@ -217,7 +268,7 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 
 		while (enumerator.MoveNext())
 		{
-			if (set.AddIfNotPresent(enumerator.Current))
+			if (set.Add(enumerator.Current))
 			{
 				Task.Factory.StartNew(x => @operator.Do((T)x), enumerator.Current, token, TaskCreationOptions.None, schedulerPair.ConcurrentScheduler);
 
@@ -238,7 +289,7 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 
 		while (enumerator.MoveNext())
 		{
-			if (set.AddIfNotPresent(enumerator.Current))
+			if (set.Add(enumerator.Current))
 			{
 				@operator.Do(enumerator.Current);
 
@@ -261,7 +312,7 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 
 		do
 		{
-			if (set.AddIfNotPresent(enumerator.Current))
+			if (set.Add(enumerator.Current))
 			{
 				item = enumerator.Current;
 			}
@@ -310,7 +361,7 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 		if (TryGetNonEnumeratedCount(out var count))
 		{
 			using var enumerator = _baseQuery.GetEnumerator();
-			using var set = new PooledSet<T, TComparer>(Math.Max(_count, 0), ArrayPool<int>.Shared, ArrayPool<Slot<T>>.Shared, _comparer);
+			using var set = new PooledSet<T, TComparer>(Math.Max(_count, 0), _comparer);
 
 			var index = 0;
 			var array = GC.AllocateUninitializedArray<T>(count);
@@ -319,7 +370,7 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 
 			while (enumerator.MoveNext() && index < count)
 			{
-				if (set.AddIfNotPresent(enumerator.Current))
+				if (set.Add(enumerator.Current))
 				{
 					Unsafe.Add(ref first, index++) = enumerator.Current;
 				}
@@ -331,7 +382,7 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 		if (_baseQuery.TryGetNonEnumeratedCount(out count))
 		{
 			using var enumerator = _baseQuery.GetEnumerator();
-			using var set = new PooledSet<T, TComparer>(Math.Max(_count, 0), ArrayPool<int>.Shared, ArrayPool<Slot<T>>.Shared, _comparer);
+			using var set = new PooledSet<T, TComparer>(Math.Max(_count, 0), _comparer);
 
 			var index = 0;
 			var array = ArrayPool<T>.Shared.Rent(count);
@@ -340,7 +391,7 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 
 			while (enumerator.MoveNext())
 			{
-				if (set.AddIfNotPresent(enumerator.Current))
+				if (set.Add(enumerator.Current))
 				{
 					Unsafe.Add(ref first, index++) = enumerator.Current;
 				}
@@ -390,13 +441,13 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 		var list = new List<T>(Math.Max(_count, 4));
 
 		using var enumerator = _baseQuery.GetEnumerator();
-		using var set = new PooledSet<T, TComparer>(Math.Max(_count, 0), ArrayPool<int>.Shared, ArrayPool<Slot<T>>.Shared, _comparer);
+		using var set = new PooledSet<T, TComparer>(Math.Max(_count, 0), _comparer);
 
 		_count = 0;
 
 		while (enumerator.MoveNext())
 		{
-			if (set.AddIfNotPresent(enumerator.Current))
+			if (set.Add(enumerator.Current))
 			{
 				list.Add(enumerator.Current);
 				_count++;
@@ -404,6 +455,78 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 		}
 
 		return list;
+	}
+
+	public PooledList<T> ToPooledList()
+	{
+		var list = new PooledList<T>(Math.Max(_count, 4));
+
+		using var enumerator = _baseQuery.GetEnumerator();
+		using var set = GetSet();
+
+		while (enumerator.MoveNext())
+		{
+			if (set.Add(enumerator.Current))
+			{
+				list.Add(enumerator.Current);
+			}
+		}
+
+		_count = list.Count;
+		return list;
+	}
+
+	public PooledQueue<T> ToPooledQueue()
+	{
+		var queue = new PooledQueue<T>(Math.Max(_count, 4));
+
+		using var enumerator = _baseQuery.GetEnumerator();
+		using var set = GetSet();
+
+		while (enumerator.MoveNext())
+		{
+			if (set.Add(enumerator.Current))
+			{
+				queue.Enqueue(enumerator.Current);
+			}
+		}
+
+		_count = queue.Count;
+		return queue;
+	}
+
+	public PooledStack<T> ToPooledStack()
+	{
+		var stack = new PooledStack<T>(Math.Max(_count, 4));
+
+		using var enumerator = _baseQuery.GetEnumerator();
+		using var set = GetSet();
+
+		while (enumerator.MoveNext())
+		{
+			if (set.Add(enumerator.Current))
+			{
+				stack.Push(enumerator.Current);
+			}
+		}
+
+		_count = stack.Count;
+		return stack;
+	}
+
+	public PooledSet<T, TComparer1> ToPooledSet<TComparer1>(TComparer1 comparer) where TComparer1 : IEqualityComparer<T>
+	{
+		var set = new PooledSet<T, TComparer1>(Math.Max(_count, 4), comparer);
+
+		using var enumerator = _baseQuery.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			set.Add(enumerator.Current);
+		}
+
+		_count = set.Count;
+		return set;
 	}
 
 	public bool TryGetNonEnumeratedCount(out int length)
@@ -429,10 +552,11 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 		return new DistinctEnumerator<T, TBaseEnumerator, TComparer>(_baseQuery.GetEnumerator(), _comparer, Math.Max(_count, 4));
 	}
 
-	IOptiEnumerator<T> IOptiQuery<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
 	private PooledSet<T, TComparer> GetSet()
 	{
-		return new PooledSet<T, TComparer>(Math.Max(_count, 0), ArrayPool<int>.Shared, ArrayPool<Slot<T>>.Shared, _comparer);
+		return new PooledSet<T, TComparer>(Math.Max(_count, 0), _comparer);
 	}
 }

@@ -6,7 +6,7 @@
 ### Results:
 ``` ini
 
-BenchmarkDotNet=v0.13.4, OS=macOS 13.2 (22D5038i) [Darwin 22.3.0]
+BenchmarkDotNet=v0.13.4, OS=macOS 13.3 (22E5236f) [Darwin 22.4.0]
 Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 .NET SDK=8.0.100-preview.1.23115.2
   [Host]     : .NET 7.0.2 (7.0.222.60605), X64 RyuJIT AVX2
@@ -16,7 +16,7 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 ```
 |                              Method |      Mean |     Error |    StdDev |        Ratio | RatioSD | Allocated | Alloc Ratio |
 |------------------------------------ |----------:|----------:|----------:|-------------:|--------:|----------:|------------:|
-|                       HandmadedCode |  6.845 μs | 0.0355 μs | 0.0315 μs |     baseline |         |         - |          NA |
-|             OptiRangeWhereSelectSum | 11.423 μs | 0.1080 μs | 0.0957 μs | 1.67x slower |   0.02x |      32 B |          NA |
-| OptiRangeWhereSelectSumWithDelegate | 41.616 μs | 0.7863 μs | 0.8075 μs | 6.10x slower |   0.13x |      40 B |          NA |
-|                             SysLinq | 46.734 μs | 0.6122 μs | 0.5112 μs | 6.83x slower |   0.09x |     104 B |          NA |
+|                       HandmadedCode |  7.033 μs | 0.1245 μs | 0.1104 μs |     baseline |         |         - |          NA |
+|             OptiRangeWhereSelectSum | 27.354 μs | 0.2152 μs | 0.1797 μs | 3.90x slower |   0.06x |      32 B |          NA |
+|                             SysLinq | 47.427 μs | 0.4039 μs | 0.3372 μs | 6.76x slower |   0.11x |     104 B |          NA |
+| OptiRangeWhereSelectSumWithDelegate | 49.350 μs | 0.7894 μs | 0.6592 μs | 7.04x slower |   0.14x |      40 B |          NA |

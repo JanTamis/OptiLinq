@@ -1,23 +1,23 @@
+using System.Collections;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using OptiLinq.Helpers;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public partial struct MemoizeQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T, MemoizeEnumerator<T, TBaseEnumerator>>
-	where TBaseEnumerator : struct, IOptiEnumerator<T>
+public partial struct MemoizeQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T, MemoizeEnumerator<T, TBaseEnumerator>>, IDisposable
+	where TBaseEnumerator : IEnumerator<T>
 	where TBaseQuery : struct, IOptiQuery<T, TBaseEnumerator>
 {
-	private List<T>? _cache;
+	private PooledList<T> _cache;
+	private bool _cacheInitialized = false;
 	private readonly object _locker;
 	private TBaseQuery _baseEnumerable;
 
 	internal MemoizeQuery(ref TBaseQuery baseEnumerable)
 	{
 		_baseEnumerable = baseEnumerable;
-		_cache = null;
 		_locker = new object();
 	}
 
@@ -27,27 +27,25 @@ public partial struct MemoizeQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 	{
 		lock (_locker)
 		{
-			if (_cache is null)
+			if (_cacheInitialized)
 			{
-				_cache = new List<T>();
-				using var enumerable = _baseEnumerable.GetEnumerator();
-
-				while (enumerable.MoveNext())
+				for (var i = 0; i < _cache.Count; i++)
 				{
-					seed = func.Eval(seed, enumerable.Current);
-					_cache.Add(enumerable.Current);
+					seed = func.Eval(seed, _cache[i]);
 				}
 
 				return selector.Eval(seed);
 			}
 
-			var span = CollectionsMarshal.AsSpan(_cache);
+			using var enumerable = _baseEnumerable.GetEnumerator();
 
-			foreach (var item in span)
+			while (enumerable.MoveNext())
 			{
-				seed = func.Eval(seed, item);
+				seed = func.Eval(seed, enumerable.Current);
+				_cache.Add(enumerable.Current);
 			}
 
+			_cacheInitialized = true;
 			return selector.Eval(seed);
 		}
 	}
@@ -56,9 +54,15 @@ public partial struct MemoizeQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 	{
 		lock (_locker)
 		{
-			if (_cache is null)
+			if (_cacheInitialized)
 			{
-				_cache = new List<T>();
+				for (var i = 0; i < _cache.Count; i++)
+				{
+					seed = @operator.Eval(seed, _cache[i]);
+				}
+			}
+			else
+			{
 				using var enumerable = _baseEnumerable.GetEnumerator();
 
 				while (enumerable.MoveNext())
@@ -67,14 +71,7 @@ public partial struct MemoizeQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 					_cache.Add(enumerable.Current);
 				}
 
-				return seed;
-			}
-
-			var span = CollectionsMarshal.AsSpan(_cache);
-
-			foreach (var item in span)
-			{
-				seed = @operator.Eval(seed, item);
+				_cacheInitialized = true;
 			}
 
 			return seed;
@@ -85,34 +82,31 @@ public partial struct MemoizeQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 	{
 		lock (_locker)
 		{
-			if (_cache is null)
+			if (_cacheInitialized)
 			{
-				_cache = new List<T>();
-				using var enumerator = _baseEnumerable.GetEnumerator();
-
-				var result = true;
-
-				while (enumerator.MoveNext())
+				for (var i = 0; i < _cache.Count; i++)
 				{
-					_cache.Add(enumerator.Current);
-
-					if (result && !@operator.Eval(enumerator.Current))
+					if (!@operator.Eval(_cache[i]))
 					{
-						result = false;
+						return false;
 					}
 				}
-
-				return result;
 			}
-
-			var span = CollectionsMarshal.AsSpan(_cache);
-
-			foreach (var item in span)
+			else
 			{
-				if (!@operator.Eval(item))
+				using var enumerable = _baseEnumerable.GetEnumerator();
+
+				while (enumerable.MoveNext())
 				{
-					return false;
+					if (!@operator.Eval(enumerable.Current))
+					{
+						return false;
+					}
+
+					_cache.Add(enumerable.Current);
 				}
+
+				_cacheInitialized = true;
 			}
 
 			return true;
@@ -123,12 +117,13 @@ public partial struct MemoizeQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 	{
 		lock (_locker)
 		{
-			if (_cache is null)
+			if (_cacheInitialized)
 			{
-				return _baseEnumerable.Any();
+				return _cache.Count > 0;
 			}
 
-			return _cache.Count > 0;
+
+			return _baseEnumerable.Any();
 		}
 	}
 
@@ -136,34 +131,31 @@ public partial struct MemoizeQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 	{
 		lock (_locker)
 		{
-			if (_cache is null)
+			if (_cacheInitialized)
 			{
-				_cache = new List<T>();
-				using var enumerator = _baseEnumerable.GetEnumerator();
-
-				var result = false;
-
-				while (enumerator.MoveNext())
+				for (var i = 0; i < _cache.Count; i++)
 				{
-					_cache.Add(enumerator.Current);
-
-					if (!result && @operator.Eval(enumerator.Current))
+					if (@operator.Eval(_cache[i]))
 					{
-						result = true;
+						return true;
 					}
 				}
-
-				return result;
 			}
-
-			var span = CollectionsMarshal.AsSpan(_cache);
-
-			foreach (var item in span)
+			else
 			{
-				if (@operator.Eval(item))
+				using var enumerable = _baseEnumerable.GetEnumerator();
+
+				while (enumerable.MoveNext())
 				{
-					return true;
+					if (@operator.Eval(enumerable.Current))
+					{
+						return true;
+					}
+
+					_cache.Add(enumerable.Current);
 				}
+
+				_cacheInitialized = true;
 			}
 
 			return false;
@@ -172,49 +164,73 @@ public partial struct MemoizeQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 
 	public IEnumerable<T> AsEnumerable()
 	{
-		return new QueryAsEnumerable<T, MemoizeQuery<T, TBaseQuery, TBaseEnumerator>, MemoizeEnumerator<T, TBaseEnumerator>>(this);
+		return this;
 	}
 
-	public bool Contains<TComparer>(T item, TComparer comparer) where TComparer : IEqualityComparer<T>
+	public bool Contains<TComparer>(in T item, TComparer comparer) where TComparer : IEqualityComparer<T>
 	{
 		lock (_locker)
 		{
-			if (_cache is null)
+			if (_cacheInitialized)
 			{
-				return _baseEnumerable.Contains(item, comparer);
-			}
-
-			var span = CollectionsMarshal.AsSpan(_cache);
-
-			foreach (var cachedItem in span)
-			{
-				if (comparer.Equals(cachedItem, item))
+				for (var i = 0; i < _cache.Count; i++)
 				{
-					return true;
+					if (comparer.Equals(_cache[i], item))
+					{
+						return true;
+					}
 				}
+			}
+			else
+			{
+				using var enumerable = _baseEnumerable.GetEnumerator();
+
+				while (enumerable.MoveNext())
+				{
+					if (comparer.Equals(enumerable.Current, item))
+					{
+						return true;
+					}
+
+					_cache.Add(enumerable.Current);
+				}
+
+				_cacheInitialized = true;
 			}
 
 			return false;
 		}
 	}
 
-	public bool Contains(T item)
+	public bool Contains(in T item)
 	{
 		lock (_locker)
 		{
-			if (_cache is null)
+			if (_cacheInitialized)
 			{
-				return _baseEnumerable.Contains(item);
-			}
-
-			var span = CollectionsMarshal.AsSpan(_cache);
-
-			foreach (var cachedItem in span)
-			{
-				if (EqualityComparer<T>.Default.Equals(cachedItem, item))
+				for (var i = 0; i < _cache.Count; i++)
 				{
-					return true;
+					if (EqualityComparer<T>.Default.Equals(_cache[i], item))
+					{
+						return true;
+					}
 				}
+			}
+			else
+			{
+				using var enumerable = _baseEnumerable.GetEnumerator();
+
+				while (enumerable.MoveNext())
+				{
+					if (EqualityComparer<T>.Default.Equals(enumerable.Current, item))
+					{
+						return true;
+					}
+
+					_cache.Add(enumerable.Current);
+				}
+
+				_cacheInitialized = true;
 			}
 
 			return false;
@@ -225,17 +241,12 @@ public partial struct MemoizeQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 	{
 		lock (_locker)
 		{
-			if (_cache is null)
+			if (_cacheInitialized)
 			{
-				return _baseEnumerable.CopyTo(data);
+				return _cache.CopyTo(data);
 			}
 
-			var length = Math.Min(data.Length, _cache.Count);
-			var span = CollectionsMarshal.AsSpan(_cache).Slice(length);
-
-			span.CopyTo(data);
-
-			return length;
+			return _baseEnumerable.CopyTo(data);
 		}
 	}
 
@@ -244,24 +255,23 @@ public partial struct MemoizeQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 	{
 		lock (_locker)
 		{
-			if (_cache is null)
+			if (_cacheInitialized)
 			{
-				_cache = new List<T>();
-				using var enumerator = _baseEnumerable.GetEnumerator();
-
-				var result = TNumber.Zero;
-
-				while (enumerator.MoveNext())
-				{
-					_cache.Add(enumerator.Current);
-
-					result++;
-				}
-
-				return result;
+				return TNumber.CreateChecked(_cache.Count);
 			}
 
-			return TNumber.CreateChecked(_cache.Count);
+			using var enumerator = _baseEnumerable.GetEnumerator();
+
+			var result = TNumber.Zero;
+
+			while (enumerator.MoveNext())
+			{
+				_cache.Add(enumerator.Current);
+
+				result++;
+			}
+
+			return result;
 		}
 	}
 
@@ -275,22 +285,79 @@ public partial struct MemoizeQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 		return Count<long>();
 	}
 
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<T, bool>
+	{
+		lock (_locker)
+		{
+			if (_cacheInitialized)
+			{
+				var count = TNumber.Zero;
+
+				for (var i = 0; i < _cache.Count; i++)
+				{
+					if (@operator.Eval(_cache[i]))
+					{
+						count++;
+					}
+				}
+
+				return count;
+			}
+
+			return _baseEnumerable.Count<TCountOperator, TNumber>(@operator);
+		}
+	}
+
+	public TNumber Count<TNumber>(Func<T, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		lock (_locker)
+		{
+			if (_cacheInitialized)
+			{
+				var count = TNumber.Zero;
+
+				for (var i = 0; i < _cache.Count; i++)
+				{
+					if (predicate(_cache[i]))
+					{
+						count++;
+					}
+				}
+
+				return count;
+			}
+
+			return _baseEnumerable.Count<TNumber>(predicate);
+		}
+	}
+
+	public int Count(Func<T, bool> predicate)
+	{
+		return Count<int>(predicate);
+	}
+
+	public long CountLong(Func<T, bool> predicate)
+	{
+		return Count<long>(predicate);
+	}
+
 	public bool TryGetElementAt<TIndex>(TIndex index, out T item) where TIndex : IBinaryInteger<TIndex>
 	{
 		lock (_locker)
 		{
-			if (_cache is null)
+			if (_cacheInitialized)
 			{
-				return _baseEnumerable.TryGetElementAt(index, out item);
+				if (index > TIndex.CreateChecked(_cache.Count))
+				{
+					item = default;
+					return false;
+				}
+
+				item = _cache[Int32.CreateChecked(index)];
+				return true;
 			}
 
-			if (index > TIndex.CreateChecked(_cache.Count))
-			{
-				throw ThrowHelper.CreateOutOfRangeException();
-			}
-
-			item = _cache[Int32.CreateChecked(index)];
-			return true;
+			return _baseEnumerable.TryGetElementAt(index, out item);
 		}
 	}
 
@@ -314,10 +381,16 @@ public partial struct MemoizeQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 	{
 		lock (_locker)
 		{
-			if (_cache is { Count: > 0 })
+			if (_cacheInitialized)
 			{
-				item = _cache[0];
-				return true;
+				if (_cache.Count != 0)
+				{
+					item = _cache[0];
+					return true;
+				}
+
+				item = default;
+				return false;
 			}
 
 			return _baseEnumerable.TryGetFirst(out item);
@@ -346,25 +419,25 @@ public partial struct MemoizeQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 		{
 			var schedulerPair = new ConcurrentExclusiveSchedulerPair(TaskScheduler.Default, Environment.ProcessorCount);
 
-			if (_cache is null)
+			if (_cacheInitialized)
+			{
+				for (var i = 0; i < _cache.Count; i++)
+				{
+					Task.Factory.StartNew(x => @operator.Do((T)x), _cache[i], token, TaskCreationOptions.None, schedulerPair.ConcurrentScheduler);
+				}
+			}
+			else
 			{
 				using var enumerator = _baseEnumerable.GetEnumerator();
-				_cache = new List<T>();
+				_cache = new PooledList<T>();
 
 				while (enumerator.MoveNext())
 				{
 					_cache.Add(enumerator.Current);
 					Task.Factory.StartNew(x => @operator.Do((T)x), enumerator.Current, token, TaskCreationOptions.None, schedulerPair.ConcurrentScheduler);
 				}
-			}
-			else
-			{
-				var span = CollectionsMarshal.AsSpan(_cache);
 
-				foreach (var item in span)
-				{
-					Task.Factory.StartNew(x => @operator.Do((T)x), item, token, TaskCreationOptions.None, schedulerPair.ConcurrentScheduler);
-				}
+				_cacheInitialized = true;
 			}
 
 			schedulerPair.Complete();
@@ -376,25 +449,23 @@ public partial struct MemoizeQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 	{
 		lock (_locker)
 		{
-			if (_cache is null)
+			if (_cacheInitialized)
 			{
-				using var enumerator = _baseEnumerable.GetEnumerator();
-				_cache = new List<T>();
-
-				while (enumerator.MoveNext())
+				for (var i = 0; i < _cache.Count; i++)
 				{
-					_cache.Add(enumerator.Current);
-					@operator.Do(enumerator.Current);
+					@operator.Do(_cache[i]);
 				}
 			}
 			else
 			{
-				var span = CollectionsMarshal.AsSpan(_cache);
+				using var enumerator = _baseEnumerable.GetEnumerator();
 
-				foreach (var item in span)
+				while (enumerator.MoveNext())
 				{
-					@operator.Do(item);
+					_cache.Add(enumerator.Current);
 				}
+
+				_cacheInitialized = true;
 			}
 		}
 	}
@@ -403,31 +474,12 @@ public partial struct MemoizeQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 	{
 		lock (_locker)
 		{
-			if (_cache is null)
+			if (_cacheInitialized)
 			{
-				using var enumerable = _baseEnumerable.GetEnumerator();
-				_cache = new List<T>();
-
-				if (!enumerable.MoveNext())
-				{
-					item = default!;
-					return false;
-				}
-
-				item = enumerable.Current;
-				_cache.Add(item);
-
-				while (enumerable.MoveNext())
-				{
-					_cache.Add(enumerable.Current);
-
-					item = enumerable.Current;
-				}
-
-				return true;
+				InitializeList();
 			}
 
-			if (_cache.Count is 0)
+			if (_cache.Count == 0)
 			{
 				item = default!;
 				return false;
@@ -468,10 +520,19 @@ public partial struct MemoizeQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 	{
 		lock (_locker)
 		{
-			if (_cache is [var first])
+			if (_cacheInitialized)
 			{
-				item = first;
-				return true;
+				switch (_cache.Count)
+				{
+					case 0:
+						item = default!;
+						return false;
+					case 1:
+						item = _cache[0];
+						return true;
+					default:
+						throw new InvalidOperationException("Sequence contains more than one element");
+				}
 			}
 
 			return _baseEnumerable.TryGetSingle(out item);
@@ -498,18 +559,9 @@ public partial struct MemoizeQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 	{
 		lock (_locker)
 		{
-			using var enumerator = _baseEnumerable.GetEnumerator();
-
-			if (_cache is null)
+			if (!_cacheInitialized)
 			{
-				_cache = _baseEnumerable.TryGetNonEnumeratedCount(out var count)
-					? new List<T>(count)
-					: new List<T>();
-
-				while (enumerator.MoveNext())
-				{
-					_cache.Add(enumerator.Current);
-				}
+				InitializeList();
 			}
 
 			return _cache.ToArray();
@@ -520,18 +572,9 @@ public partial struct MemoizeQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 	{
 		lock (_locker)
 		{
-			using var enumerator = _baseEnumerable.GetEnumerator();
-
-			if (_cache is null)
+			if (!_cacheInitialized)
 			{
-				_cache = _baseEnumerable.TryGetNonEnumeratedCount(out var count)
-					? new List<T>(count)
-					: new List<T>();
-
-				while (enumerator.MoveNext())
-				{
-					_cache.Add(enumerator.Current);
-				}
+				InitializeList();
 			}
 
 			length = _cache.Count;
@@ -543,21 +586,19 @@ public partial struct MemoizeQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 	{
 		lock (_locker)
 		{
-			using var enumerator = _baseEnumerable.GetEnumerator();
-
-			if (_cache is null)
+			if (!_cacheInitialized)
 			{
-				_cache = _baseEnumerable.TryGetNonEnumeratedCount(out var count)
-					? new List<T>(count)
-					: new List<T>();
-
-				while (enumerator.MoveNext())
-				{
-					_cache.Add(enumerator.Current);
-				}
+				InitializeList();
 			}
 
-			return new HashSet<T>(_cache, comparer);
+			var hashset = new HashSet<T>(_cache.Count, comparer);
+
+			for (var i = 0; i < _cache.Count; i++)
+			{
+				hashset.Add(_cache[i]);
+			}
+
+			return hashset;
 		}
 	}
 
@@ -565,21 +606,96 @@ public partial struct MemoizeQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 	{
 		lock (_locker)
 		{
-			using var enumerator = _baseEnumerable.GetEnumerator();
-
-			if (_cache is null)
+			if (!_cacheInitialized)
 			{
-				_cache = _baseEnumerable.TryGetNonEnumeratedCount(out var count)
-					? new List<T>(count)
-					: new List<T>();
-
-				while (enumerator.MoveNext())
-				{
-					_cache.Add(enumerator.Current);
-				}
+				InitializeList();
 			}
 
-			return new List<T>(_cache);
+			var list = new List<T>(_cache.Count);
+
+			for (var i = 0; i < _cache.Count; i++)
+			{
+				list.Add(_cache[i]);
+			}
+
+			return list;
+		}
+	}
+
+	public PooledList<T> ToPooledList()
+	{
+		lock (_locker)
+		{
+			if (!_cacheInitialized)
+			{
+				InitializeList();
+			}
+
+			var list = new PooledList<T>(_cache.Count);
+
+			_cache.CopyTo(list.AsSpan());
+
+			return list;
+		}
+	}
+
+	public PooledQueue<T> ToPooledQueue()
+	{
+		lock (_locker)
+		{
+			if (!_cacheInitialized)
+			{
+				InitializeList();
+			}
+
+			var queue = new PooledQueue<T>(_cache.Count);
+
+			for (var i = 0; i < _cache.Count; i++)
+			{
+				queue.Enqueue(_cache[i]);
+			}
+
+			return queue;
+		}
+	}
+
+	public PooledStack<T> ToPooledStack()
+	{
+		lock (_locker)
+		{
+			if (!_cacheInitialized)
+			{
+				InitializeList();
+			}
+
+			var stack = new PooledStack<T>(_cache.Count)
+			{
+				Count = _cache.Count,
+			};
+
+			_cache.CopyTo(stack.AsSpan());
+
+			return stack;
+		}
+	}
+
+	public PooledSet<T, TComparer> ToPooledSet<TComparer>(TComparer comparer) where TComparer : IEqualityComparer<T>
+	{
+		lock (_locker)
+		{
+			if (!_cacheInitialized)
+			{
+				InitializeList();
+			}
+
+			var set = new PooledSet<T, TComparer>(_cache.Count, comparer);
+
+			for (var i = 0; i < _cache.Count; i++)
+			{
+				set.Add(_cache[i]);
+			}
+
+			return set;
 		}
 	}
 
@@ -592,28 +708,46 @@ public partial struct MemoizeQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 	{
 		lock (_locker)
 		{
-			if (_cache is not null)
+			if (_cacheInitialized)
 			{
-				span = CollectionsMarshal.AsSpan(_cache);
+				span = _cache.AsSpan();
 				return true;
 			}
 
-			if (_baseEnumerable.TryGetSpan(out span))
-			{
-				_cache = new List<T>(span.Length);
-				span.CopyTo(CollectionsMarshal.AsSpan(_cache));
-
-				return true;
-			}
+			return _baseEnumerable.TryGetSpan(out span);
 		}
-
-		return false;
 	}
 
 	public MemoizeEnumerator<T, TBaseEnumerator> GetEnumerator()
 	{
-		return new MemoizeEnumerator<T, TBaseEnumerator>(_baseEnumerable.GetEnumerator(), _locker, ref _cache);
+		return new MemoizeEnumerator<T, TBaseEnumerator>(_baseEnumerable.GetEnumerator(), _locker, ref _cache, _cacheInitialized);
 	}
 
-	IOptiEnumerator<T> IOptiQuery<T>.GetEnumerator() => GetEnumerator();
+	private void InitializeList()
+	{
+		if (_baseEnumerable.TryGetNonEnumeratedCount(out var count))
+		{
+			_cache.EnsureCapacity(count);
+			_baseEnumerable.CopyTo(_cache.AsSpan());
+		}
+		else
+		{
+			using var enumerator = _baseEnumerable.GetEnumerator();
+
+			while (enumerator.MoveNext())
+			{
+				_cache.Add(enumerator.Current);
+			}
+		}
+
+		_cacheInitialized = true;
+	}
+
+	public void Dispose()
+	{
+		_cache.Dispose();
+	}
+
+	IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

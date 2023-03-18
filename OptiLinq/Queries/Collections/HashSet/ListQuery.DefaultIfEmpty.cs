@@ -2,8 +2,8 @@ namespace OptiLinq;
 
 public partial struct HashSetQuery<T>
 {
-	public DefaultIfEmptyQuery<T, HashSetQuery<T>, HashSetEnumerator<T>> DefaultIfEmpty(in T defaultValue = default)
+	public DefaultIfEmptyQuery<T, HashSetQuery<T>, HashSet<T>.Enumerator> DefaultIfEmpty(in T defaultValue = default)
 	{
-		return new DefaultIfEmptyQuery<T, HashSetQuery<T>, HashSetEnumerator<T>>(ref this, defaultValue);
+		return new DefaultIfEmptyQuery<T, HashSetQuery<T>, HashSet<T>.Enumerator>(ref this, defaultValue);
 	}
 }

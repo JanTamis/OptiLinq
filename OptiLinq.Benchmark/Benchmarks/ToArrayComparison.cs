@@ -44,7 +44,7 @@ public class ToArrayComparison
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static T[] ToArray<T, TEnumerator>(ref TEnumerator enumerator, int size)
-		where TEnumerator : struct, IOptiEnumerator<T>
+		where TEnumerator : IEnumerator<T>
 	{
 		var result = new T[size];
 		var i = 0;

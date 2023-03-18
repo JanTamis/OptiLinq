@@ -10,15 +10,24 @@ public class Max
 {
 	private const int Count = 10000;
 
+	private readonly int[] _array;
+
+	public Max()
+	{
+		_array = Enumerable.Range(0, Count).ToArray();
+	}
+
 	[Benchmark(Baseline = true)]
 	public int Handmaded()
 	{
 		var max = int.MinValue;
 
-		for (var index = 0; index < Count; index++)
+		for (var i = 0; i < _array.Length; i++)
 		{
-			if (index > max)
-				max = index;
+			var item = _array[i];
+
+			if (item > max)
+				max = item;
 		}
 
 		return max;
@@ -27,19 +36,12 @@ public class Max
 	[Benchmark]
 	public int LINQ()
 	{
-		return Enumerable.Range(0, Count).Max();
+		return _array.Max();
 	}
 
 	[Benchmark]
-	public int StructLINQ()
+	public int OptiLinq()
 	{
-		return OptiQuery.Range(0, Count).Max();
-	}
-
-
-	[Benchmark]
-	public int ConvertMin()
-	{
-		return Enumerable.Range(0, Count).AsOptiQuery().Max();
+		return _array.AsOptiQuery().Max();
 	}
 }

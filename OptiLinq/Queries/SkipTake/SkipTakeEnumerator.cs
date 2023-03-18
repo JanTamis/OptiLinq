@@ -1,10 +1,11 @@
+using System.Collections;
 using System.Numerics;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public struct SkipTakeEnumerator<TSkipCount, TTakeCount, T, TBaseEnumerator> : IOptiEnumerator<T>
-	where TBaseEnumerator : struct, IOptiEnumerator<T>
+public struct SkipTakeEnumerator<TSkipCount, TTakeCount, T, TBaseEnumerator> : IEnumerator<T>
+	where TBaseEnumerator : IEnumerator<T>
 	where TSkipCount : IBinaryInteger<TSkipCount>
 	where TTakeCount : IBinaryInteger<TTakeCount>
 {
@@ -20,6 +21,8 @@ public struct SkipTakeEnumerator<TSkipCount, TTakeCount, T, TBaseEnumerator> : I
 		_takeCount = takeCount;
 	}
 
+	object IEnumerator.Current => Current;
+
 	public T Current => _baseEnumerator.Current;
 
 	public bool MoveNext()
@@ -34,6 +37,12 @@ public struct SkipTakeEnumerator<TSkipCount, TTakeCount, T, TBaseEnumerator> : I
 		}
 		
 		return _takeCount-- > TTakeCount.Zero && _baseEnumerator.MoveNext();
+	}
+
+	public void Reset()
+	{
+		_baseEnumerator.Reset();
+		_initialized = false;
 	}
 	
 	public void Dispose()

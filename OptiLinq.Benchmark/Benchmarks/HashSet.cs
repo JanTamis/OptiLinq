@@ -25,6 +25,7 @@ public class HashSet
 	public int LINQ()
 	{
 		var sum = 0;
+		
 		foreach (var i in hashset)
 		{
 			sum += i;
@@ -43,6 +44,7 @@ public class HashSet
 	public int OptiLINQ()
 	{
 		var sum = 0;
+		
 		foreach (var i in hashset.AsOptiQuery())
 		{
 			sum += i;

@@ -2,13 +2,13 @@ namespace OptiLinq;
 
 public partial struct ListQuery<T>
 {
-	public OrderQuery<T, ListQuery<T>, ListEnumerator<T>, TComparer> Order<TComparer>(TComparer comparer) where TComparer : IComparer<T>
+	public OrderQuery<T, ListQuery<T>, List<T>.Enumerator, TComparer> Order<TComparer>(TComparer comparer) where TComparer : IComparer<T>
 	{
-		return new OrderQuery<T, ListQuery<T>, ListEnumerator<T>, TComparer>(ref this, comparer);
+		return new OrderQuery<T, ListQuery<T>, List<T>.Enumerator, TComparer>(ref this, comparer);
 	}
 
-	public OrderQuery<T, ListQuery<T>, ListEnumerator<T>, Comparer<T>> Order()
+	public OrderQuery<T, ListQuery<T>, List<T>.Enumerator, Comparer<T>> Order()
 	{
-		return new OrderQuery<T, ListQuery<T>, ListEnumerator<T>, Comparer<T>>(ref this, Comparer<T>.Default);
+		return new OrderQuery<T, ListQuery<T>, List<T>.Enumerator, Comparer<T>>(ref this, Comparer<T>.Default);
 	}
 }

@@ -14,11 +14,11 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|                                      Method |      Mean |     Error |    StdDev |        Ratio | RatioSD | Allocated | Alloc Ratio |
-|-------------------------------------------- |----------:|----------:|----------:|-------------:|--------:|----------:|------------:|
-|                              ForEachOnArray |  3.044 μs | 0.0170 μs | 0.0142 μs | 1.43x faster |   0.01x |         - |          NA |
-|                                  ForOnArray |  4.341 μs | 0.0312 μs | 0.0277 μs |     baseline |         |         - |          NA |
-|              ForEachOnArrayStructEnumerable |  4.999 μs | 0.0543 μs | 0.0481 μs | 1.15x slower |   0.01x |         - |          NA |
-|                    ForEachOnYieldEnumerable | 40.335 μs | 0.3106 μs | 0.2425 μs | 9.29x slower |   0.07x |      56 B |          NA |
-| ForEachOnArrayStructEnumerableAsIEnumerable | 40.534 μs | 0.6276 μs | 0.5240 μs | 9.33x slower |   0.15x |      32 B |          NA |
-|                        ForEachOnIEnumerable | 40.545 μs | 0.4628 μs | 0.4103 μs | 9.34x slower |   0.11x |      32 B |          NA |
+|                               Method |      Mean |     Error |    StdDev |         Ratio | RatioSD | Allocated | Alloc Ratio |
+|------------------------------------- |----------:|----------:|----------:|--------------:|--------:|----------:|------------:|
+|                       ForEachOnArray |  3.221 μs | 0.0226 μs | 0.0188 μs |  1.44x faster |   0.02x |         - |          NA |
+|                           ForOnArray |  4.647 μs | 0.0624 μs | 0.0553 μs |      baseline |         |         - |          NA |
+|              ForEachOnArrayOptiQuery |  5.320 μs | 0.0719 μs | 0.0562 μs |  1.15x slower |   0.02x |         - |          NA |
+|                 ForEachOnIEnumerable | 42.714 μs | 0.2715 μs | 0.2267 μs |  9.19x slower |   0.13x |      32 B |          NA |
+| ForEachOnArrayOptiQueryAsIEnumerable | 42.790 μs | 0.2539 μs | 0.2375 μs |  9.21x slower |   0.14x |      32 B |          NA |
+|             ForEachOnYieldEnumerable | 47.630 μs | 0.3985 μs | 0.3533 μs | 10.25x slower |   0.14x |      56 B |          NA |

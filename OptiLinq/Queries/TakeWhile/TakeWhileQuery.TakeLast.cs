@@ -1,5 +1,3 @@
-using System.Numerics;
-
 namespace OptiLinq;
 
 public partial struct TakeWhileQuery<T, TOperator, TBaseQuery, TBaseEnumerator>

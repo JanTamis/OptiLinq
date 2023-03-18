@@ -2,8 +2,8 @@ namespace OptiLinq;
 
 public partial struct EnumerableQuery<T>
 {
-	public AppendQuery<T, EnumerableQuery<T>, EnumerableEnumerator<T>> Append(in T element)
+	public AppendQuery<T, EnumerableQuery<T>, IEnumerator<T>> Append(in T element)
 	{
-		return new AppendQuery<T, EnumerableQuery<T>, EnumerableEnumerator<T>>(ref this, in element);
+		return new AppendQuery<T, EnumerableQuery<T>, IEnumerator<T>>(ref this, in element);
 	}
 }

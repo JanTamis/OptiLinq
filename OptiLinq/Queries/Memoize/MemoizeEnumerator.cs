@@ -1,27 +1,31 @@
+using System.Collections;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public struct MemoizeEnumerator<T, TEnumerator> : IOptiEnumerator<T> 
-	where TEnumerator : struct, IOptiEnumerator<T>
+public struct MemoizeEnumerator<T, TEnumerator> : IEnumerator<T>
+	where TEnumerator : IEnumerator<T>
 {
-	private List<T>? _cache;
-	private readonly object _locker;
+	private PooledList<T> _cache;
 	private TEnumerator _baseEnumerator;
 	
 	private bool _lockTaken;
 	private readonly bool _useCache;
+	private readonly object _locker;
 	
 	private int _index = -1;
 
-	internal MemoizeEnumerator(TEnumerator baseEnumerator, object locker, ref List<T>? cache)
+	internal MemoizeEnumerator(TEnumerator baseEnumerator, object locker, ref PooledList<T> cache, bool useCache)
 	{
 		_baseEnumerator = baseEnumerator;
 		_locker = locker;
 		_cache = cache;
-		
-		_useCache = _cache is not null;
+
+		_useCache = useCache;
 	}
+
+	object IEnumerator.Current => Current;
 	
 	public T Current { get; private set; }
 
@@ -32,7 +36,7 @@ public struct MemoizeEnumerator<T, TEnumerator> : IOptiEnumerator<T>
 			Monitor.Enter(_locker, ref _lockTaken);
 		}
 
-		if (_useCache && _cache is not null)
+		if (_useCache)
 		{
 			if (++_index < _cache.Count)
 			{
@@ -42,12 +46,9 @@ public struct MemoizeEnumerator<T, TEnumerator> : IOptiEnumerator<T>
 		}
 		else
 		{
-			_cache ??= new List<T>();
-			
 			if (_baseEnumerator.MoveNext())
 			{
-				Current = _baseEnumerator.Current;
-				_cache?.Add(Current);
+				_cache.Add(_baseEnumerator.Current);
 				
 				return true;
 			}
@@ -55,6 +56,12 @@ public struct MemoizeEnumerator<T, TEnumerator> : IOptiEnumerator<T>
 
 		Current = default;
 		return false;
+	}
+
+	public void Reset()
+	{
+		_index = -1;
+		_baseEnumerator.Reset();
 	}
 	
 	public void Dispose()

@@ -1,13 +1,17 @@
+using System.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public struct SelectEnumerator<T, TResult, TOperator, TBaseEnumerator> : IOptiEnumerator<TResult>
+public struct SelectEnumerator<T, TResult, TOperator, TBaseEnumerator> : IEnumerator<TResult>
 	where TOperator : IFunction<T, TResult>
-	where TBaseEnumerator : struct, IOptiEnumerator<T>
+	where TBaseEnumerator : IEnumerator<T>
 {
 	private TBaseEnumerator _baseEnumerator;
 	private TOperator _operator;
+
+
+	object IEnumerator.Current => Current;
 
 	public TResult Current => _operator.Eval(_baseEnumerator.Current);
 
@@ -20,6 +24,11 @@ public struct SelectEnumerator<T, TResult, TOperator, TBaseEnumerator> : IOptiEn
 	public bool MoveNext()
 	{
 		return _baseEnumerator.MoveNext();
+	}
+
+	public void Reset()
+	{
+		_baseEnumerator.Reset();
 	}
 
 	public void Dispose()

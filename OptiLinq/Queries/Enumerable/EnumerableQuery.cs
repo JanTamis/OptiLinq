@@ -1,16 +1,20 @@
+using System.Collections;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public partial struct EnumerableQuery<T> : IOptiQuery<T, EnumerableEnumerator<T>>
+public partial struct EnumerableQuery<T> : IOptiQuery<T, IEnumerator<T>>
 {
 	private readonly IEnumerable<T> _enumerable;
 
 	internal EnumerableQuery(IEnumerable<T> enumerable)
 	{
+		ArgumentNullException.ThrowIfNull(enumerable);
+		
 		_enumerable = enumerable;
 	}
 
@@ -80,7 +84,7 @@ public partial struct EnumerableQuery<T> : IOptiQuery<T, EnumerableEnumerator<T>
 		return _enumerable;
 	}
 
-	public bool Contains<TComparer>(T item, TComparer comparer) where TComparer : IEqualityComparer<T>
+	public bool Contains<TComparer>(in T item, TComparer comparer) where TComparer : IEqualityComparer<T>
 	{
 		if (comparer == null)
 		{
@@ -106,7 +110,7 @@ public partial struct EnumerableQuery<T> : IOptiQuery<T, EnumerableEnumerator<T>
 		return false;
 	}
 
-	public bool Contains(T item)
+	public bool Contains(in T item)
 	{
 		return _enumerable.Contains(item);
 	}
@@ -147,6 +151,50 @@ public partial struct EnumerableQuery<T> : IOptiQuery<T, EnumerableEnumerator<T>
 	public long LongCount()
 	{
 		return _enumerable.LongCount();
+	}
+
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<T, bool>
+	{
+		using var enumerator = _enumerable.GetEnumerator();
+
+		var count = TNumber.Zero;
+
+		while (enumerator.MoveNext())
+		{
+			if (@operator.Eval(enumerator.Current))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public TNumber Count<TNumber>(Func<T, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		var count = TNumber.Zero;
+
+		using var enumerator = _enumerable.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			if (predicate(enumerator.Current))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public int Count(Func<T, bool> predicate)
+	{
+		return _enumerable.Count(predicate);
+	}
+
+	public long CountLong(Func<T, bool> predicate)
+	{
+		return _enumerable.LongCount(predicate);
 	}
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out T item) where TIndex : IBinaryInteger<TIndex>
@@ -307,6 +355,58 @@ public partial struct EnumerableQuery<T> : IOptiQuery<T, EnumerableEnumerator<T>
 		return _enumerable.ToList();
 	}
 
+	public PooledList<T> ToPooledList()
+	{
+		TryGetNonEnumeratedCount(out var count);
+		var list = new PooledList<T>(Math.Min(count, 4));
+
+		foreach (var item in _enumerable)
+		{
+			list.Add(item);
+		}
+
+		return list;
+	}
+
+	public PooledQueue<T> ToPooledQueue()
+	{
+		TryGetNonEnumeratedCount(out var count);
+		var queue = new PooledQueue<T>(Math.Min(count, 4));
+
+		foreach (var item in _enumerable)
+		{
+			queue.Enqueue(item);
+		}
+
+		return queue;
+	}
+
+	public PooledStack<T> ToPooledStack()
+	{
+		TryGetNonEnumeratedCount(out var count);
+		var stack = new PooledStack<T>(Math.Min(count, 4));
+
+		foreach (var item in _enumerable)
+		{
+			stack.Push(item);
+		}
+
+		return stack;
+	}
+
+	public PooledSet<T, TComparer> ToPooledSet<TComparer>(TComparer comparer) where TComparer : IEqualityComparer<T>
+	{
+		TryGetNonEnumeratedCount(out var count);
+		var set = new PooledSet<T, TComparer>(Math.Min(count, 4), comparer);
+
+		foreach (var item in _enumerable)
+		{
+			set.Add(item);
+		}
+
+		return set;
+	}
+
 	public bool TryGetNonEnumeratedCount(out int length)
 	{
 		return _enumerable.TryGetNonEnumeratedCount(out length);
@@ -330,13 +430,11 @@ public partial struct EnumerableQuery<T> : IOptiQuery<T, EnumerableEnumerator<T>
 		return false;
 	}
 
-	public EnumerableEnumerator<T> GetEnumerator()
+	public IEnumerator<T> GetEnumerator()
 	{
-		return new EnumerableEnumerator<T>(_enumerable.GetEnumerator());
+		return _enumerable.GetEnumerator();
 	}
 
-	IOptiEnumerator<T> IOptiQuery<T>.GetEnumerator()
-	{
-		return GetEnumerator();
-	}
+	IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Order;
 

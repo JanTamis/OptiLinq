@@ -1,12 +1,13 @@
+using System.Collections;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using OptiLinq.Helpers;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
 public partial struct ChunkQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T[], ChunkEnumerator<T, TBaseEnumerator>>
-	where TBaseEnumerator : struct, IOptiEnumerator<T>
+	where TBaseEnumerator : IEnumerator<T>
 	where TBaseQuery : struct, IOptiQuery<T, TBaseEnumerator>
 {
 	private TBaseQuery _baseEnumerable;
@@ -81,10 +82,10 @@ public partial struct ChunkQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T[
 
 	public IEnumerable<T[]> AsEnumerable()
 	{
-		return new QueryAsEnumerable<T[], ChunkQuery<T, TBaseQuery, TBaseEnumerator>, ChunkEnumerator<T, TBaseEnumerator>>(this);
+		return this;
 	}
 
-	public bool Contains<TComparer>(T[] item, TComparer comparer) where TComparer : IEqualityComparer<T[]>
+	public bool Contains<TComparer>(in T[] item, TComparer comparer) where TComparer : IEqualityComparer<T[]>
 	{
 		using var enumerator = GetEnumerator();
 
@@ -99,7 +100,7 @@ public partial struct ChunkQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T[
 		return false;
 	}
 
-	public bool Contains(T[] item)
+	public bool Contains(in T[] item)
 	{
 		return Contains(item, EqualityComparer<T[]>.Default);
 	}
@@ -133,6 +134,49 @@ public partial struct ChunkQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T[
 	public long LongCount()
 	{
 		return Count<long>();
+	}
+
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<T[], bool>
+	{
+		var count = TNumber.Zero;
+
+		using var enumerator = GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			if (@operator.Eval(enumerator.Current))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public TNumber Count<TNumber>(Func<T[], bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		using var enumerator = GetEnumerator();
+		var count = TNumber.Zero;
+
+		while (enumerator.MoveNext())
+		{
+			if (predicate(enumerator.Current))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public int Count(Func<T[], bool> predicate)
+	{
+		return Count<int>(predicate);
+	}
+
+	public long CountLong(Func<T[], bool> predicate)
+	{
+		return Count<long>(predicate);
 	}
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out T[] item) where TIndex : IBinaryInteger<TIndex>
@@ -322,6 +366,68 @@ public partial struct ChunkQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T[
 		return list;
 	}
 
+	public PooledList<T[]> ToPooledList()
+	{
+		var list = TryGetNonEnumeratedCount(out var count)
+			? new PooledList<T[]>(count)
+			: new PooledList<T[]>();
+
+		using var enumerator = GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			list.Add(enumerator.Current);
+		}
+
+		return list;
+	}
+
+	public PooledQueue<T[]> ToPooledQueue()
+	{
+		var queue = TryGetNonEnumeratedCount(out var count)
+			? new PooledQueue<T[]>(count)
+			: new PooledQueue<T[]>();
+
+		using var enumerator = GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			queue.Enqueue(enumerator.Current);
+		}
+
+		return queue;
+	}
+
+	public PooledStack<T[]> ToPooledStack()
+	{
+		var stack = TryGetNonEnumeratedCount(out var count)
+			? new PooledStack<T[]>(count)
+			: new PooledStack<T[]>();
+
+		using var enumerator = GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			stack.Push(enumerator.Current);
+		}
+
+		return stack;
+	}
+
+	public PooledSet<T[], TComparer> ToPooledSet<TComparer>(TComparer comparer) where TComparer : IEqualityComparer<T[]>
+	{
+		var set = new PooledSet<T[], TComparer>(comparer);
+
+		using var enumerator = GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			set.Add(enumerator.Current);
+		}
+
+		return set;
+	}
+
 	public bool TryGetNonEnumeratedCount(out int length)
 	{
 		if (_baseEnumerable.TryGetNonEnumeratedCount(out var count))
@@ -345,8 +451,6 @@ public partial struct ChunkQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T[
 		return new ChunkEnumerator<T, TBaseEnumerator>(_baseEnumerable.GetEnumerator(), _chunkSize);
 	}
 
-	IOptiEnumerator<T[]> IOptiQuery<T[]>.GetEnumerator()
-	{
-		return GetEnumerator();
-	}
+	IEnumerator<T[]> IEnumerable<T[]>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

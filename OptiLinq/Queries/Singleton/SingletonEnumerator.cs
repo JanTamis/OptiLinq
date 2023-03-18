@@ -1,8 +1,8 @@
-using OptiLinq.Interfaces;
+using System.Collections;
 
 namespace OptiLinq;
 
-public struct SingletonEnumerator<T> : IOptiEnumerator<T>
+public struct SingletonEnumerator<T> : IEnumerator<T>
 {
 	private bool _isValid = true;
 
@@ -10,6 +10,8 @@ public struct SingletonEnumerator<T> : IOptiEnumerator<T>
 	{
 		Current = element;
 	}
+
+	object IEnumerator.Current => Current;
 
 	public T Current { get; }
 
@@ -22,6 +24,11 @@ public struct SingletonEnumerator<T> : IOptiEnumerator<T>
 		}
 
 		return false;
+	}
+
+	public void Reset()
+	{
+		_isValid = true;
 	}
 
 	public void Dispose()

@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using OptiLinq.Interfaces;
 
-namespace OptiLinq.Helpers;
+namespace OptiLinq.Collections;
 
 internal struct LargeArrayBuilder<T>
 {
@@ -84,7 +84,7 @@ internal struct LargeArrayBuilder<T>
 	/// It is the caller's responsibility to ensure that adding <paramref name="items"/>
 	/// does not cause the builder to exceed its maximum capacity.
 	/// </remarks>
-	public void AddRange<TEnumerator>(TEnumerator enumerator) where TEnumerator : IOptiEnumerator<T>
+	public void AddRange<TEnumerator>(TEnumerator enumerator) where TEnumerator : IEnumerator<T>
 	{
 		var destination = _current;
 		var index = _index;

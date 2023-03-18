@@ -2,8 +2,8 @@ namespace OptiLinq;
 
 public partial struct EnumerableQuery<T>
 {
-	public ShuffleQuery<T, EnumerableQuery<T>, EnumerableEnumerator<T>> Shuffle(int? seed = null)
+	public ShuffleQuery<T, EnumerableQuery<T>, IEnumerator<T>> Shuffle(int? seed = null)
 	{
-		return new ShuffleQuery<T, EnumerableQuery<T>, EnumerableEnumerator<T>>(ref this, seed);
+		return new ShuffleQuery<T, EnumerableQuery<T>, IEnumerator<T>>(ref this, seed);
 	}
 }

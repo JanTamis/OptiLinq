@@ -3,16 +3,15 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
-namespace OptiLinq.Helpers;
+namespace OptiLinq.Collections;
 
 // A simple Queue of generic objects.  Internally it is implemented as a
 // circular buffer, so Enqueue can be O(n).  Dequeue is O(1).
 [DebuggerDisplay("Count = {Count}")]
 [Serializable]
-[TypeForwardedFrom("System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089")]
 public struct PooledQueue<T> : IDisposable
 {
-	private T[] _array;
+	internal T[] _array;
 	private int _head; // The index from which to dequeue if the queue isn't empty.
 	private int _tail; // The index at which to enqueue if the queue isn't full.
 	private int _size; // Number of elements.
@@ -21,7 +20,7 @@ public struct PooledQueue<T> : IDisposable
 	// capacity and grow factor are used.
 	public PooledQueue() : this(4)
 	{
-		_array = Array.Empty<T>();
+		
 	}
 
 	// Creates a queue with room for capacity objects. The default grow factor
@@ -31,7 +30,11 @@ public struct PooledQueue<T> : IDisposable
 		_array = ArrayPool<T>.Shared.Rent(capacity);
 	}
 
-	public int Count => _size;
+	public int Count
+	{
+		get => _size;
+		internal set => _size = value;
+	}
 
 	// Removes all Objects from the queue.
 	public void Clear()
@@ -166,7 +169,7 @@ public struct PooledQueue<T> : IDisposable
 
 	// Returns true if the queue contains at least one object equal to item.
 	// Equality is determined using EqualityComparer<T>.Default.Equals().
-	public bool Contains(T item)
+	public bool Contains(in T item)
 	{
 		if (_size == 0)
 		{

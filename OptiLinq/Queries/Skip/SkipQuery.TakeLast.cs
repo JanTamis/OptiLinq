@@ -1,5 +1,3 @@
-using System.Numerics;
-
 namespace OptiLinq;
 
 public partial struct SkipQuery<TCount, T, TBaseQuery, TBaseEnumerator>

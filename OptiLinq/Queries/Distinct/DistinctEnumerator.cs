@@ -1,10 +1,10 @@
-using OptiLinq.Helpers;
-using OptiLinq.Interfaces;
+using System.Collections;
+using OptiLinq.Collections;
 
 namespace OptiLinq;
 
-public struct DistinctEnumerator<T, TBaseEnumerator, TComparer> : IOptiEnumerator<T>
-	where TBaseEnumerator : IOptiEnumerator<T>
+public struct DistinctEnumerator<T, TBaseEnumerator, TComparer> : IEnumerator<T>
+	where TBaseEnumerator : IEnumerator<T>
 	where TComparer : IEqualityComparer<T>
 {
 	private TBaseEnumerator _baseEnumerator;
@@ -16,19 +16,27 @@ public struct DistinctEnumerator<T, TBaseEnumerator, TComparer> : IOptiEnumerato
 		_set = new PooledSet<T, TComparer>(capacity, comparer);
 	}
 
+	object IEnumerator.Current => Current;
+
 	public T Current => _baseEnumerator.Current;
 
 	public bool MoveNext()
 	{
 		while (_baseEnumerator.MoveNext())
 		{
-			if (_set.AddIfNotPresent(_baseEnumerator.Current))
+			if (_set.Add(_baseEnumerator.Current))
 			{
 				return true;
 			}
 		}
 
 		return false;
+	}
+
+	public void Reset()
+	{
+		_set.Clear();
+		_baseEnumerator.Reset();
 	}
 
 	public void Dispose()

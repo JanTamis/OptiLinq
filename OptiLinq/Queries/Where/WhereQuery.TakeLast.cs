@@ -1,5 +1,3 @@
-using System.Numerics;
-
 namespace OptiLinq;
 
 public partial struct WhereQuery<T, TOperator, TBaseQuery, TBaseEnumerator>

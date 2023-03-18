@@ -1,13 +1,14 @@
+using System.Collections;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using OptiLinq.Helpers;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
 public partial struct GroupByQuery<T, TKey, TKeySelector, TBaseQuery, TBaseEnumerator, TComparer> : IOptiQuery<ArrayQuery<T>, GroupByEnumerator<TKey, T, TComparer>>
 	where TKeySelector : struct, IFunction<T, TKey>
-	where TBaseEnumerator : struct, IOptiEnumerator<T>
+	where TBaseEnumerator : IEnumerator<T>
 	where TBaseQuery : struct, IOptiQuery<T, TBaseEnumerator>
 	where TComparer : IEqualityComparer<TKey>
 {
@@ -83,10 +84,10 @@ public partial struct GroupByQuery<T, TKey, TKeySelector, TBaseQuery, TBaseEnume
 
 	public IEnumerable<ArrayQuery<T>> AsEnumerable()
 	{
-		return new QueryAsEnumerable<ArrayQuery<T>, GroupByQuery<T, TKey, TKeySelector, TBaseQuery, TBaseEnumerator, TComparer>, GroupByEnumerator<TKey, T, TComparer>>(this);
+		return this;
 	}
 
-	public bool Contains<TComparer1>(ArrayQuery<T> item, TComparer1 comparer) where TComparer1 : IEqualityComparer<ArrayQuery<T>>
+	public bool Contains<TComparer1>(in ArrayQuery<T> item, TComparer1 comparer) where TComparer1 : IEqualityComparer<ArrayQuery<T>>
 	{
 		using var enumerator = GetEnumerator();
 
@@ -101,7 +102,7 @@ public partial struct GroupByQuery<T, TKey, TKeySelector, TBaseQuery, TBaseEnume
 		return false;
 	}
 
-	public bool Contains(ArrayQuery<T> item)
+	public bool Contains(in ArrayQuery<T> item)
 	{
 		using var enumerator = GetEnumerator();
 
@@ -140,7 +141,7 @@ public partial struct GroupByQuery<T, TKey, TKeySelector, TBaseQuery, TBaseEnume
 
 		while (enumerator.MoveNext())
 		{
-			if (set.AddIfNotPresent(_keySelector.Eval(enumerator.Current)))
+			if (set.Add(_keySelector.Eval(enumerator.Current)))
 			{
 				length++;
 			}
@@ -157,6 +158,50 @@ public partial struct GroupByQuery<T, TKey, TKeySelector, TBaseQuery, TBaseEnume
 	public long LongCount()
 	{
 		return Count<long>();
+	}
+
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<ArrayQuery<T>, bool>
+	{
+		var count = TNumber.Zero;
+
+		using var enumerator = GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			if (@operator.Eval(enumerator.Current))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public TNumber Count<TNumber>(Func<ArrayQuery<T>, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		var count = TNumber.Zero;
+
+		using var enumerator = GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			if (predicate(enumerator.Current))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public int Count(Func<ArrayQuery<T>, bool> predicate)
+	{
+		return Count<int>(predicate);
+	}
+
+	public long CountLong(Func<ArrayQuery<T>, bool> predicate)
+	{
+		return Count<long>(predicate);
 	}
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out ArrayQuery<T> item) where TIndex : IBinaryInteger<TIndex>
@@ -407,6 +452,58 @@ public partial struct GroupByQuery<T, TKey, TKeySelector, TBaseQuery, TBaseEnume
 		return list;
 	}
 
+	public PooledList<ArrayQuery<T>> ToPooledList()
+	{
+		using var lookup = GetLookup();
+		var list = new PooledList<ArrayQuery<T>>(lookup.Count);
+
+		for (var i = 0; i < lookup.Count; i++)
+		{
+			list[i] = new ArrayQuery<T>(lookup.slots[i].value.ToArray());
+		}
+
+		return list;
+	}
+
+	public PooledQueue<ArrayQuery<T>> ToPooledQueue()
+	{
+		using var lookup = GetLookup();
+		var queue = new PooledQueue<ArrayQuery<T>>(lookup.Count);
+
+		for (var i = 0; i < lookup.Count; i++)
+		{
+			queue.Enqueue(new ArrayQuery<T>(lookup.slots[i].value.ToArray()));
+		}
+
+		return queue;
+	}
+
+	public PooledStack<ArrayQuery<T>> ToPooledStack()
+	{
+		using var lookup = GetLookup();
+		var stack = new PooledStack<ArrayQuery<T>>(lookup.Count);
+
+		for (var i = 0; i < lookup.Count; i++)
+		{
+			stack.Push(new ArrayQuery<T>(lookup.slots[i].value.ToArray()));
+		}
+
+		return stack;
+	}
+
+	public PooledSet<ArrayQuery<T>, TComparer1> ToPooledSet<TComparer1>(TComparer1 comparer) where TComparer1 : IEqualityComparer<ArrayQuery<T>>
+	{
+		using var lookup = GetLookup();
+		var set = new PooledSet<ArrayQuery<T>, TComparer1>(lookup.Count, comparer);
+
+		for (var i = 0; i < lookup.Count; i++)
+		{
+			set.Add(new ArrayQuery<T>(lookup.slots[i].value.ToArray()));
+		}
+
+		return set;
+	}
+
 	public bool TryGetNonEnumeratedCount(out int length)
 	{
 		length = 0;
@@ -424,7 +521,8 @@ public partial struct GroupByQuery<T, TKey, TKeySelector, TBaseQuery, TBaseEnume
 		return new GroupByEnumerator<TKey, T, TComparer>(GetLookup());
 	}
 
-	IOptiEnumerator<ArrayQuery<T>> IOptiQuery<ArrayQuery<T>>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+	IEnumerator<ArrayQuery<T>> IEnumerable<ArrayQuery<T>>.GetEnumerator() => GetEnumerator();
 
 	private Lookup<TKey, T, TComparer> GetLookup()
 	{

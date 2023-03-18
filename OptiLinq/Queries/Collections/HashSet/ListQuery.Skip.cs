@@ -4,9 +4,9 @@ namespace OptiLinq;
 
 public partial struct HashSetQuery<T>
 {
-	public SkipQuery<TCount, T, HashSetQuery<T>, HashSetEnumerator<T>> Skip<TCount>(TCount count)
+	public SkipQuery<TCount, T, HashSetQuery<T>, HashSet<T>.Enumerator> Skip<TCount>(TCount count)
 		where TCount : IBinaryInteger<TCount>
 	{
-		return new SkipQuery<TCount, T, HashSetQuery<T>, HashSetEnumerator<T>>(ref this, count);
+		return new SkipQuery<TCount, T, HashSetQuery<T>, HashSet<T>.Enumerator>(ref this, count);
 	}
 }

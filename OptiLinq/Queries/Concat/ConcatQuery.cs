@@ -1,15 +1,16 @@
+using System.Collections;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using OptiLinq.Helpers;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public partial struct ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery> : IOptiQuery<T, ConcatEnumerator<T, TFirstEnumerator, IOptiEnumerator<T>>>
+public partial struct ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery> : IOptiQuery<T, ConcatEnumerator<T, TFirstEnumerator, IEnumerator<T>>>
 	where TFirstQuery : struct, IOptiQuery<T, TFirstEnumerator>
 	where TSecondQuery : struct, IOptiQuery<T>
-	where TFirstEnumerator : struct, IOptiEnumerator<T>
+	where TFirstEnumerator : IEnumerator<T>
 {
 	private TFirstQuery _firstQuery;
 	private TSecondQuery _secondQuery;
@@ -49,17 +50,17 @@ public partial struct ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery
 
 	public IEnumerable<T> AsEnumerable()
 	{
-		return new QueryAsEnumerable<T, ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery>, ConcatEnumerator<T, TFirstEnumerator, IOptiEnumerator<T>>>(this);
+		return this;
 	}
 
-	public bool Contains<TComparer>(T item, TComparer comparer) where TComparer : IEqualityComparer<T>
+	public bool Contains<TComparer>(in T item, TComparer comparer) where TComparer : IEqualityComparer<T>
 	{
 		return _firstQuery.Contains(item, comparer) || _secondQuery.Contains(item, comparer);
 	}
 
-	public bool Contains(T item)
+	public bool Contains(in T item)
 	{
-		return _firstQuery.Contains(item) || _secondQuery.Contains(item);
+		return _firstQuery.Contains(in item) || _secondQuery.Contains(in item);
 	}
 
 	public int CopyTo(Span<T> data)
@@ -82,6 +83,26 @@ public partial struct ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery
 	public long LongCount()
 	{
 		return Count<long>();
+	}
+
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<T, bool>
+	{
+		return _firstQuery.Count<TCountOperator, TNumber>(@operator) + _secondQuery.Count<TCountOperator, TNumber>(@operator);
+	}
+
+	public TNumber Count<TNumber>(Func<T, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		return _firstQuery.Count<TNumber>(predicate) + _secondQuery.Count<TNumber>(predicate);
+	}
+
+	public int Count(Func<T, bool> predicate)
+	{
+		return _firstQuery.Count(predicate) + _secondQuery.Count(predicate);
+	}
+
+	public long CountLong(Func<T, bool> predicate)
+	{
+		return _firstQuery.CountLong(predicate) + _secondQuery.CountLong(predicate);
 	}
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out T item) where TIndex : IBinaryInteger<TIndex>
@@ -352,6 +373,131 @@ public partial struct ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery
 		return list;
 	}
 
+	public PooledList<T> ToPooledList()
+	{
+		var list = new PooledList<T>();
+
+		if (_firstQuery.TryGetNonEnumeratedCount(out var count))
+		{
+			list.EnsureCapacity(list.Count + count);
+			_firstQuery.CopyTo(list.Items.AsSpan(list.Count));
+		}
+		else
+		{
+			using var enumerator = _firstQuery.GetEnumerator();
+
+			while (enumerator.MoveNext())
+			{
+				list.Add(enumerator.Current);
+			}
+		}
+
+		if (_secondQuery.TryGetNonEnumeratedCount(out count))
+		{
+			list.EnsureCapacity(list.Count + count);
+			_secondQuery.CopyTo(list.Items.AsSpan(list.Count));
+		}
+		else
+		{
+			using var enumerator = _secondQuery.GetEnumerator();
+
+			while (enumerator.MoveNext())
+			{
+				list.Add(enumerator.Current);
+			}
+		}
+
+		return list;
+	}
+
+	public PooledQueue<T> ToPooledQueue()
+	{
+		var queue = new PooledQueue<T>();
+
+		if (_firstQuery.TryGetNonEnumeratedCount(out var count))
+		{
+			queue.EnsureCapacity(queue.Count + count);
+			_firstQuery.CopyTo(queue._array.AsSpan(queue.Count));
+		}
+		else
+		{
+			using var enumerator = _firstQuery.GetEnumerator();
+
+			while (enumerator.MoveNext())
+			{
+				queue.Enqueue(enumerator.Current);
+			}
+		}
+
+		if (_secondQuery.TryGetNonEnumeratedCount(out count))
+		{
+			queue.EnsureCapacity(queue.Count + count);
+			_secondQuery.CopyTo(queue._array.AsSpan(queue.Count));
+		}
+		else
+		{
+			using var enumerator = _secondQuery.GetEnumerator();
+
+			while (enumerator.MoveNext())
+			{
+				queue.Enqueue(enumerator.Current);
+			}
+		}
+
+		return queue;
+	}
+
+	public PooledStack<T> ToPooledStack()
+	{
+		var stack = new PooledStack<T>();
+
+		if (_firstQuery.TryGetNonEnumeratedCount(out var count))
+		{
+			stack.EnsureCapacity(stack.Count + count);
+			_firstQuery.CopyTo(stack._array.AsSpan(stack.Count));
+		}
+		else
+		{
+			using var enumerator = _firstQuery.GetEnumerator();
+
+			while (enumerator.MoveNext())
+			{
+				stack.Push(enumerator.Current);
+			}
+		}
+
+		if (_secondQuery.TryGetNonEnumeratedCount(out count))
+		{
+			stack.EnsureCapacity(stack.Count + count);
+			_secondQuery.CopyTo(stack._array.AsSpan(stack.Count));
+		}
+		else
+		{
+			using var enumerator = _secondQuery.GetEnumerator();
+
+			while (enumerator.MoveNext())
+			{
+				stack.Push(enumerator.Current);
+			}
+		}
+
+		return stack;
+	}
+
+	public PooledSet<T, TComparer> ToPooledSet<TComparer>(TComparer comparer) where TComparer : IEqualityComparer<T>
+	{
+		var set = _secondQuery.ToPooledSet(comparer);
+
+		using var enumerator = _firstQuery.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			set.Add(enumerator.Current);
+		}
+
+		return set;
+	}
+
 	public bool TryGetNonEnumeratedCount(out int length)
 	{
 		if (_firstQuery.TryGetNonEnumeratedCount(out var firstCount) && _secondQuery.TryGetNonEnumeratedCount(out var secondCount))
@@ -370,10 +516,11 @@ public partial struct ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery
 		return false;
 	}
 
-	public ConcatEnumerator<T, TFirstEnumerator, IOptiEnumerator<T>> GetEnumerator()
+	public ConcatEnumerator<T, TFirstEnumerator, IEnumerator<T>> GetEnumerator()
 	{
-		return new ConcatEnumerator<T, TFirstEnumerator, IOptiEnumerator<T>>(_firstQuery.GetEnumerator(), _secondQuery.GetEnumerator());
+		return new ConcatEnumerator<T, TFirstEnumerator, IEnumerator<T>>(_firstQuery.GetEnumerator(), _secondQuery.GetEnumerator());
 	}
 
-	IOptiEnumerator<T> IOptiQuery<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

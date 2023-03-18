@@ -1,11 +1,9 @@
-using System.Numerics;
-
 namespace OptiLinq;
 
 public partial struct HashSetQuery<T>
 {
-	public TakeLastQuery<T, HashSetQuery<T>, HashSetEnumerator<T>> TakeLast(int count)
+	public TakeLastQuery<T, HashSetQuery<T>, HashSet<T>.Enumerator> TakeLast(int count)
 	{
-		return new TakeLastQuery<T, HashSetQuery<T>, HashSetEnumerator<T>>(this, count);
+		return new TakeLastQuery<T, HashSetQuery<T>, HashSet<T>.Enumerator>(this, count);
 	}
 }

@@ -2,17 +2,17 @@ using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public partial struct ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery>
+public partial struct ExceptQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>
 {
-	public UnionQuery<T, ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery>, TOtherQuery, EqualityComparer<T>> Union<TOtherQuery>(ref TOtherQuery other) where TOtherQuery : struct, IOptiQuery<T>
+	public UnionQuery<T, ExceptQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, ExceptEnumerator<T, TFirstEnumerator, TComparer>, TOtherQuery, EqualityComparer<T>> Union<TOtherQuery>(ref TOtherQuery other) where TOtherQuery : struct, IOptiQuery<T>
 	{
-		return new UnionQuery<T, ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery>, TOtherQuery, EqualityComparer<T>>(ref this, ref other, EqualityComparer<T>.Default);
+		return new UnionQuery<T, ExceptQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, ExceptEnumerator<T, TFirstEnumerator, TComparer>, TOtherQuery, EqualityComparer<T>>(ref this, ref other, EqualityComparer<T>.Default);
 	}
 
-	public UnionQuery<T, ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery>, TOtherQuery, TOtherComparer> Union<TOtherQuery, TOtherComparer>(TOtherQuery other, TOtherComparer comparer = default!)
+	public UnionQuery<T, ExceptQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, ExceptEnumerator<T, TFirstEnumerator, TComparer>, TOtherQuery, TOtherComparer> Union<TOtherQuery, TOtherComparer>(TOtherQuery other, TOtherComparer comparer = default!)
 		where TOtherQuery : struct, IOptiQuery<T>
 		where TOtherComparer : IEqualityComparer<T>
 	{
-		return new UnionQuery<T, ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery>, TOtherQuery, TOtherComparer>(ref this, ref other, comparer);
+		return new UnionQuery<T, ExceptQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, ExceptEnumerator<T, TFirstEnumerator, TComparer>, TOtherQuery, TOtherComparer>(ref this, ref other, comparer);
 	}
 }

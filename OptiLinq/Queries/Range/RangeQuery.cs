@@ -1,6 +1,8 @@
+using System.Collections;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
@@ -75,10 +77,10 @@ public partial struct RangeQuery : IOptiQuery<int, RangeEnumerator>
 
 	public IEnumerable<int> AsEnumerable()
 	{
-		return new QueryAsEnumerable<int, RangeQuery, RangeEnumerator>(this);
+		return this;
 	}
 
-	public bool Contains<TComparer>(int item, TComparer comparer) where TComparer : IEqualityComparer<int>
+	public bool Contains<TComparer>(in int item, TComparer comparer) where TComparer : IEqualityComparer<int>
 	{
 		for (var i = _start; i < _start + _count; i++)
 		{
@@ -91,7 +93,7 @@ public partial struct RangeQuery : IOptiQuery<int, RangeEnumerator>
 		return false;
 	}
 
-	public bool Contains(int item)
+	public bool Contains(in int item)
 	{
 		return item >= _start && item <= _count + _start;
 	}
@@ -110,6 +112,46 @@ public partial struct RangeQuery : IOptiQuery<int, RangeEnumerator>
 	public long LongCount()
 	{
 		return Count<long>();
+	}
+
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<int, bool>
+	{
+		var count = TNumber.Zero;
+
+		for (var i = _start; i < _start + _count; i++)
+		{
+			if (@operator.Eval(i))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public TNumber Count<TNumber>(Func<int, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		var count = TNumber.Zero;
+
+		for (var i = _start; i < _start + _count; i++)
+		{
+			if (predicate(i))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public int Count(Func<int, bool> predicate)
+	{
+		return Count<int>(predicate);
+	}
+
+	public long CountLong(Func<int, bool> predicate)
+	{
+		return Count<long>(predicate);
 	}
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out int item) where TIndex : IBinaryInteger<TIndex>
@@ -270,62 +312,40 @@ public partial struct RangeQuery : IOptiQuery<int, RangeEnumerator>
 		return default;
 	}
 
+	private readonly int[] _buffer = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public int CopyTo(Span<int> data)
 	{
 		var count = Math.Min(_count, data.Length);
 		var start = _start;
 
-		data = data.Slice(0, count);
+		ref var first = ref MemoryMarshal.GetReference(data);
 
 		if (Vector.IsHardwareAccelerated && count >= Vector<int>.Count)
 		{
-			var destinationVectors = MemoryMarshal.Cast<int, Vector<int>>(data);
-
-			if (start is 0)
-			{
-				for (var index = 0; index < Vector<int>.Count; index++)
-					data[index] = index;
-			}
-			else
-			{
-				for (var index = 0; index < Vector<int>.Count; index++)
-					data[index] = index + start;
-			}
-
 			var increment = new Vector<int>(Vector<int>.Count);
-			var vector = destinationVectors[0];
+			var vector = new Vector<int>(_buffer);
 
-			for (var index = 1; index < destinationVectors.Length; index++)
+			if (_start > 0)
 			{
+				vector += new Vector<int>(_start);
+			}
+
+			do
+			{
+				Unsafe.As<int, Vector<int>>(ref first) = vector;
 				vector += increment;
-				destinationVectors[index] = vector;
-			}
 
-			if (start is 0)
-			{
-				for (var index = count - (count % Vector<int>.Count); index < data.Length; index++)
-					data[index] = index;
-			}
-			else
-			{
-				for (var index = count - (count % Vector<int>.Count); index < data.Length; index++)
-					data[index] = index + start;
-			}
+				first = ref Unsafe.Add(ref first, Vector<int>.Count);
+				count -= Vector<int>.Count;
+			} while (count >= Vector<int>.Count);
+
+			start = Unsafe.Subtract(ref first, 1);
 		}
-		else
-		{
-			if (start is 0)
-			{
-				for (var index = 0; index < data.Length; index++)
-					data[index] = index;
-			}
-			else
-			{
-				for (var index = 0; index < data.Length; index++)
-					data[index] = index + start;
-			}
-		}
+
+		for (var i = 0; i < count; i++)
+			Unsafe.Add(ref first, i) = ++start;
 
 		return count;
 	}
@@ -366,6 +386,54 @@ public partial struct RangeQuery : IOptiQuery<int, RangeEnumerator>
 		return list;
 	}
 
+	public PooledList<int> ToPooledList()
+	{
+		var list = new PooledList<int>(_count)
+		{
+			Count = _count,
+		};
+
+		CopyTo(list.Items);
+
+		return list;
+	}
+
+	public PooledQueue<int> ToPooledQueue()
+	{
+		var queue = new PooledQueue<int>(_count)
+		{
+			Count = _count,
+		};
+
+		CopyTo(queue._array);
+
+		return queue;
+	}
+
+	public PooledStack<int> ToPooledStack()
+	{
+		var stack = new PooledStack<int>(_count)
+		{
+			Count = _count,
+		};
+
+		CopyTo(stack._array);
+
+		return stack;
+	}
+
+	public PooledSet<int, TComparer> ToPooledSet<TComparer>(TComparer comparer) where TComparer : IEqualityComparer<int>
+	{
+		var set = new PooledSet<int, TComparer>(_count, comparer);
+
+		for (var i = _start; i < _start + _count; i++)
+		{
+			set.Add(i);
+		}
+
+		return set;
+	}
+
 	public bool TryGetNonEnumeratedCount(out int length)
 	{
 		length = _count;
@@ -393,5 +461,6 @@ public partial struct RangeQuery : IOptiQuery<int, RangeEnumerator>
 		return new RangeEnumerator(_start, _count);
 	}
 
-	IOptiEnumerator<int> IOptiQuery<int>.GetEnumerator() => GetEnumerator();
+	IEnumerator<int> IEnumerable<int>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

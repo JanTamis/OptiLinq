@@ -14,11 +14,11 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|           Method |      Mean |    Error |   StdDev |        Ratio | RatioSD |    Gen0 |    Gen1 |    Gen2 | Allocated |   Alloc Ratio |
-|----------------- |----------:|---------:|---------:|-------------:|--------:|--------:|--------:|--------:|----------:|--------------:|
-|      OptiLinqSum |  82.99 μs | 0.927 μs | 0.868 μs | 1.17x faster |   0.02x |       - |       - |       - |     112 B | 836.643x less |
-|          LinqSum |  97.07 μs | 0.742 μs | 0.658 μs | 1.00x faster |   0.01x | 11.1084 |  2.6855 |       - |   93704 B |   1.000x more |
-|             Linq |  97.39 μs | 0.921 μs | 0.719 μs |     baseline |         | 11.1084 |  2.6855 |       - |   93704 B |               |
-|     LinqComparer | 116.96 μs | 0.632 μs | 0.591 μs | 1.20x slower |   0.01x | 11.1084 |  2.6855 |       - |   93728 B |   1.000x more |
-| OptiLinqComparer | 174.54 μs | 1.425 μs | 1.113 μs | 1.79x slower |   0.02x | 62.2559 | 62.2559 | 62.2559 |  269943 B |   2.881x more |
-|         OptiLinq | 212.63 μs | 1.757 μs | 1.557 μs | 2.19x slower |   0.02x | 62.2559 | 62.2559 | 62.2559 |  270163 B |   2.883x more |
+|           Method |      Mean |    Error |   StdDev |        Ratio | RatioSD |    Gen0 |   Gen1 | Allocated |     Alloc Ratio |
+|----------------- |----------:|---------:|---------:|-------------:|--------:|--------:|-------:|----------:|----------------:|
+| OptiLinqComparer |  57.05 μs | 1.059 μs | 0.991 μs | 1.87x faster |   0.04x |       - |      - |         - |              NA |
+|      OptiLinqSum |  89.42 μs | 1.442 μs | 1.204 μs | 1.19x faster |   0.03x |       - |      - |      48 B | 1,952.167x less |
+|         OptiLinq |  90.92 μs | 1.598 μs | 1.495 μs | 1.18x faster |   0.03x |       - |      - |         - |              NA |
+|          LinqSum | 106.59 μs | 0.826 μs | 0.645 μs | 1.00x faster |   0.02x | 11.1084 | 2.6855 |   93704 B |     1.000x more |
+|             Linq | 106.80 μs | 1.833 μs | 1.714 μs |     baseline |         | 11.1084 | 2.6855 |   93704 B |                 |
+|     LinqComparer | 126.40 μs | 1.544 μs | 1.290 μs | 1.18x slower |   0.02x | 10.9863 | 2.6855 |   93728 B |     1.000x more |

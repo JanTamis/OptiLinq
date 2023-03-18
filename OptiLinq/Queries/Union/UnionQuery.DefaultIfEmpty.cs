@@ -1,9 +1,9 @@
 namespace OptiLinq;
 
-public partial struct UnionQuery<T, TFirstQuery, TSecondQuery, TComparer>
+public partial struct UnionQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery, TComparer>
 {
-	public DefaultIfEmptyQuery<T, UnionQuery<T, TFirstQuery, TSecondQuery, TComparer>, UnionEnumerator<T, TComparer>> DefaultIfEmpty(in T defaultValue = default)
+	public DefaultIfEmptyQuery<T, UnionQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery, TComparer>, UnionEnumerator<T, TFirstEnumerator, TComparer>> DefaultIfEmpty(in T defaultValue = default)
 	{
-		return new DefaultIfEmptyQuery<T, UnionQuery<T, TFirstQuery, TSecondQuery, TComparer>, UnionEnumerator<T, TComparer>>(ref this, defaultValue);
+		return new DefaultIfEmptyQuery<T, UnionQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery, TComparer>, UnionEnumerator<T, TFirstEnumerator, TComparer>>(ref this, defaultValue);
 	}
 }

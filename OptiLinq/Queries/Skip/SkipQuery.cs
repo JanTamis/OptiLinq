@@ -1,12 +1,13 @@
+using System.Collections;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using OptiLinq.Helpers;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
 public partial struct SkipQuery<TCount, T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T, SkipEnumerator<TCount, T, TBaseEnumerator>>
-	where TBaseEnumerator : struct, IOptiEnumerator<T>
+	where TBaseEnumerator : IEnumerator<T>
 	where TBaseQuery : struct, IOptiQuery<T, TBaseEnumerator>
 	where TCount : IBinaryInteger<TCount>
 {
@@ -104,10 +105,10 @@ public partial struct SkipQuery<TCount, T, TBaseQuery, TBaseEnumerator> : IOptiQ
 
 	public IEnumerable<T> AsEnumerable()
 	{
-		return new QueryAsEnumerable<T, SkipQuery<TCount, T, TBaseQuery, TBaseEnumerator>, SkipEnumerator<TCount, T, TBaseEnumerator>>(this);
+		return this;
 	}
 
-	public bool Contains<TComparer>(T item, TComparer comparer) where TComparer : IEqualityComparer<T>
+	public bool Contains<TComparer>(in T item, TComparer comparer) where TComparer : IEqualityComparer<T>
 	{
 		using var enumerator = _baseEnumerable.GetEnumerator();
 
@@ -126,7 +127,7 @@ public partial struct SkipQuery<TCount, T, TBaseQuery, TBaseEnumerator> : IOptiQ
 		return false;
 	}
 
-	public bool Contains(T item)
+	public bool Contains(in T item)
 	{
 		using var enumerator = _baseEnumerable.GetEnumerator();
 
@@ -184,6 +185,58 @@ public partial struct SkipQuery<TCount, T, TBaseQuery, TBaseEnumerator> : IOptiQ
 	public long LongCount()
 	{
 		return Count<long>();
+	}
+
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<T, bool>
+	{
+		var count = TNumber.Zero;
+
+		using var enumerator = _baseEnumerable.GetEnumerator();
+
+		for (var i = TCount.Zero; i < _count && enumerator.MoveNext(); i++)
+		{
+		}
+
+		while (enumerator.MoveNext())
+		{
+			if (@operator.Eval(enumerator.Current))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public TNumber Count<TNumber>(Func<T, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		var count = TNumber.Zero;
+
+		using var enumerator = _baseEnumerable.GetEnumerator();
+
+		for (var i = TCount.Zero; i < _count && enumerator.MoveNext(); i++)
+		{
+		}
+
+		while (enumerator.MoveNext())
+		{
+			if (predicate(enumerator.Current))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public int Count(Func<T, bool> predicate)
+	{
+		return Count<int>(predicate);
+	}
+
+	public long CountLong(Func<T, bool> predicate)
+	{
+		return Count<long>(predicate);
 	}
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out T item) where TIndex : IBinaryInteger<TIndex>
@@ -451,6 +504,74 @@ public partial struct SkipQuery<TCount, T, TBaseQuery, TBaseEnumerator> : IOptiQ
 		return list;
 	}
 
+	public PooledList<T> ToPooledList()
+	{
+		var list = new PooledList<T>();
+		using var enumerator = _baseEnumerable.GetEnumerator();
+
+		for (var i = TCount.Zero; i < _count && enumerator.MoveNext(); i++)
+		{
+		}
+
+		while (enumerator.MoveNext())
+		{
+			list.Add(enumerator.Current);
+		}
+
+		return list;
+	}
+
+	public PooledQueue<T> ToPooledQueue()
+	{
+		var queue = new PooledQueue<T>();
+		using var enumerator = _baseEnumerable.GetEnumerator();
+
+		for (var i = TCount.Zero; i < _count && enumerator.MoveNext(); i++)
+		{
+		}
+
+		while (enumerator.MoveNext())
+		{
+			queue.Enqueue(enumerator.Current);
+		}
+
+		return queue;
+	}
+
+	public PooledStack<T> ToPooledStack()
+	{
+		var stack = new PooledStack<T>();
+		using var enumerator = _baseEnumerable.GetEnumerator();
+
+		for (var i = TCount.Zero; i < _count && enumerator.MoveNext(); i++)
+		{
+		}
+
+		while (enumerator.MoveNext())
+		{
+			stack.Push(enumerator.Current);
+		}
+
+		return stack;
+	}
+
+	public PooledSet<T, TComparer> ToPooledSet<TComparer>(TComparer comparer) where TComparer : IEqualityComparer<T>
+	{
+		var set = new PooledSet<T, TComparer>(comparer);
+		using var enumerator = _baseEnumerable.GetEnumerator();
+
+		for (var i = TCount.Zero; i < _count && enumerator.MoveNext(); i++)
+		{
+		}
+
+		while (enumerator.MoveNext())
+		{
+			set.Add(enumerator.Current);
+		}
+
+		return set;
+	}
+
 	public bool TryGetNonEnumeratedCount(out int length)
 	{
 		length = 0;
@@ -476,8 +597,8 @@ public partial struct SkipQuery<TCount, T, TBaseQuery, TBaseEnumerator> : IOptiQ
 		return new SkipEnumerator<TCount, T, TBaseEnumerator>(_baseEnumerable.GetEnumerator(), _count);
 	}
 
-	IOptiEnumerator<T> IOptiQuery<T>.GetEnumerator()
-	{
-		return GetEnumerator();
-	}
+	IEnumerator<T> IEnumerable<T>.
+		GetEnumerator() => GetEnumerator();
+
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

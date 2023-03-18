@@ -1,9 +1,9 @@
-using OptiLinq.Helpers;
-using OptiLinq.Interfaces;
+using System.Collections;
+using OptiLinq.Collections;
 
 namespace OptiLinq;
 
-public struct GroupByEnumerator<TKey, TElement, TComparer> : IOptiEnumerator<ArrayQuery<TElement>>
+public struct GroupByEnumerator<TKey, TElement, TComparer> : IEnumerator<ArrayQuery<TElement>>
 	where TComparer : IEqualityComparer<TKey>
 {
 	private int index = -1;
@@ -15,6 +15,8 @@ public struct GroupByEnumerator<TKey, TElement, TComparer> : IOptiEnumerator<Arr
 		_lookup = lookup;
 	}
 
+	object IEnumerator.Current => Current;
+	
 	public ArrayQuery<TElement> Current { get; private set; }
 
 	public bool MoveNext()
@@ -29,6 +31,11 @@ public struct GroupByEnumerator<TKey, TElement, TComparer> : IOptiEnumerator<Arr
 		}
 
 		return false;
+	}
+
+	public void Reset()
+	{
+		index = -1;
 	}
 
 	public void Dispose()

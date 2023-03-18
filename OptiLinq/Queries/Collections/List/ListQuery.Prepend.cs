@@ -2,8 +2,8 @@ namespace OptiLinq;
 
 public partial struct ListQuery<T>
 {
-	public PrependQuery<T, ListQuery<T>, ListEnumerator<T>> Prepend(in T item)
+	public PrependQuery<T, ListQuery<T>, List<T>.Enumerator> Prepend(in T item)
 	{
-		return new PrependQuery<T, ListQuery<T>, ListEnumerator<T>>(ref this, in item);
+		return new PrependQuery<T, ListQuery<T>, List<T>.Enumerator>(ref this, in item);
 	}
 }

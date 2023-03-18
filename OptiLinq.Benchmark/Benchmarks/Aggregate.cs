@@ -1,6 +1,5 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Order;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq.Benchmark;

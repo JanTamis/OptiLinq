@@ -1,6 +1,7 @@
+using System.Collections;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using OptiLinq.Helpers;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
@@ -9,7 +10,7 @@ public partial struct WhereSelectQuery<T, TResult, TWhereOperator, TSelectOperat
 	where TWhereOperator : struct, IFunction<T, bool>
 	where TSelectOperator : struct, IFunction<T, TResult>
 	where TBaseQuery : struct, IOptiQuery<T, TBaseEnumerator>
-	where TBaseEnumerator : struct, IOptiEnumerator<T>
+	where TBaseEnumerator : IEnumerator<T>
 {
 	private TBaseQuery _baseEnumerable;
 
@@ -102,10 +103,10 @@ public partial struct WhereSelectQuery<T, TResult, TWhereOperator, TSelectOperat
 
 	public IEnumerable<TResult> AsEnumerable()
 	{
-		return new QueryAsEnumerable<TResult, WhereSelectQuery<T, TResult, TWhereOperator, TSelectOperator, TBaseQuery, TBaseEnumerator>, WhereSelectEnumerator<T, TResult, TWhereOperator, TSelectOperator, TBaseEnumerator>>(this);
+		return this;
 	}
 
-	public bool Contains<TComparer>(TResult item, TComparer comparer) where TComparer : IEqualityComparer<TResult>
+	public bool Contains<TComparer>(in TResult item, TComparer comparer) where TComparer : IEqualityComparer<TResult>
 	{
 		using var enumerator = _baseEnumerable.GetEnumerator();
 
@@ -120,7 +121,7 @@ public partial struct WhereSelectQuery<T, TResult, TWhereOperator, TSelectOperat
 		return false;
 	}
 
-	public bool Contains(TResult item)
+	public bool Contains(in TResult item)
 	{
 		using var enumerator = _baseEnumerable.GetEnumerator();
 
@@ -178,6 +179,52 @@ public partial struct WhereSelectQuery<T, TResult, TWhereOperator, TSelectOperat
 	public long LongCount()
 	{
 		return Count<long>();
+	}
+
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<TResult, bool>
+	{
+		var count = TNumber.Zero;
+		var tempOperator = _whereOperator;
+
+		using var enumerator = _baseEnumerable.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			if (tempOperator.Eval(enumerator.Current) && @operator.Eval(_selectOperator.Eval(enumerator.Current)))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public TNumber Count<TNumber>(Func<TResult, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		var count = TNumber.Zero;
+		var tempOperator = _whereOperator;
+
+		using var enumerator = _baseEnumerable.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			if (tempOperator.Eval(enumerator.Current) && predicate(_selectOperator.Eval(enumerator.Current)))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public int Count(Func<TResult, bool> predicate)
+	{
+		throw new NotImplementedException();
+	}
+
+	public long CountLong(Func<TResult, bool> predicate)
+	{
+		throw new NotImplementedException();
 	}
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out TResult item) where TIndex : IBinaryInteger<TIndex>
@@ -374,6 +421,74 @@ public partial struct WhereSelectQuery<T, TResult, TWhereOperator, TSelectOperat
 		return list;
 	}
 
+	public PooledList<TResult> ToPooledList()
+	{
+		var list = new PooledList<TResult>();
+
+		using var enumerator = _baseEnumerable.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			if (_whereOperator.Eval(enumerator.Current))
+			{
+				list.Add(_selectOperator.Eval(enumerator.Current));
+			}
+		}
+
+		return list;
+	}
+
+	public PooledQueue<TResult> ToPooledQueue()
+	{
+		var queue = new PooledQueue<TResult>();
+
+		using var enumerator = _baseEnumerable.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			if (_whereOperator.Eval(enumerator.Current))
+			{
+				queue.Enqueue(_selectOperator.Eval(enumerator.Current));
+			}
+		}
+
+		return queue;
+	}
+
+	public PooledStack<TResult> ToPooledStack()
+	{
+		var stack = new PooledStack<TResult>();
+
+		using var enumerator = _baseEnumerable.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			if (_whereOperator.Eval(enumerator.Current))
+			{
+				stack.Push(_selectOperator.Eval(enumerator.Current));
+			}
+		}
+
+		return stack;
+	}
+
+	public PooledSet<TResult, TComparer> ToPooledSet<TComparer>(TComparer comparer) where TComparer : IEqualityComparer<TResult>
+	{
+		var set = new PooledSet<TResult, TComparer>(comparer);
+
+		using var enumerator = _baseEnumerable.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			if (_whereOperator.Eval(enumerator.Current))
+			{
+				set.Add(_selectOperator.Eval(enumerator.Current));
+			}
+		}
+
+		return set;
+	}
+
 	public bool TryGetNonEnumeratedCount(out int length)
 	{
 		length = 0;
@@ -391,8 +506,6 @@ public partial struct WhereSelectQuery<T, TResult, TWhereOperator, TSelectOperat
 		return new WhereSelectEnumerator<T, TResult, TWhereOperator, TSelectOperator, TBaseEnumerator>(_baseEnumerable.GetEnumerator(), _whereOperator, _selectOperator);
 	}
 
-	IOptiEnumerator<TResult> IOptiQuery<TResult>.GetEnumerator()
-	{
-		return GetEnumerator();
-	}
+	IEnumerator<TResult> IEnumerable<TResult>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

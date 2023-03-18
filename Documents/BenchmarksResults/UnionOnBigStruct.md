@@ -14,8 +14,9 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|               Method |     Mean |   Error |  StdDev |        Ratio | RatioSD |     Gen0 |     Gen1 |     Gen2 | Allocated |      Alloc Ratio |
-|--------------------- |---------:|--------:|--------:|-------------:|--------:|---------:|---------:|---------:|----------:|-----------------:|
-| OptiLinqWithComparer | 129.6 μs | 3.28 μs | 8.98 μs | 6.41x faster |   0.50x |        - |        - |        - |     160 B | 10,496.406x less |
-|             OptiLinq | 294.8 μs | 2.58 μs | 2.41 μs | 2.58x faster |   0.03x |   7.3242 |        - |        - |   64450 B |     26.058x less |
-|                 Linq | 760.9 μs | 9.22 μs | 8.18 μs |     baseline |         | 399.4141 | 399.4141 | 399.4141 | 1679425 B |                  |
+|               Method |     Mean |    Error |   StdDev |        Ratio | RatioSD |     Gen0 |     Gen1 |     Gen2 | Allocated |      Alloc Ratio |
+|--------------------- |---------:|---------:|---------:|-------------:|--------:|---------:|---------:|---------:|----------:|-----------------:|
+| OptiLinqWithComparer | 106.4 μs |  1.37 μs |  1.28 μs | 7.75x faster |   0.15x |        - |        - |        - |      32 B | 52,482.031x less |
+|             OptiLinq | 287.3 μs |  3.95 μs |  3.70 μs | 2.87x faster |   0.03x |   7.3242 |        - |        - |   64034 B |     26.227x less |
+|     LinqWithComparer | 684.6 μs | 11.37 μs | 10.63 μs | 1.20x faster |   0.02x | 399.4141 | 399.4141 | 399.4141 | 1614661 B |      1.040x less |
+|                 Linq | 823.7 μs |  9.64 μs |  9.01 μs |     baseline |         | 399.4141 | 399.4141 | 399.4141 | 1679425 B |                  |

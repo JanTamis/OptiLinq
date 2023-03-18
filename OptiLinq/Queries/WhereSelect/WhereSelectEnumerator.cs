@@ -1,17 +1,20 @@
+using System.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public struct WhereSelectEnumerator<T, TResult, TWhereOperator, TSelectOperator, TBaseEnumerator> : IOptiEnumerator<TResult>
+public struct WhereSelectEnumerator<T, TResult, TWhereOperator, TSelectOperator, TBaseEnumerator> : IEnumerator<TResult>
 	where TWhereOperator : IFunction<T, bool>
 	where TSelectOperator : IFunction<T, TResult>
-	where TBaseEnumerator : struct, IOptiEnumerator<T>
+	where TBaseEnumerator : IEnumerator<T>
 {
 	private TBaseEnumerator _baseEnumerator;
 
 	private TWhereOperator _whereOperator;
 	private TSelectOperator _selectOperator;
 
+
+	object IEnumerator.Current => Current;
 	public TResult Current { get; private set; } = default!;
 
 	public WhereSelectEnumerator(TBaseEnumerator baseEnumerator, TWhereOperator whereOperator, TSelectOperator selectOperator)
@@ -33,6 +36,11 @@ public struct WhereSelectEnumerator<T, TResult, TWhereOperator, TSelectOperator,
 		}
 
 		return false;
+	}
+
+	public void Reset()
+	{
+		_baseEnumerator.Reset();
 	}
 
 	public void Dispose()

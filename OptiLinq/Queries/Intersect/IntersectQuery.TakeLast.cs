@@ -1,11 +1,9 @@
-using System.Numerics;
-
 namespace OptiLinq;
 
-public partial struct IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery>
+public partial struct IntersectQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>
 {
-	public TakeLastQuery<T, IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery>, IntersectEnumerator<T, TComparer>> TakeLast(int count)
+	public TakeLastQuery<T, IntersectQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, IntersectEnumerator<T, TFirstEnumerator, TComparer>> TakeLast(int count)
 	{
-		return new TakeLastQuery<T, IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery>, IntersectEnumerator<T, TComparer>>(this, count);
+		return new TakeLastQuery<T, IntersectQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, IntersectEnumerator<T, TFirstEnumerator, TComparer>>(this, count);
 	}
 }

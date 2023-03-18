@@ -1,14 +1,15 @@
+using System.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public struct SelectManyEnumerator<T, TResult, TBaseEnumerator, TSubQuery, TOperator> : IOptiEnumerator<TResult>
+public struct SelectManyEnumerator<T, TResult, TBaseEnumerator, TSubQuery, TOperator> : IEnumerator<TResult>
 	where TOperator : struct, IFunction<T, TSubQuery>
-	where TBaseEnumerator : struct, IOptiEnumerator<T>
+	where TBaseEnumerator : IEnumerator<T>
 	where TSubQuery : IOptiQuery<TResult>
 {
 	private TBaseEnumerator _baseEnumerator;
-	private IOptiEnumerator<TResult>? _subEnumerator;
+	private IEnumerator<TResult>? _subEnumerator;
 
 	private TOperator _selector;
 
@@ -21,6 +22,9 @@ public struct SelectManyEnumerator<T, TResult, TBaseEnumerator, TSubQuery, TOper
 		_subEnumerator = default;
 		_state = 0;
 	}
+
+
+	object IEnumerator.Current => Current;
 
 	public TResult Current => _subEnumerator.Current;
 
@@ -56,6 +60,13 @@ public struct SelectManyEnumerator<T, TResult, TBaseEnumerator, TSubQuery, TOper
 		}
 
 		return false;
+	}
+
+	public void Reset()
+	{
+		_state = 0;
+		_baseEnumerator.Reset();
+		_subEnumerator?.Dispose();
 	}
 
 	public void Dispose()

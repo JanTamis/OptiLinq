@@ -1,17 +1,18 @@
+using System.Collections;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using OptiLinq.Helpers;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public partial struct ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumerator, TSecondQuery> : IOptiQuery<TResult, ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IOptiEnumerator<T>>>
+public partial struct ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumerator, TSecondQuery> : IOptiQuery<TResult, ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IEnumerator<T>>>
 	where TOperator : struct, IFunction<T, T, TResult>
 	where TFirstQuery : struct, IOptiQuery<T, TFirstEnumerator>
 	where TSecondQuery : struct, IOptiQuery<T>
-	where TFirstEnumerator : struct, IOptiEnumerator<T>
+	where TFirstEnumerator : IEnumerator<T>
 {
-	private readonly TOperator _operator;
+	private TOperator _operator;
 	private TFirstQuery _firstQuery;
 	private TSecondQuery _secondQuery;
 
@@ -85,10 +86,10 @@ public partial struct ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumera
 
 	public IEnumerable<TResult> AsEnumerable()
 	{
-		throw new NotImplementedException();
+		return this;
 	}
 
-	public bool Contains<TComparer>(TResult item, TComparer comparer) where TComparer : IEqualityComparer<TResult>
+	public bool Contains<TComparer>(in TResult item, TComparer comparer) where TComparer : IEqualityComparer<TResult>
 	{
 		using var enumerator = GetEnumerator();
 
@@ -103,7 +104,7 @@ public partial struct ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumera
 		return false;
 	}
 
-	public bool Contains(TResult item)
+	public bool Contains(in TResult item)
 	{
 		using var enumerator = GetEnumerator();
 
@@ -159,6 +160,52 @@ public partial struct ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumera
 	public long LongCount()
 	{
 		return Count<long>();
+	}
+
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<TResult, bool>
+	{
+		using var firstEnumerator = _firstQuery.GetEnumerator();
+		using var secondEnumerator = _secondQuery.GetEnumerator();
+
+		var count = TNumber.Zero;
+
+		while (firstEnumerator.MoveNext() && secondEnumerator.MoveNext())
+		{
+			if (@operator.Eval(_operator.Eval(firstEnumerator.Current, secondEnumerator.Current)))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public TNumber Count<TNumber>(Func<TResult, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		var count = TNumber.Zero;
+
+		using var firstEnumerator = _firstQuery.GetEnumerator();
+		using var secondEnumerator = _secondQuery.GetEnumerator();
+
+		while (firstEnumerator.MoveNext() && secondEnumerator.MoveNext())
+		{
+			if (predicate(_operator.Eval(firstEnumerator.Current, secondEnumerator.Current)))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public int Count(Func<TResult, bool> predicate)
+	{
+		throw new NotImplementedException();
+	}
+
+	public long CountLong(Func<TResult, bool> predicate)
+	{
+		throw new NotImplementedException();
 	}
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out TResult item) where TIndex : IBinaryInteger<TIndex>
@@ -274,12 +321,12 @@ public partial struct ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumera
 
 	public TResult Max()
 	{
-		return EnumerableHelper.Max<TResult, ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IOptiEnumerator<T>>>(GetEnumerator());
+		return EnumerableHelper.Max<TResult, ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IEnumerator<T>>>(GetEnumerator());
 	}
 
 	public TResult Min()
 	{
-		return EnumerableHelper.Min<TResult, ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IOptiEnumerator<T>>>(GetEnumerator());
+		return EnumerableHelper.Min<TResult, ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IEnumerator<T>>>(GetEnumerator());
 	}
 
 	public bool TryGetSingle(out TResult item)
@@ -320,12 +367,12 @@ public partial struct ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumera
 
 	public TResult[] ToArray()
 	{
-		return EnumerableHelper.ToArray<TResult, ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumerator, TSecondQuery>, ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IOptiEnumerator<T>>>(this, out _);
+		return EnumerableHelper.ToArray<TResult, ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumerator, TSecondQuery>, ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IEnumerator<T>>>(this, out _);
 	}
 
 	public TResult[] ToArray(out int length)
 	{
-		return EnumerableHelper.ToArray<TResult, ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumerator, TSecondQuery>, ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IOptiEnumerator<T>>>(this, out length);
+		return EnumerableHelper.ToArray<TResult, ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumerator, TSecondQuery>, ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IEnumerator<T>>>(this, out length);
 	}
 
 	public HashSet<TResult> ToHashSet(IEqualityComparer<TResult>? comparer = default)
@@ -358,6 +405,68 @@ public partial struct ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumera
 		return list;
 	}
 
+	public PooledList<TResult> ToPooledList()
+	{
+		var list = TryGetNonEnumeratedCount(out var count)
+			? new PooledList<TResult>(count)
+			: new PooledList<TResult>();
+
+		using var enumerator = GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			list.Add(enumerator.Current);
+		}
+
+		return list;
+	}
+
+	public PooledQueue<TResult> ToPooledQueue()
+	{
+		var queue = TryGetNonEnumeratedCount(out var count)
+			? new PooledQueue<TResult>(count)
+			: new PooledQueue<TResult>();
+
+		using var enumerator = GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			queue.Enqueue(enumerator.Current);
+		}
+
+		return queue;
+	}
+
+	public PooledStack<TResult> ToPooledStack()
+	{
+		var stack = TryGetNonEnumeratedCount(out var count)
+			? new PooledStack<TResult>(count)
+			: new PooledStack<TResult>();
+
+		using var enumerator = GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			stack.Push(enumerator.Current);
+		}
+
+		return stack;
+	}
+
+	public PooledSet<TResult, TComparer> ToPooledSet<TComparer>(TComparer comparer) where TComparer : IEqualityComparer<TResult>
+	{
+		var set = new PooledSet<TResult, TComparer>(comparer);
+
+		using var enumerator = GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			set.Add(enumerator.Current);
+		}
+
+		return set;
+	}
+
 	public bool TryGetNonEnumeratedCount(out int length)
 	{
 		if (_firstQuery.TryGetNonEnumeratedCount(out var firstLength) && _secondQuery.TryGetNonEnumeratedCount(out var secondLength))
@@ -376,10 +485,11 @@ public partial struct ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumera
 		return false;
 	}
 
-	public ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IOptiEnumerator<T>> GetEnumerator()
+	public ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IEnumerator<T>> GetEnumerator()
 	{
-		return new ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IOptiEnumerator<T>>(in _operator, _firstQuery.GetEnumerator(), _secondQuery.GetEnumerator());
+		return new ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, IEnumerator<T>>(in _operator, _firstQuery.GetEnumerator(), _secondQuery.GetEnumerator());
 	}
 
-	IOptiEnumerator<TResult> IOptiQuery<TResult>.GetEnumerator() => GetEnumerator();
+	IEnumerator<TResult> IEnumerable<TResult>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

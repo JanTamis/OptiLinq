@@ -22,7 +22,8 @@ public class ForEachDuckTyping
 	{
 		var arrayLength = array.Length;
 		var tab = array;
-		for (int i = 0; i < arrayLength; i++)
+
+		for (var i = 0; i < arrayLength; i++)
 		{
 			yield return tab[i];
 		}
@@ -32,7 +33,8 @@ public class ForEachDuckTyping
 	public int ForOnArray()
 	{
 		var sum = 0;
-		for (int i = 0; i < array.Length; i++)
+
+		for (var i = 0; i < array.Length; i++)
 		{
 			sum += array[i];
 		}
@@ -45,6 +47,7 @@ public class ForEachDuckTyping
 	public int ForEachOnArray()
 	{
 		var sum = 0;
+		
 		foreach (var i in array)
 		{
 			sum += i;
@@ -57,6 +60,7 @@ public class ForEachDuckTyping
 	public int ForEachOnYieldEnumerable()
 	{
 		var sum = 0;
+		
 		foreach (var i in YieldEnumerable())
 		{
 			sum += i;
@@ -78,9 +82,10 @@ public class ForEachDuckTyping
 	}
 
 	[Benchmark]
-	public int ForEachOnArrayStructEnumerable()
+	public int ForEachOnArrayOptiQuery()
 	{
 		var sum = 0;
+		
 		foreach (var i in array.AsOptiQuery())
 		{
 			sum += i;
@@ -90,9 +95,10 @@ public class ForEachDuckTyping
 	}
 
 	[Benchmark]
-	public int ForEachOnArrayStructEnumerableAsIEnumerable()
+	public int ForEachOnArrayOptiQueryAsIEnumerable()
 	{
 		var sum = 0;
+		
 		foreach (var i in array.AsOptiQuery().AsEnumerable())
 		{
 			sum += i;

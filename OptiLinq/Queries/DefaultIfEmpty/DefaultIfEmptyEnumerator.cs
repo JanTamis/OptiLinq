@@ -1,8 +1,9 @@
+using System.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public struct DefaultIfEmptyEnumerator<T, TEnumerator> : IOptiEnumerator<T> where TEnumerator : struct, IOptiEnumerator<T>
+public struct DefaultIfEmptyEnumerator<T, TEnumerator> : IEnumerator<T> where TEnumerator : IEnumerator<T>
 {
 	private TEnumerator _enumerator;
 	private readonly T _defaultValue;
@@ -14,6 +15,9 @@ public struct DefaultIfEmptyEnumerator<T, TEnumerator> : IOptiEnumerator<T> wher
 		_enumerator = enumerator;
 		_defaultValue = defaultValue;
 	}
+
+
+	object IEnumerator.Current => Current;
 
 	public T Current { get; private set; } = default!;
 
@@ -45,6 +49,12 @@ public struct DefaultIfEmptyEnumerator<T, TEnumerator> : IOptiEnumerator<T> wher
 		}
 
 		return false;
+	}
+
+	public void Reset()
+	{
+		_state = 1;
+		_enumerator.Reset();
 	}
 
 	public void Dispose()

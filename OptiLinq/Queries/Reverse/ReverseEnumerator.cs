@@ -1,27 +1,29 @@
-using System.Buffers;
-using System.Runtime.CompilerServices;
-using OptiLinq.Helpers;
-using OptiLinq.Interfaces;
+using System.Collections;
+using OptiLinq.Collections;
 
 namespace OptiLinq;
 
-public struct ReverseEnumerator<T, TBaseEnumerator> : IOptiEnumerator<T> where TBaseEnumerator : struct, IOptiEnumerator<T>
+public struct ReverseEnumerator<T> : IEnumerator<T>
 {
-	private readonly T[] _data;
-	private readonly int _count = 0;
+	private PooledList<T> _list;
 	private int _index = -1;
 
-	public ReverseEnumerator(TBaseEnumerator enumerator, int initialCount)
+	public ReverseEnumerator(PooledList<T> list)
 	{
-		_data = EnumerableHelper.ToArray(enumerator, ArrayPool<T>.Shared, initialCount, out _count);
-		Array.Reverse(_data, 0, _count);
+		_list = list;
+
+		_list.Items
+			.AsSpan()
+			.Reverse();
 	}
 
-	public T Current => _data[_index];
+	object IEnumerator.Current => Current;
+
+	public T Current => _list[_index];
 
 	public bool MoveNext()
 	{
-		if (_index < _data.Length - 1)
+		if (_index < _list.Count - 1)
 		{
 			_index++;
 			return true;
@@ -29,9 +31,14 @@ public struct ReverseEnumerator<T, TBaseEnumerator> : IOptiEnumerator<T> where T
 
 		return false;
 	}
+
+	public void Reset()
+	{
+		_index = -1;
+	}
 	
 	public void Dispose()
 	{
-		ArrayPool<T>.Shared.Return(_data, RuntimeHelpers.IsReferenceOrContainsReferences<T>());
+		_list.Dispose();
 	}
 }

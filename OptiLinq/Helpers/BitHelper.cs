@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace OptiLinq.Helpers;
+namespace OptiLinq.Collections;
 
 internal ref struct BitHelper
 {

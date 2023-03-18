@@ -2,7 +2,7 @@ using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace OptiLinq.Helpers;
+namespace OptiLinq.Collections;
 
 public struct Lookup<TKey, TValue, TComparer> : IDisposable
 	where TComparer : IEqualityComparer<TKey>

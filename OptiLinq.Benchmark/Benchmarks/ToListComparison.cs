@@ -34,7 +34,7 @@ public class ToListComparison
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void FillList<T, TEnumerator>(List<T> list, ref TEnumerator enumerator)
-		where TEnumerator : struct, IOptiEnumerator<T>
+		where TEnumerator : IEnumerator<T>
 	{
 		while (enumerator.MoveNext())
 		{

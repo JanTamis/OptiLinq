@@ -1,13 +1,14 @@
+using System.Collections;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using OptiLinq.Helpers;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
 public partial struct ShuffleQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T, ShuffleEnumerator<T, TBaseEnumerator>>
 	where TBaseQuery : struct, IOptiQuery<T, TBaseEnumerator>
-	where TBaseEnumerator : struct, IOptiEnumerator<T>
+	where TBaseEnumerator : IEnumerator<T>
 {
 	private TBaseQuery _baseQuery;
 	private readonly int? _seed;
@@ -47,17 +48,17 @@ public partial struct ShuffleQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 
 	public IEnumerable<T> AsEnumerable()
 	{
-		return new QueryAsEnumerable<T, ShuffleQuery<T, TBaseQuery, TBaseEnumerator>, ShuffleEnumerator<T, TBaseEnumerator>>(this);
+		return this;
 	}
 
-	public bool Contains<TComparer>(T item, TComparer comparer) where TComparer : IEqualityComparer<T>
+	public bool Contains<TComparer>(in T item, TComparer comparer) where TComparer : IEqualityComparer<T>
 	{
-		return _baseQuery.Contains(item, comparer);
+		return _baseQuery.Contains(in item, comparer);
 	}
 
-	public bool Contains(T item)
+	public bool Contains(in T item)
 	{
-		return _baseQuery.Contains(item);
+		return _baseQuery.Contains(in item);
 	}
 
 	public int CopyTo(Span<T> data)
@@ -82,6 +83,26 @@ public partial struct ShuffleQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 	public long LongCount()
 	{
 		return _baseQuery.LongCount();
+	}
+
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<T, bool>
+	{
+		return _baseQuery.Count<TCountOperator, TNumber>(@operator);
+	}
+
+	public TNumber Count<TNumber>(Func<T, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		return _baseQuery.Count<TNumber>(predicate);
+	}
+
+	public int Count(Func<T, bool> predicate)
+	{
+		return _baseQuery.Count(predicate);
+	}
+
+	public long CountLong(Func<T, bool> predicate)
+	{
+		return _baseQuery.CountLong(predicate);
 	}
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out T item) where TIndex : IBinaryInteger<TIndex>
@@ -258,6 +279,38 @@ public partial struct ShuffleQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 		return list;
 	}
 
+	public PooledList<T> ToPooledList()
+	{
+		var list = _baseQuery.ToPooledList();
+
+		Shuffle(list.Items.AsSpan(0, list.Count));
+
+		return list;
+	}
+
+	public PooledQueue<T> ToPooledQueue()
+	{
+		var queue = _baseQuery.ToPooledQueue();
+
+		Shuffle(queue._array.AsSpan(0, queue.Count));
+
+		return queue;
+	}
+
+	public PooledStack<T> ToPooledStack()
+	{
+		var stack = _baseQuery.ToPooledStack();
+
+		Shuffle(stack._array.AsSpan(0, stack.Count));
+
+		return stack;
+	}
+
+	public PooledSet<T, TComparer> ToPooledSet<TComparer>(TComparer comparer) where TComparer : IEqualityComparer<T>
+	{
+		return _baseQuery.ToPooledSet(comparer);
+	}
+
 	public bool TryGetNonEnumeratedCount(out int length)
 	{
 		return _baseQuery.TryGetNonEnumeratedCount(out length);
@@ -271,10 +324,14 @@ public partial struct ShuffleQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 
 	public ShuffleEnumerator<T, TBaseEnumerator> GetEnumerator()
 	{
-		return new ShuffleEnumerator<T, TBaseEnumerator>(_baseQuery.GetEnumerator(), GetRandom());
+		var list = _baseQuery.ToPooledList();
+		Shuffle(list.Items.AsSpan(0, list.Count));
+
+		return new ShuffleEnumerator<T, TBaseEnumerator>(list);
 	}
 
-	IOptiEnumerator<T> IOptiQuery<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
 	private void Shuffle(Span<T> data)
 	{

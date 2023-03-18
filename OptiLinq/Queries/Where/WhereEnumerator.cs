@@ -1,14 +1,16 @@
+using System.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public struct WhereEnumerator<T, TOperator, TBaseEnumerator> : IOptiEnumerator<T>
+public struct WhereEnumerator<T, TOperator, TBaseEnumerator> : IEnumerator<T>
 	where TOperator : IFunction<T, bool>
-	where TBaseEnumerator : struct, IOptiEnumerator<T>
+	where TBaseEnumerator : IEnumerator<T>
 {
 	private TBaseEnumerator _baseEnumerator;
-
 	private TOperator _operator;
+
+	object IEnumerator.Current => Current;
 
 	public T Current => _baseEnumerator.Current;
 
@@ -29,6 +31,11 @@ public struct WhereEnumerator<T, TOperator, TBaseEnumerator> : IOptiEnumerator<T
 		}
 
 		return false;
+	}
+
+	public void Reset()
+	{
+		_baseEnumerator.Reset();
 	}
 
 	public void Dispose()

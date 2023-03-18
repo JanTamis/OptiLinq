@@ -1,9 +1,9 @@
 namespace OptiLinq;
 
-public partial struct ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery>
+public partial struct ExceptQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>
 {
-	public ChunkQuery<T, ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery>, ExceptEnumerator<T, TComparer>> Chunk(int chunkSize)
+	public ChunkQuery<T, ExceptQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, ExceptEnumerator<T, TFirstEnumerator, TComparer>> Chunk(int chunkSize)
 	{
-		return new ChunkQuery<T, ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery>, ExceptEnumerator<T, TComparer>>(ref this, chunkSize);
+		return new ChunkQuery<T, ExceptQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, ExceptEnumerator<T, TFirstEnumerator, TComparer>>(ref this, chunkSize);
 	}
 }

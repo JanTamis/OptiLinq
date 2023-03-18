@@ -1,14 +1,15 @@
 using System.Buffers;
+using System.Collections;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using OptiLinq.Helpers;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
 public partial struct OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer> : IOptiQuery<T, OrderEnumerator<T, TComparer, TBaseEnumerator>>
-	where TBaseEnumerator : struct, IOptiEnumerator<T>
+	where TBaseEnumerator : IEnumerator<T>
 	where TBaseQuery : struct, IOptiQuery<T, TBaseEnumerator>
 	where TComparer : IComparer<T>
 {
@@ -52,17 +53,17 @@ public partial struct OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer> : IO
 
 	public IEnumerable<T> AsEnumerable()
 	{
-		return new QueryAsEnumerable<T, OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, OrderEnumerator<T, TComparer, TBaseEnumerator>>(this);
+		return this;
 	}
 
-	public bool Contains<TComparer1>(T item, TComparer1 comparer) where TComparer1 : IEqualityComparer<T>
+	public bool Contains<TComparer1>(in T item, TComparer1 comparer) where TComparer1 : IEqualityComparer<T>
 	{
-		return _baseEnumerable.Contains(item, comparer);
+		return _baseEnumerable.Contains(in item, comparer);
 	}
 
-	public bool Contains(T item)
+	public bool Contains(in T item)
 	{
-		return _baseEnumerable.Contains(item);
+		return _baseEnumerable.Contains(in item);
 	}
 
 	public int CopyTo(Span<T> data)
@@ -88,6 +89,26 @@ public partial struct OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer> : IO
 	public long LongCount()
 	{
 		return _baseEnumerable.LongCount();
+	}
+
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<T, bool>
+	{
+		return _baseEnumerable.Count<TCountOperator, TNumber>(@operator);
+	}
+
+	public TNumber Count<TNumber>(Func<T, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		return _baseEnumerable.Count<TNumber>(predicate);
+	}
+
+	public int Count(Func<T, bool> predicate)
+	{
+		return _baseEnumerable.Count(predicate);
+	}
+
+	public long CountLong(Func<T, bool> predicate)
+	{
+		return _baseEnumerable.CountLong(predicate);
 	}
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out T item) where TIndex : IBinaryInteger<TIndex>
@@ -294,60 +315,71 @@ public partial struct OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer> : IO
 
 	public T[] ToArray(out int length)
 	{
-		TryGetNonEnumeratedCount(out _count);
+		var array = _baseEnumerable.ToArray(out length);
 
-		var temp = EnumerableHelper.ToArray(_baseEnumerable.GetEnumerator(), ArrayPool<T>.Shared, Math.Max(4, _count), out _count);
-		var span = temp.AsSpan(0, _count);
+		array.AsSpan(0, length).Sort(_comparer);
 
-		var array = GC.AllocateUninitializedArray<T>(_count);
-
-		span.Sort(_comparer);
-		span.CopyTo(array);
-
-		ArrayPool<T>.Shared.Return(temp, RuntimeHelpers.IsReferenceOrContainsReferences<T>());
-
-		length = _count;
 		return array;
 	}
 
 	public HashSet<T> ToHashSet(IEqualityComparer<T>? comparer = default)
 	{
-		comparer ??= EqualityComparer<T>.Default;
-
-		TryGetNonEnumeratedCount(out var count);
-
-		var data = EnumerableHelper.ToArray(_baseEnumerable.GetEnumerator(), ArrayPool<T>.Shared, Math.Max(4, count), out count);
-		data.AsSpan(0, count).Sort(_comparer);
-
-		var set = new HashSet<T>(count, comparer);
-		ref var first = ref MemoryMarshal.GetArrayDataReference(data);
-
-		for (var i = 0; i < count; i++)
-		{
-			set.Add(Unsafe.Add(ref first, i));
-		}
-
-		_count = count;
-
-		ArrayPool<T>.Shared.Return(data, RuntimeHelpers.IsReferenceOrContainsReferences<T>());
-
-		return set;
+		return _baseEnumerable.ToHashSet(comparer);
 	}
 
 	public List<T> ToList()
 	{
-		TryGetNonEnumeratedCount(out _count);
+		var list = _baseEnumerable.ToList();
 
-		var temp = EnumerableHelper.ToArray(_baseEnumerable.GetEnumerator(), ArrayPool<T>.Shared, Math.Max(4, _count), out _count);
-		var list = new List<T>(_count);
-		var span = temp.AsSpan(0, _count);
-
-		span.Sort(_comparer);
-		span.CopyTo(CollectionsMarshal.AsSpan(list));
-
-		ArrayPool<T>.Shared.Return(temp, RuntimeHelpers.IsReferenceOrContainsReferences<T>());
+		CollectionsMarshal.AsSpan(list).Sort(_comparer);
 
 		return list;
+	}
+
+	public PooledList<T> ToPooledList()
+	{
+		var list = _baseEnumerable.ToPooledList();
+
+		list.Items.AsSpan(0, list.Count).Sort(_comparer);
+
+		return list;
+	}
+
+	public PooledQueue<T> ToPooledQueue()
+	{
+		using var tempList = _baseEnumerable.ToPooledList();
+
+		tempList.Items.AsSpan(0, tempList.Count).Sort(_comparer);
+
+		var result = new PooledQueue<T>(tempList.Count);
+
+		for (var i = 0; i < tempList.Count; i++)
+		{
+			result.Enqueue(tempList.Items[i]);
+		}
+
+		return result;
+	}
+
+	public PooledStack<T> ToPooledStack()
+	{
+		using var tempList = _baseEnumerable.ToPooledList();
+
+		tempList.Items.AsSpan(0, tempList.Count).Sort(_comparer);
+
+		var result = new PooledStack<T>(tempList.Count);
+
+		for (var i = 0; i < tempList.Count; i++)
+		{
+			result.Push(tempList.Items[i]);
+		}
+
+		return result;
+	}
+
+	public PooledSet<T, TComparer1> ToPooledSet<TComparer1>(TComparer1 comparer) where TComparer1 : IEqualityComparer<T>
+	{
+		return _baseEnumerable.ToPooledSet(comparer);
 	}
 
 	public bool TryGetNonEnumeratedCount(out int length)
@@ -373,10 +405,8 @@ public partial struct OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer> : IO
 		return new OrderEnumerator<T, TComparer, TBaseEnumerator>(_baseEnumerable.GetEnumerator(), _comparer, Math.Max(4, count));
 	}
 
-	IOptiEnumerator<T> IOptiQuery<T>.GetEnumerator()
-	{
-		return GetEnumerator();
-	}
+	IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
 	private OrderedEnumerable<T, TBaseQuery, TBaseEnumerator> GenerateEnumerable()
 	{

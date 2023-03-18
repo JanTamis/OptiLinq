@@ -2,11 +2,11 @@ using System.Numerics;
 
 namespace OptiLinq;
 
-public partial struct IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery>
+public partial struct IntersectQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>
 {
-	public TakeQuery<TCount, T, IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery>, IntersectEnumerator<T, TComparer>> Take<TCount>(TCount count)
+	public TakeQuery<TCount, T, IntersectQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, IntersectEnumerator<T, TFirstEnumerator, TComparer>> Take<TCount>(TCount count)
 		where TCount : IBinaryInteger<TCount>
 	{
-		return new TakeQuery<TCount, T, IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery>, IntersectEnumerator<T, TComparer>>(ref this, count);
+		return new TakeQuery<TCount, T, IntersectQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, IntersectEnumerator<T, TFirstEnumerator, TComparer>>(ref this, count);
 	}
 }

@@ -23,6 +23,7 @@ public class ForEach
 	public int ClrForEach()
 	{
 		var sysRange = Enumerable.Range(0, Count);
+		
 		foreach (var i in sysRange)
 		{
 			count++;
@@ -35,6 +36,7 @@ public class ForEach
 	public int WithAction()
 	{
 		OptiQuery.Range(0, Count).ForEach(action);
+		
 		return count;
 	}
 
@@ -42,6 +44,7 @@ public class ForEach
 	public int WithStruct()
 	{
 		var countAction = new CountAction<int> { Count = 0 };
+		
 		OptiQuery.Range(0, Count).ForEach(countAction);
 
 		return countAction.Count;
@@ -52,8 +55,8 @@ public class ForEach
 	public int ToTypedEnumerableWithStruct()
 	{
 		var countAction = new CountAction<int> { Count = 0 };
-
 		var convertRange = Enumerable.Range(0, Count).AsOptiQuery();
+		
 		convertRange.ForEach(countAction);
 		return countAction.Count;
 	}

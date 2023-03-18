@@ -2,10 +2,10 @@ using System.Collections;
 using System.Diagnostics;
 using OptiLinq.Interfaces;
 
-namespace OptiLinq.Helpers;
+namespace OptiLinq.Collections;
 
 internal abstract partial class OrderedEnumerable<TElement, TQuery, TEnumerable> : IOrderedEnumerable<TElement>
-	where TEnumerable : struct, IOptiEnumerator<TElement>
+	where TEnumerable : IEnumerator<TElement>
 	where TQuery : struct, IOptiQuery<TElement, TEnumerable>
 {
 	internal TQuery _source;
@@ -101,7 +101,7 @@ internal abstract partial class OrderedEnumerable<TElement, TQuery, TEnumerable>
 }
 
 internal sealed class OrderedEnumerable<TElement, TKey, TQuery, TEnumerable> : OrderedEnumerable<TElement, TQuery, TEnumerable>
-	where TEnumerable : struct, IOptiEnumerator<TElement>
+	where TEnumerable : IEnumerator<TElement>
 	where TQuery : struct, IOptiQuery<TElement, TEnumerable>
 {
 	private readonly OrderedEnumerable<TElement, TQuery, TEnumerable>? _parent;
@@ -149,7 +149,7 @@ internal sealed class OrderedEnumerable<TElement, TKey, TQuery, TEnumerable> : O
 
 /// <summary>An ordered enumerable used by Order/OrderDescending for Ts that are bitwise indistinguishable for any considered equal.</summary>
 internal sealed partial class OrderedImplicitlyStableEnumerable<TElement, TQuery, TEnumerable> : OrderedEnumerable<TElement, TQuery, TEnumerable>
-	where TEnumerable : struct, IOptiEnumerator<TElement>
+	where TEnumerable : IEnumerator<TElement>
 	where TQuery : struct, IOptiQuery<TElement, TEnumerable>
 {
 	private readonly bool _descending;

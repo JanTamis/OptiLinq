@@ -1,27 +1,37 @@
+using System.Collections;
 using System.Numerics;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public struct TakeEnumerator<TCount, T, TBaseEnumerator> : IOptiEnumerator<T>
-	where TBaseEnumerator : struct, IOptiEnumerator<T>
+public struct TakeEnumerator<TCount, T, TBaseEnumerator> : IEnumerator<T>
+	where TBaseEnumerator : IEnumerator<T>
 	where TCount : IBinaryInteger<TCount>
 {
 	private TBaseEnumerator _baseEnumerator;
-	private TCount _count;
+	private readonly TCount _count;
+	private TCount _currentCount;
 
 	public TakeEnumerator(TBaseEnumerator baseEnumerator, TCount count)
 	{
 		_baseEnumerator = baseEnumerator;
 		_count = count;
+		_currentCount = _count;
 	}
 
+	object IEnumerator.Current => Current;
 
 	public T Current => _baseEnumerator.Current;
 
 	public bool MoveNext()
 	{
-		return _count-- > TCount.Zero && _baseEnumerator.MoveNext();
+		return _currentCount-- > TCount.Zero && _baseEnumerator.MoveNext();
+	}
+
+	public void Reset()
+	{
+		_currentCount = _count;
+		_baseEnumerator.Reset();
 	}
 	
 	public void Dispose()

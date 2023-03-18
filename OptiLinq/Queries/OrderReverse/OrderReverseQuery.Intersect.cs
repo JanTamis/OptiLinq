@@ -4,16 +4,16 @@ namespace OptiLinq;
 
 public partial struct OrderReverseQuery<T, TBaseQuery, TBaseEnumerator, TComparer>
 {
-	public IntersectQuery<T, TOtherComparer, OrderReverseQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, TOtherQuery> Intersect<TOtherQuery, TOtherComparer>(in TOtherQuery other, TOtherComparer comparer)
+	public IntersectQuery<T, TOtherComparer, OrderReverseQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, OrderReverseEnumerator<T, TComparer, TBaseEnumerator>, TOtherQuery> Intersect<TOtherQuery, TOtherComparer>(in TOtherQuery other, TOtherComparer comparer)
 		where TOtherQuery : struct, IOptiQuery<T>
 		where TOtherComparer : IEqualityComparer<T>
 	{
-		return new IntersectQuery<T, TOtherComparer, OrderReverseQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, TOtherQuery>(this, other, comparer);
+		return new IntersectQuery<T, TOtherComparer, OrderReverseQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, OrderReverseEnumerator<T, TComparer, TBaseEnumerator>, TOtherQuery>(this, other, comparer);
 	}
 
-	public IntersectQuery<T, EqualityComparer<T>, OrderReverseQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, TOtherQuery> Intersect<TOtherQuery>(in TOtherQuery other)
+	public IntersectQuery<T, EqualityComparer<T>, OrderReverseQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, OrderReverseEnumerator<T, TComparer, TBaseEnumerator>, TOtherQuery> Intersect<TOtherQuery>(in TOtherQuery other)
 		where TOtherQuery : struct, IOptiQuery<T>
 	{
-		return new IntersectQuery<T, EqualityComparer<T>, OrderReverseQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, TOtherQuery>(this, other, EqualityComparer<T>.Default);
+		return new IntersectQuery<T, EqualityComparer<T>, OrderReverseQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, OrderReverseEnumerator<T, TComparer, TBaseEnumerator>, TOtherQuery>(this, other, EqualityComparer<T>.Default);
 	}
 }

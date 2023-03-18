@@ -1,11 +1,12 @@
+using System.Collections;
 using System.Numerics;
-using OptiLinq.Helpers;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
 public partial struct PrependQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T, PrependEnumerator<T, TBaseEnumerator>>
-	where TBaseEnumerator : struct, IOptiEnumerator<T>
+	where TBaseEnumerator : IEnumerator<T>
 	where TBaseQuery : struct, IOptiQuery<T, TBaseEnumerator>
 {
 	private TBaseQuery _baseQuery;
@@ -44,17 +45,17 @@ public partial struct PrependQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 
 	public IEnumerable<T> AsEnumerable()
 	{
-		return new QueryAsEnumerable<T, PrependQuery<T, TBaseQuery, TBaseEnumerator>, PrependEnumerator<T, TBaseEnumerator>>(this);
+		return this;
 	}
 
-	public bool Contains<TComparer>(T item, TComparer comparer) where TComparer : IEqualityComparer<T>
+	public bool Contains<TComparer>(in T item, TComparer comparer) where TComparer : IEqualityComparer<T>
 	{
-		return comparer.Equals(item, _element) || _baseQuery.Contains(item, comparer);
+		return comparer.Equals(item, _element) || _baseQuery.Contains(in item, comparer);
 	}
 
-	public bool Contains(T item)
+	public bool Contains(in T item)
 	{
-		return EqualityComparer<T>.Default.Equals(item, _element) || _baseQuery.Contains(item);
+		return EqualityComparer<T>.Default.Equals(item, _element) || _baseQuery.Contains(in item);
 	}
 
 	public int CopyTo(Span<T> data)
@@ -83,6 +84,26 @@ public partial struct PrependQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 	public long LongCount()
 	{
 		return _baseQuery.LongCount() + 1L;
+	}
+
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<T, bool>
+	{
+		return _baseQuery.Count<TCountOperator, TNumber>(@operator) + (@operator.Eval(_element) ? TNumber.One : TNumber.Zero);
+	}
+
+	public TNumber Count<TNumber>(Func<T, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		return _baseQuery.Count<TNumber>(predicate) + (predicate(_element) ? TNumber.One : TNumber.Zero);
+	}
+
+	public int Count(Func<T, bool> predicate)
+	{
+		return Count<int>(predicate);
+	}
+
+	public long CountLong(Func<T, bool> predicate)
+	{
+		return Count<long>(predicate);
 	}
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out T item) where TIndex : IBinaryInteger<TIndex>
@@ -277,6 +298,86 @@ public partial struct PrependQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 		return list;
 	}
 
+	public PooledList<T> ToPooledList()
+	{
+		var list = new PooledList<T>();
+
+		list.Add(_element);
+
+		if (_baseQuery.TryGetNonEnumeratedCount(out var count))
+		{
+			list.EnsureCapacity(count + 1);
+			_baseQuery.CopyTo(list.Items.AsSpan(1));
+			list.Count = count + 1;
+		}
+		else
+		{
+			using var enumerator = _baseQuery.GetEnumerator();
+
+			while (enumerator.MoveNext())
+			{
+				list.Add(enumerator.Current);
+			}
+		}
+
+		return list;
+	}
+
+	public PooledQueue<T> ToPooledQueue()
+	{
+		var queue = new PooledQueue<T>();
+
+		if (_baseQuery.TryGetNonEnumeratedCount(out var count))
+		{
+			queue.EnsureCapacity(count + 1);
+			_baseQuery.CopyTo(queue._array.AsSpan(1));
+			queue.Count = count + 1;
+		}
+		else
+		{
+			using var enumerator = _baseQuery.GetEnumerator();
+
+			while (enumerator.MoveNext())
+			{
+				queue.Enqueue(enumerator.Current);
+			}
+		}
+
+		return queue;
+	}
+
+	public PooledStack<T> ToPooledStack()
+	{
+		var stack = new PooledStack<T>();
+
+		if (_baseQuery.TryGetNonEnumeratedCount(out var count))
+		{
+			stack.EnsureCapacity(count + 1);
+			_baseQuery.CopyTo(stack._array.AsSpan(1));
+			stack.Count = count + 1;
+		}
+		else
+		{
+			using var enumerator = _baseQuery.GetEnumerator();
+
+			while (enumerator.MoveNext())
+			{
+				stack.Push(enumerator.Current);
+			}
+		}
+
+		return stack;
+	}
+
+	public PooledSet<T, TComparer> ToPooledSet<TComparer>(TComparer comparer) where TComparer : IEqualityComparer<T>
+	{
+		var set = _baseQuery.ToPooledSet(comparer);
+
+		set.Add(_element);
+
+		return set;
+	}
+
 	public bool TryGetNonEnumeratedCount(out int length)
 	{
 		if (_baseQuery.TryGetNonEnumeratedCount(out length))
@@ -300,5 +401,6 @@ public partial struct PrependQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 		return new PrependEnumerator<T, TBaseEnumerator>(_baseQuery.GetEnumerator(), _element);
 	}
 
-	IOptiEnumerator<T> IOptiQuery<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

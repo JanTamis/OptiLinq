@@ -19,7 +19,7 @@ public class Concat
 		array2 = Enumerable.Range(0, Count).ToArray();
 	}
 
-	[Benchmark]
+	[Benchmark(Baseline = true)]
 	public int Linq()
 	{
 		var sum = 0;

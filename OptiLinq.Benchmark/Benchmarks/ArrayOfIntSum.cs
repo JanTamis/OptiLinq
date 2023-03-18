@@ -9,7 +9,7 @@ namespace OptiLinq.Benchmark;
 public class ArrayOfIntSum
 {
 	private readonly IEnumerable<int> sysArray;
-	private readonly int Count = 1_000;
+	private readonly int Count = 10_000;
 	private readonly int[] array;
 
 	public ArrayOfIntSum()
@@ -39,5 +39,5 @@ public class ArrayOfIntSum
 	public int ArrayLINQ() => array.Sum();
 
 	[Benchmark]
-	public int OptiLinq() => array.AsOptiQuery().Sum();
+	public int OptiLinq() => array.AsOptiQuery().Sum<int, ArrayQuery<int>>();
 }

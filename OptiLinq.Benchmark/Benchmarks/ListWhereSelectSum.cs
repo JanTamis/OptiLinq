@@ -44,6 +44,6 @@ public class ListWhereSelectSum
 			.AsOptiQuery()
 			.Where<IsEven<int>>()
 			.Select<SelectFunction>()
-			.Sum(x => x);
+			.Sum();
 	}
 }

@@ -1,6 +1,6 @@
 namespace OptiLinq.Interfaces;
 
-public interface IOptiCollection<T, out TEnumerator> : IOptiCollection<T>, IOptiQuery<T, TEnumerator> where TEnumerator : struct, IOptiEnumerator<T>
+public interface IOptiCollection<T, out TEnumerator> : IOptiCollection<T>, IOptiQuery<T, TEnumerator> where TEnumerator : struct, IEnumerator<T>
 {
 }
 

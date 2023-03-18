@@ -1,14 +1,15 @@
+using System.Collections;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using OptiLinq.Helpers;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
 public partial struct ArrayQuery<T> : IOptiQuery<T, ArrayEnumerator<T>>
 {
-	private T[] _array;
+	private readonly T[] _array;
 
 	internal ArrayQuery(T[] list)
 	{
@@ -19,11 +20,9 @@ public partial struct ArrayQuery<T> : IOptiQuery<T, ArrayEnumerator<T>>
 		where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 		where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
-		ref var first = ref MemoryMarshal.GetArrayDataReference(_array);
-
 		for (var i = 0; i < _array.Length; i++)
 		{
-			seed = func.Eval(seed, Unsafe.Add(ref first, i));
+			seed = func.Eval(seed, _array[i]);
 		}
 
 		return selector.Eval(seed);
@@ -31,11 +30,9 @@ public partial struct ArrayQuery<T> : IOptiQuery<T, ArrayEnumerator<T>>
 
 	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 	{
-		ref var first = ref MemoryMarshal.GetArrayDataReference(_array);
-
 		for (var i = 0; i < _array.Length; i++)
 		{
-			seed = @operator.Eval(seed, Unsafe.Add(ref first, i));
+			seed = @operator.Eval(seed, _array[i]);
 		}
 
 		return seed;
@@ -77,8 +74,13 @@ public partial struct ArrayQuery<T> : IOptiQuery<T, ArrayEnumerator<T>>
 		return _array;
 	}
 
-	public bool Contains<TComparer>(T item, TComparer comparer) where TComparer : IEqualityComparer<T>
+	public bool Contains<TComparer>(in T item, TComparer comparer = default) where TComparer : IEqualityComparer<T>
 	{
+		if (typeof(TComparer) == typeof(EqualityComparer<T>))
+		{
+			return Contains(in item);
+		}
+		
 		for (var i = 0; i < _array.Length; i++)
 		{
 			if (comparer.Equals(_array[i], item))
@@ -90,9 +92,77 @@ public partial struct ArrayQuery<T> : IOptiQuery<T, ArrayEnumerator<T>>
 		return false;
 	}
 
-	public bool Contains(T item)
+	public bool Contains(in T item)
 	{
-		return _array.Contains(item);
+		if (!RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+		{
+			if (Unsafe.SizeOf<T>() == sizeof(byte))
+			{
+				return SpanHelper.ContainsValueType(
+					ref Unsafe.As<T, byte>(ref MemoryMarshal.GetArrayDataReference(_array)),
+					Unsafe.As<T, byte>(ref Unsafe.AsRef(in item)),
+					_array.Length);
+			}
+
+			if (Unsafe.SizeOf<T>() == sizeof(short))
+			{
+				return SpanHelper.ContainsValueType(
+					ref Unsafe.As<T, short>(ref MemoryMarshal.GetArrayDataReference(_array)),
+					Unsafe.As<T, short>(ref Unsafe.AsRef(in item)),
+					_array.Length);
+			}
+
+			if (Unsafe.SizeOf<T>() == sizeof(int))
+			{
+				return SpanHelper.ContainsValueType(
+					ref Unsafe.As<T, int>(ref MemoryMarshal.GetArrayDataReference(_array)),
+					Unsafe.As<T, int>(ref Unsafe.AsRef(in item)),
+					_array.Length);
+			}
+
+			if (Unsafe.SizeOf<T>() == sizeof(long))
+			{
+				return SpanHelper.ContainsValueType(
+					ref Unsafe.As<T, long>(ref MemoryMarshal.GetArrayDataReference(_array)),
+					Unsafe.As<T, long>(ref Unsafe.AsRef(in item)),
+					_array.Length);
+			}
+
+			ref var searchItem = ref Unsafe.AsRef(in item);
+
+			ref var firstItem = ref MemoryMarshal.GetArrayDataReference(_array);
+			ref var lastItem = ref Unsafe.Add(ref firstItem, _array.Length);
+
+			while (Unsafe.IsAddressLessThan(ref firstItem, ref lastItem))
+			{
+				if (Unsafe.AreSame(ref firstItem, ref searchItem) || EqualityComparer<T>.Default.Equals(firstItem, item))
+				{
+					return true;
+				}
+
+				firstItem = ref Unsafe.Add(ref firstItem, 1);
+			}
+
+			for (var i = 0; i < _array.Length; i++)
+			{
+				if (EqualityComparer<T>.Default.Equals(_array[i], item))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		for (var i = 0; i < _array.Length; i++)
+		{
+			if (EqualityComparer<T>.Default.Equals(_array[i], item))
+			{
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public int CopyTo(Span<T> data)
@@ -118,6 +188,46 @@ public partial struct ArrayQuery<T> : IOptiQuery<T, ArrayEnumerator<T>>
 	public long LongCount()
 	{
 		return _array.LongLength;
+	}
+
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<T, bool>
+	{
+		var count = TNumber.Zero;
+
+		for (var i = 0; i < _array.Length; i++)
+		{
+			if (@operator.Eval(_array[i]))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public TNumber Count<TNumber>(Func<T, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		var count = TNumber.Zero;
+
+		for (var i = 0; i < _array.Length; i++)
+		{
+			if (predicate(_array[i]))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public int Count(Func<T, bool> predicate)
+	{
+		return Count<int>(predicate);
+	}
+
+	public long CountLong(Func<T, bool> predicate)
+	{
+		return Count<long>(predicate);
 	}
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out T item) where TIndex : IBinaryInteger<TIndex>
@@ -309,6 +419,54 @@ public partial struct ArrayQuery<T> : IOptiQuery<T, ArrayEnumerator<T>>
 		return list;
 	}
 
+	public PooledList<T> ToPooledList()
+	{
+		var list = new PooledList<T>(_array.Length)
+		{
+			Count = _array.Length,
+		};
+
+		_array.CopyTo(list.Items, 0);
+
+		return list;
+	}
+
+	public PooledQueue<T> ToPooledQueue()
+	{
+		var queue = new PooledQueue<T>(_array.Length);
+
+		for (var i = 0; i < _array.Length; i++)
+		{
+			queue.Enqueue(_array[i]);
+		}
+
+		return queue;
+	}
+
+	public PooledStack<T> ToPooledStack()
+	{
+		var stack = new PooledStack<T>(_array.Length)
+		{
+			Count = _array.Length,
+		};
+
+		_array.CopyTo(stack._array, 0);
+
+		return stack;
+	}
+
+	public PooledSet<T, TComparer> ToPooledSet<TComparer>(TComparer comparer) where TComparer : IEqualityComparer<T>
+	{
+		var set = new PooledSet<T, TComparer>(_array.Length, comparer);
+
+		for (var i = 0; i < _array.Length; i++)
+		{
+			set.Add(_array[i]);
+		}
+
+		return set;
+	}
+
 	public bool TryGetNonEnumeratedCount(out int length)
 	{
 		length = _array.Length;
@@ -326,5 +484,6 @@ public partial struct ArrayQuery<T> : IOptiQuery<T, ArrayEnumerator<T>>
 		return new ArrayEnumerator<T>(_array);
 	}
 
-	IOptiEnumerator<T> IOptiQuery<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

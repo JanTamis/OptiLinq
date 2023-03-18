@@ -2,8 +2,8 @@ namespace OptiLinq;
 
 public partial struct ReverseQuery<T, TBaseQuery, TBaseEnumerator>
 {
-	public AppendQuery<T, ReverseQuery<T, TBaseQuery, TBaseEnumerator>, ReverseEnumerator<T, TBaseEnumerator>> Append(in T element)
+	public AppendQuery<T, ReverseQuery<T, TBaseQuery, TBaseEnumerator>, ReverseEnumerator<T>> Append(in T element)
 	{
-		return new AppendQuery<T, ReverseQuery<T, TBaseQuery, TBaseEnumerator>, ReverseEnumerator<T, TBaseEnumerator>>(ref this, in element);
+		return new AppendQuery<T, ReverseQuery<T, TBaseQuery, TBaseEnumerator>, ReverseEnumerator<T>>(ref this, in element);
 	}
 }

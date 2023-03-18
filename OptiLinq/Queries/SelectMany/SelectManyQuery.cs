@@ -1,7 +1,8 @@
+using System.Collections;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using OptiLinq.Helpers;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
@@ -9,7 +10,7 @@ namespace OptiLinq;
 public partial struct SelectManyQuery<T, TResult, TOperator, TBaseQuery, TBaseEnumerator, TSubQuery> : IOptiQuery<TResult, SelectManyEnumerator<T, TResult, TBaseEnumerator, TSubQuery, TOperator>>
 	where TOperator : struct, IFunction<T, TSubQuery>
 	where TBaseQuery : struct, IOptiQuery<T, TBaseEnumerator>
-	where TBaseEnumerator : struct, IOptiEnumerator<T>
+	where TBaseEnumerator : IEnumerator<T>
 	where TSubQuery : IOptiQuery<TResult>
 {
 	private TBaseQuery _baseQuery;
@@ -106,10 +107,10 @@ public partial struct SelectManyQuery<T, TResult, TOperator, TBaseQuery, TBaseEn
 
 	public IEnumerable<TResult> AsEnumerable()
 	{
-		return new QueryAsEnumerable<TResult, SelectManyQuery<T, TResult, TOperator, TBaseQuery, TBaseEnumerator, TSubQuery>, SelectManyEnumerator<T, TResult, TBaseEnumerator, TSubQuery, TOperator>>(this);
+		return this;
 	}
 
-	public bool Contains<TComparer>(TResult item, TComparer comparer) where TComparer : IEqualityComparer<TResult>
+	public bool Contains<TComparer>(in TResult item, TComparer comparer) where TComparer : IEqualityComparer<TResult>
 	{
 		using var enumerator = _baseQuery.GetEnumerator();
 
@@ -117,7 +118,7 @@ public partial struct SelectManyQuery<T, TResult, TOperator, TBaseQuery, TBaseEn
 		{
 			var subQuery = _selector.Eval(enumerator.Current);
 
-			if (subQuery.Contains(item, comparer))
+			if (subQuery.Contains(in item, comparer))
 			{
 				return true;
 			}
@@ -126,7 +127,7 @@ public partial struct SelectManyQuery<T, TResult, TOperator, TBaseQuery, TBaseEn
 		return false;
 	}
 
-	public bool Contains(TResult item)
+	public bool Contains(in TResult item)
 	{
 		using var enumerator = _baseQuery.GetEnumerator();
 
@@ -134,7 +135,7 @@ public partial struct SelectManyQuery<T, TResult, TOperator, TBaseQuery, TBaseEn
 		{
 			var subQuery = _selector.Eval(enumerator.Current);
 
-			if (subQuery.Contains(item))
+			if (subQuery.Contains(in item))
 			{
 				return true;
 			}
@@ -184,6 +185,70 @@ public partial struct SelectManyQuery<T, TResult, TOperator, TBaseQuery, TBaseEn
 	public long LongCount()
 	{
 		return Count<long>();
+	}
+
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<TResult, bool>
+	{
+		var count = TNumber.Zero;
+
+		using var enumerator = _baseQuery.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			var subQuery = _selector.Eval(enumerator.Current);
+
+			count += subQuery.Count<TCountOperator, TNumber>(@operator);
+		}
+
+		return count;
+	}
+
+	public TNumber Count<TNumber>(Func<TResult, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		var count = TNumber.Zero;
+
+		using var enumerator = _baseQuery.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			var subQuery = _selector.Eval(enumerator.Current);
+
+			count += subQuery.Count<TNumber>(predicate);
+		}
+
+		return count;
+	}
+
+	public int Count(Func<TResult, bool> predicate)
+	{
+		var count = 0;
+
+		using var enumerator = _baseQuery.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			var subQuery = _selector.Eval(enumerator.Current);
+
+			count += subQuery.Count(predicate);
+		}
+
+		return count;
+	}
+
+	public long CountLong(Func<TResult, bool> predicate)
+	{
+		var count = 0L;
+
+		using var enumerator = _baseQuery.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			var subQuery = _selector.Eval(enumerator.Current);
+
+			count += subQuery.CountLong(predicate);
+		}
+
+		return count;
 	}
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out TResult item) where TIndex : IBinaryInteger<TIndex>
@@ -507,6 +572,125 @@ public partial struct SelectManyQuery<T, TResult, TOperator, TBaseQuery, TBaseEn
 		return result;
 	}
 
+	public PooledList<TResult> ToPooledList()
+	{
+		using var enumerator = _baseQuery.GetEnumerator();
+
+		var result = new PooledList<TResult>();
+
+		while (enumerator.MoveNext())
+		{
+			var subQuery = _selector.Eval(enumerator.Current);
+
+			if (subQuery.TryGetNonEnumeratedCount(out var subCount))
+			{
+				var count = result.Count;
+				result.EnsureCapacity(result.Count + subCount);
+
+				subQuery.CopyTo(result.Items.AsSpan().Slice(count));
+			}
+			else
+			{
+				using var subEnumerator = subQuery.GetEnumerator();
+
+				while (subEnumerator.MoveNext())
+				{
+					result.Add(subEnumerator.Current);
+				}
+			}
+		}
+
+		return result;
+	}
+
+	public PooledQueue<TResult> ToPooledQueue()
+	{
+		using var enumerator = _baseQuery.GetEnumerator();
+
+		var result = new PooledQueue<TResult>();
+
+		while (enumerator.MoveNext())
+		{
+			var subQuery = _selector.Eval(enumerator.Current);
+
+			if (subQuery.TryGetNonEnumeratedCount(out var subCount))
+			{
+				var count = result.Count;
+				result.EnsureCapacity(result.Count + subCount);
+
+				subQuery.CopyTo(result._array.AsSpan().Slice(count));
+			}
+			else
+			{
+				using var subEnumerator = subQuery.GetEnumerator();
+
+				while (subEnumerator.MoveNext())
+				{
+					result.Enqueue(subEnumerator.Current);
+				}
+			}
+		}
+
+		return result;
+	}
+
+	public PooledStack<TResult> ToPooledStack()
+	{
+		using var enumerator = _baseQuery.GetEnumerator();
+
+		var result = new PooledStack<TResult>();
+
+		while (enumerator.MoveNext())
+		{
+			var subQuery = _selector.Eval(enumerator.Current);
+
+			if (subQuery.TryGetNonEnumeratedCount(out var subCount))
+			{
+				var count = result.Count;
+				result.EnsureCapacity(result.Count + subCount);
+
+				subQuery.CopyTo(result._array.AsSpan().Slice(count));
+			}
+			else
+			{
+				using var subEnumerator = subQuery.GetEnumerator();
+
+				while (subEnumerator.MoveNext())
+				{
+					result.Push(subEnumerator.Current);
+				}
+			}
+		}
+
+		return result;
+	}
+
+	public PooledSet<TResult, TComparer> ToPooledSet<TComparer>(TComparer comparer) where TComparer : IEqualityComparer<TResult>
+	{
+		using var enumerator = _baseQuery.GetEnumerator();
+
+		var result = new PooledSet<TResult, TComparer>(comparer);
+
+		while (enumerator.MoveNext())
+		{
+			var subQuery = _selector.Eval(enumerator.Current);
+
+			if (subQuery.TryGetNonEnumeratedCount(out var count))
+			{
+				result.EnsureCapacity(result.Count + count);
+			}
+
+			using var subEnumerator = subQuery.GetEnumerator();
+
+			while (subEnumerator.MoveNext())
+			{
+				result.Add(subEnumerator.Current);
+			}
+		}
+
+		return result;
+	}
+
 	public bool TryGetNonEnumeratedCount(out int length)
 	{
 		using var enumerator = _baseQuery.GetEnumerator();
@@ -542,7 +726,8 @@ public partial struct SelectManyQuery<T, TResult, TOperator, TBaseQuery, TBaseEn
 		return new SelectManyEnumerator<T, TResult, TBaseEnumerator, TSubQuery, TOperator>(_baseQuery.GetEnumerator(), _selector);
 	}
 
-	IOptiEnumerator<TResult> IOptiQuery<TResult>.GetEnumerator() => GetEnumerator();
+	IEnumerator<TResult> IEnumerable<TResult>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
 	public override string ToString()
 	{

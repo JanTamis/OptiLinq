@@ -1,13 +1,13 @@
 using OptiLinq.Interfaces;
 
-namespace OptiLinq.Helpers;
+namespace OptiLinq.Collections;
 
 /// <summary>
 /// A buffer into which the contents of an <see cref="IEnumerable{TElement}"/> can be stored.
 /// </summary>
 /// <typeparam name="TElement">The type of the buffer's elements.</typeparam>
 internal readonly struct Buffer<TElement, TQuery, TEnumerable>
-	where TEnumerable : struct, IOptiEnumerator<TElement>
+	where TEnumerable : IEnumerator<TElement>
 	where TQuery : struct, IOptiQuery<TElement, TEnumerable>
 {
 	/// <summary>

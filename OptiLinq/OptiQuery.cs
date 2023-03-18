@@ -1,7 +1,7 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.Intrinsics;
-using OptiLinq.Helpers;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 using OptiLinq.Operators;
 
@@ -24,6 +24,11 @@ public static class OptiQuery
 		return new ArrayQuery<T>(list);
 	}
 
+	public static HashSetQuery<T> AsOptiQuery<T>(this HashSet<T> list)
+	{
+		return new HashSetQuery<T>(list);
+	}
+
 	public static RangeQuery Range(int start, int count)
 	{
 		return new RangeQuery(start, count);
@@ -44,7 +49,7 @@ public static class OptiQuery
 		return new GenerateQuery<T, TOperator>(initial, @operator);
 	}
 
-	public static GenerateQuery<T, FuncAsIFunction<T, T>> Generate<T>(Func<T, T> @operator = default, T initial = default)
+	public static GenerateQuery<T, FuncAsIFunction<T, T>> Generate<T>(Func<T, T> @operator, T initial = default)
 	{
 		return new GenerateQuery<T, FuncAsIFunction<T, T>>(initial, new FuncAsIFunction<T, T>(@operator));
 	}
@@ -93,34 +98,7 @@ public static class OptiQuery
 	{
 		if (query.TryGetSpan(out var data))
 		{
-			var sum = TNumber.Zero;
-
-			if (Vector.IsHardwareAccelerated && Vector<TNumber>.IsSupported && data.Length >= Vector<TNumber>.Count)
-			{
-				var vectors = MemoryMarshal.Cast<TNumber, Vector<TNumber>>(data);
-				var vectorSum = Vector<TNumber>.Zero;
-
-				for (var i = 0; i < vectors.Length; i++)
-				{
-					vectorSum += vectors[i];
-				}
-
-				sum += Vector.Sum(vectorSum);
-
-				for (var i = vectors.Length * Vector<TNumber>.Count; i < data.Length; i++)
-				{
-					sum += data[i];
-				}
-
-				return sum;
-			}
-
-			for (var i = 0; i < data.Length; i++)
-			{
-				sum += data[i];
-			}
-
-			return sum;
+			return Sum(data);
 		}
 
 		return query.Aggregate(new SumOperator<TNumber>(), TNumber.Zero);
@@ -145,9 +123,14 @@ public static class OptiQuery
 	public static decimal Average(this IOptiQuery<decimal> query) => query.Average<decimal, decimal>();
 
 	internal static TResult Average<TNumber, TResult>(this IOptiQuery<TNumber> query)
-		where TNumber : INumberBase<TNumber>
-		where TResult : INumberBase<TResult>
+		where TNumber : struct, INumberBase<TNumber>
+		where TResult : struct, INumberBase<TResult>
 	{
+		if (query.TryGetSpan(out var data))
+		{
+			return TResult.CreateChecked(Sum(data)) / TResult.CreateChecked(data.Length);
+		}
+
 		var result = query.Aggregate(new AverageOperator<TResult, TNumber>(), (TResult.Zero, TResult.Zero));
 
 		if (result.Item2 == TResult.Zero)
@@ -194,11 +177,51 @@ public static class OptiQuery
 		return query.Contains(element);
 	}
 
-	public static void ForEach<T>(this IOptiQuery<T> query, Action<T> action)
+	public static void ForEach<TQuery, T>(this TQuery query, Action<T> action) where TQuery : IOptiQuery<T>
 	{
-		foreach (var item in query)
+		query.ForEach(new ActionAsIFunction<T>(action));
+	}
+
+	public static TNumber Count<T, TNumber>(this IOptiQuery<T> query, Func<T, bool> action) where TNumber : struct, INumberBase<TNumber>
+	{
+		return query.Count<FuncAsIFunction<T, bool>, TNumber>(new FuncAsIFunction<T, bool>(action));
+	}
+
+	internal static TNumber Sum<TNumber>(ReadOnlySpan<TNumber> data) where TNumber : struct, INumberBase<TNumber>
+	{
+		if (Vector.IsHardwareAccelerated && Vector<TNumber>.IsSupported)
 		{
-			action(item);
+			ref var first = ref MemoryMarshal.GetReference(data);
+			ref var last = ref Unsafe.Add(ref first, data.Length);
+
+			var vectorSum = Unsafe.As<TNumber, Vector<TNumber>>(ref first);
+			first = ref Unsafe.Add(ref first, Vector<TNumber>.Count);
+
+			while (Unsafe.IsAddressLessThan(ref first, ref Unsafe.Subtract(ref last, Vector<TNumber>.Count)))
+			{
+				var vec1 = Unsafe.As<TNumber, Vector<TNumber>>(ref first);
+				var vec2 = Unsafe.As<TNumber, Vector<TNumber>>(ref Unsafe.Add(ref first, Vector<TNumber>.Count));
+
+				vectorSum += vec1 + vec2;
+				first = ref Unsafe.Add(ref first, Vector<TNumber>.Count * 2);
+			}
+
+			while (Unsafe.IsAddressLessThan(ref first, ref last))
+			{
+				vectorSum += Unsafe.As<TNumber, Vector<TNumber>>(ref first);
+				first = ref Unsafe.Add(ref first, Vector<TNumber>.Count);
+			}
+
+			return Vector.Sum(vectorSum);
 		}
+
+		var sum = TNumber.Zero;
+
+		for (var i = 0; i < data.Length; i++)
+		{
+			sum += data[i];
+		}
+
+		return sum;
 	}
 }

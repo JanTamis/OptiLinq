@@ -1,10 +1,11 @@
+using System.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public struct ArrayEnumerator<T> : IOptiEnumerator<T>
+public struct ArrayEnumerator<T> : IEnumerator<T>
 {
-	private T[] _array;
+	private readonly T[] _array;
 	private int _index;
 
 	internal ArrayEnumerator(T[] list)
@@ -12,6 +13,9 @@ public struct ArrayEnumerator<T> : IOptiEnumerator<T>
 		_array = list;
 		_index = -1;
 	}
+
+
+	object IEnumerator.Current => Current;
 
 	public T Current
 	{
@@ -22,7 +26,7 @@ public struct ArrayEnumerator<T> : IOptiEnumerator<T>
 
 			if ((uint)index >= (uint)array.Length)
 			{
-				throw new InvalidOperationException();
+				throw new IndexOutOfRangeException();
 			}
 
 			return array[index];
@@ -32,7 +36,7 @@ public struct ArrayEnumerator<T> : IOptiEnumerator<T>
 	public bool MoveNext()
 	{
 		var index = _index + 1;
-		
+
 		if ((uint)index >= (uint)_array.Length)
 		{
 			_index = _array.Length;
@@ -41,6 +45,11 @@ public struct ArrayEnumerator<T> : IOptiEnumerator<T>
 
 		_index = index;
 		return true;
+	}
+
+	public void Reset()
+	{
+		_index = -1;
 	}
 
 	public void Dispose()

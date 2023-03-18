@@ -49,3 +49,18 @@ public readonly struct FuncAsIFunction<TOut> : IFunction<TOut>
 		return _func();
 	}
 }
+
+public readonly struct ActionAsIFunction<TIn> : IAction<TIn>
+{
+	private readonly Action<TIn> _action;
+
+	internal ActionAsIFunction(Action<TIn> action)
+	{
+		_action = action;
+	}
+
+	public void Do(in TIn element)
+	{
+		_action(element);
+	}
+}

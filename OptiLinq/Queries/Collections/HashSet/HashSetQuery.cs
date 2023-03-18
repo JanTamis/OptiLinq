@@ -1,13 +1,13 @@
+using System.Collections;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using OptiLinq.Helpers;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-// ReSharper disable GenericEnumeratorNotDisposed
-public partial struct HashSetQuery<T> : IOptiQuery<T, HashSetEnumerator<T>>
+public partial struct HashSetQuery<T> : IOptiQuery<T, HashSet<T>.Enumerator>
 {
 	private readonly HashSet<T> _set;
 
@@ -20,7 +20,7 @@ public partial struct HashSetQuery<T> : IOptiQuery<T, HashSetEnumerator<T>>
 		where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 		where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
-		var enumerator = _set.GetEnumerator();
+		using var enumerator = _set.GetEnumerator();
 
 		while (enumerator.MoveNext())
 		{
@@ -32,7 +32,7 @@ public partial struct HashSetQuery<T> : IOptiQuery<T, HashSetEnumerator<T>>
 
 	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 	{
-		var enumerator = _set.GetEnumerator();
+		using var enumerator = _set.GetEnumerator();
 
 		while (enumerator.MoveNext())
 		{
@@ -44,7 +44,7 @@ public partial struct HashSetQuery<T> : IOptiQuery<T, HashSetEnumerator<T>>
 
 	public bool All<TAllOperator>(TAllOperator @operator = default) where TAllOperator : struct, IFunction<T, bool>
 	{
-		var enumerator = _set.GetEnumerator();
+		using var enumerator = _set.GetEnumerator();
 
 		while (enumerator.MoveNext())
 		{
@@ -64,7 +64,7 @@ public partial struct HashSetQuery<T> : IOptiQuery<T, HashSetEnumerator<T>>
 
 	public bool Any<TAnyOperator>(TAnyOperator @operator = default) where TAnyOperator : struct, IFunction<T, bool>
 	{
-		var enumerator = _set.GetEnumerator();
+		using var enumerator = _set.GetEnumerator();
 
 		while (enumerator.MoveNext())
 		{
@@ -82,9 +82,9 @@ public partial struct HashSetQuery<T> : IOptiQuery<T, HashSetEnumerator<T>>
 		return _set;
 	}
 
-	public bool Contains<TComparer>(T item, TComparer comparer) where TComparer : IEqualityComparer<T>
+	public bool Contains<TComparer>(in T item, TComparer comparer) where TComparer : IEqualityComparer<T>
 	{
-		var enumerator = _set.GetEnumerator();
+		using var enumerator = _set.GetEnumerator();
 
 		while (enumerator.MoveNext())
 		{
@@ -97,9 +97,9 @@ public partial struct HashSetQuery<T> : IOptiQuery<T, HashSetEnumerator<T>>
 		return false;
 	}
 
-	public bool Contains(T item)
+	public bool Contains(in T item)
 	{
-		var enumerator = _set.GetEnumerator();
+		using var enumerator = _set.GetEnumerator();
 
 		while (enumerator.MoveNext())
 		{
@@ -114,7 +114,7 @@ public partial struct HashSetQuery<T> : IOptiQuery<T, HashSetEnumerator<T>>
 
 	public int CopyTo(Span<T> data)
 	{
-		var enumerator = _set.GetEnumerator();
+		using var enumerator = _set.GetEnumerator();
 		var i = 0;
 
 		while (enumerator.MoveNext())
@@ -133,19 +133,63 @@ public partial struct HashSetQuery<T> : IOptiQuery<T, HashSetEnumerator<T>>
 
 	public int Count()
 	{
-		return Count<int>();
+		return _set.Count;
 	}
 
 	public long LongCount()
 	{
-		return Count<long>();
+		return _set.Count;
+	}
+
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<T, bool>
+	{
+		var count = TNumber.Zero;
+
+		using var enumerator = _set.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			if (@operator.Eval(enumerator.Current))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public TNumber Count<TNumber>(Func<T, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		var count = TNumber.Zero;
+
+		using var enumerator = _set.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			if (predicate(enumerator.Current))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public int Count(Func<T, bool> predicate)
+	{
+		return Count<int>(predicate);
+	}
+
+	public long CountLong(Func<T, bool> predicate)
+	{
+		return Count<long>(predicate);
 	}
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out T item) where TIndex : IBinaryInteger<TIndex>
 	{
 		if (index >= TIndex.Zero)
 		{
-			var enumerator = _set.GetEnumerator();
+			using var enumerator = _set.GetEnumerator();
 
 			while (enumerator.MoveNext())
 			{
@@ -181,7 +225,7 @@ public partial struct HashSetQuery<T> : IOptiQuery<T, HashSetEnumerator<T>>
 
 	public bool TryGetFirst(out T item)
 	{
-		var enumerator = _set.GetEnumerator();
+		using var enumerator = _set.GetEnumerator();
 
 		if (enumerator.MoveNext())
 		{
@@ -212,7 +256,7 @@ public partial struct HashSetQuery<T> : IOptiQuery<T, HashSetEnumerator<T>>
 	public Task ForAll<TAction>(TAction @operator = default, CancellationToken token = default) where TAction : struct, IAction<T>
 	{
 		var schedulerPair = new ConcurrentExclusiveSchedulerPair(TaskScheduler.Default, Environment.ProcessorCount);
-		var enumerator = _set.GetEnumerator();
+		using var enumerator = _set.GetEnumerator();
 
 		while (enumerator.MoveNext())
 		{
@@ -225,7 +269,7 @@ public partial struct HashSetQuery<T> : IOptiQuery<T, HashSetEnumerator<T>>
 
 	public void ForEach<TAction>(TAction @operator = default) where TAction : struct, IAction<T>
 	{
-		var enumerator = _set.GetEnumerator();
+		using var enumerator = _set.GetEnumerator();
 
 		while (enumerator.MoveNext())
 		{
@@ -235,7 +279,7 @@ public partial struct HashSetQuery<T> : IOptiQuery<T, HashSetEnumerator<T>>
 
 	public bool TryGetLast(out T item)
 	{
-		var enumerator = _set.GetEnumerator();
+		using var enumerator = _set.GetEnumerator();
 
 		if (enumerator.MoveNext())
 		{
@@ -271,17 +315,17 @@ public partial struct HashSetQuery<T> : IOptiQuery<T, HashSetEnumerator<T>>
 
 	public T Max()
 	{
-		return EnumerableHelper.Max<T, HashSetEnumerator<T>>(GetEnumerator());
+		return EnumerableHelper.Max<T, HashSet<T>.Enumerator>(GetEnumerator());
 	}
 
 	public T Min()
 	{
-		return EnumerableHelper.Min<T, HashSetEnumerator<T>>(GetEnumerator());
+		return EnumerableHelper.Min<T, HashSet<T>.Enumerator>(GetEnumerator());
 	}
 
 	public bool TryGetSingle(out T item)
 	{
-		var enumerator = _set.GetEnumerator();
+		using var enumerator = _set.GetEnumerator();
 
 		if (enumerator.MoveNext())
 		{
@@ -337,7 +381,7 @@ public partial struct HashSetQuery<T> : IOptiQuery<T, HashSetEnumerator<T>>
 	{
 		var list = new List<T>(_set.Count);
 		var span = CollectionsMarshal.AsSpan(list);
-		var enumerator = _set.GetEnumerator();
+		using var enumerator = _set.GetEnumerator();
 
 		for (var i = 0; i < span.Length && enumerator.MoveNext(); i++)
 		{
@@ -345,6 +389,60 @@ public partial struct HashSetQuery<T> : IOptiQuery<T, HashSetEnumerator<T>>
 		}
 
 		return list;
+	}
+
+	public PooledList<T> ToPooledList()
+	{
+		var list = new PooledList<T>(_set.Count)
+		{
+			Count = _set.Count,
+		};
+
+		_set.CopyTo(list.Items);
+
+		return list;
+	}
+
+	public PooledQueue<T> ToPooledQueue()
+	{
+		var queue = new PooledQueue<T>(_set.Count);
+
+		using var enumerator = _set.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			queue.Enqueue(enumerator.Current);
+		}
+
+		return queue;
+	}
+
+	public PooledStack<T> ToPooledStack()
+	{
+		var stack = new PooledStack<T>(_set.Count);
+
+		using var enumerator = _set.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			stack.Push(enumerator.Current);
+		}
+
+		return stack;
+	}
+
+	public PooledSet<T, TComparer> ToPooledSet<TComparer>(TComparer comparer) where TComparer : IEqualityComparer<T>
+	{
+		var set = new PooledSet<T, TComparer>(_set.Count, comparer);
+
+		using var enumerator = _set.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			set.Add(enumerator.Current);
+		}
+
+		return set;
 	}
 
 	public bool TryGetNonEnumeratedCount(out int length)
@@ -359,10 +457,11 @@ public partial struct HashSetQuery<T> : IOptiQuery<T, HashSetEnumerator<T>>
 		return false;
 	}
 
-	public HashSetEnumerator<T> GetEnumerator()
+	public HashSet<T>.Enumerator GetEnumerator()
 	{
-		return new HashSetEnumerator<T>(_set.GetEnumerator());
+		return _set.GetEnumerator();
 	}
 
-	IOptiEnumerator<T> IOptiQuery<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

@@ -1,12 +1,14 @@
+using System.Collections;
 using System.Numerics;
-using OptiLinq.Helpers;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public partial struct ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery> : IOptiQuery<T, ExceptEnumerator<T, TComparer>>
+public partial struct ExceptQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery> : IOptiQuery<T, ExceptEnumerator<T, TFirstEnumerator, TComparer>>
 	where TComparer : IEqualityComparer<T>
-	where TFirstQuery : struct, IOptiQuery<T>
+	where TFirstQuery : struct, IOptiQuery<T, TFirstEnumerator>
+	where TFirstEnumerator : IEnumerator<T>
 	where TSecondQuery : struct, IOptiQuery<T>
 {
 	private TComparer _comparer;
@@ -24,34 +26,31 @@ public partial struct ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery> : IOp
 
 	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate> where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
-
-		var count = 0;
 
 		while (enumerator.MoveNext())
 		{
-			if (set.AddIfNotPresent(enumerator.Current))
+			if (set.Add(enumerator.Current))
 			{
 				seed = func.Eval(seed, enumerator.Current);
-				count++;
 			}
 		}
 
-		_count = count;
+		_count = set.Count;
 		return selector.Eval(seed);
 	}
 
 	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		var count = 0;
 
 		while (enumerator.MoveNext())
 		{
-			if (set.AddIfNotPresent(enumerator.Current))
+			if (set.Add(enumerator.Current))
 			{
 				seed = @operator.Eval(seed, enumerator.Current);
 				count++;
@@ -64,12 +63,12 @@ public partial struct ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery> : IOp
 
 	public bool All<TAllOperator>(TAllOperator @operator = default) where TAllOperator : struct, IFunction<T, bool>
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		while (enumerator.MoveNext())
 		{
-			if (set.AddIfNotPresent(enumerator.Current) && !@operator.Eval(enumerator.Current))
+			if (set.Add(enumerator.Current) && !@operator.Eval(enumerator.Current))
 			{
 				return false;
 			}
@@ -80,12 +79,12 @@ public partial struct ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery> : IOp
 
 	public bool Any()
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		while (enumerator.MoveNext())
 		{
-			if (set.AddIfNotPresent(enumerator.Current))
+			if (set.Add(enumerator.Current))
 			{
 				return true;
 			}
@@ -96,12 +95,12 @@ public partial struct ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery> : IOp
 
 	public bool Any<TAnyOperator>(TAnyOperator @operator = default) where TAnyOperator : struct, IFunction<T, bool>
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		while (enumerator.MoveNext())
 		{
-			if (set.AddIfNotPresent(enumerator.Current) && @operator.Eval(enumerator.Current))
+			if (set.Add(enumerator.Current) && @operator.Eval(enumerator.Current))
 			{
 				return true;
 			}
@@ -112,17 +111,17 @@ public partial struct ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery> : IOp
 
 	public IEnumerable<T> AsEnumerable()
 	{
-		return new QueryAsEnumerable<T, ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery>, ExceptEnumerator<T, TComparer>>(this);
+		return this;
 	}
 
-	public bool Contains<TComparer1>(T item, TComparer1 comparer) where TComparer1 : IEqualityComparer<T>
+	public bool Contains<TComparer1>(in T item, TComparer1 comparer) where TComparer1 : IEqualityComparer<T>
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		while (enumerator.MoveNext())
 		{
-			if (set.AddIfNotPresent(enumerator.Current) && comparer.Equals(enumerator.Current, item))
+			if (set.Add(enumerator.Current) && comparer.Equals(enumerator.Current, item))
 			{
 				return true;
 			}
@@ -131,14 +130,14 @@ public partial struct ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery> : IOp
 		return false;
 	}
 
-	public bool Contains(T item)
+	public bool Contains(in T item)
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		while (enumerator.MoveNext())
 		{
-			if (set.AddIfNotPresent(enumerator.Current) && EqualityComparer<T>.Default.Equals(enumerator.Current, item))
+			if (set.Add(enumerator.Current) && EqualityComparer<T>.Default.Equals(enumerator.Current, item))
 			{
 				return true;
 			}
@@ -149,14 +148,14 @@ public partial struct ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery> : IOp
 
 	public int CopyTo(Span<T> data)
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		var index = 0;
 
 		while (index < data.Length && enumerator.MoveNext())
 		{
-			if (set.AddIfNotPresent(enumerator.Current))
+			if (set.Add(enumerator.Current))
 			{
 				data[index++] = enumerator.Current;
 			}
@@ -167,14 +166,14 @@ public partial struct ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery> : IOp
 
 	public TNumber Count<TNumber>() where TNumber : INumberBase<TNumber>
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		var count = TNumber.Zero;
 
 		while (enumerator.MoveNext())
 		{
-			if (set.AddIfNotPresent(enumerator.Current))
+			if (set.Add(enumerator.Current))
 			{
 				count++;
 			}
@@ -194,16 +193,62 @@ public partial struct ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery> : IOp
 		return Count<long>();
 	}
 
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<T, bool>
+	{
+		using var set = _secondQuery.ToPooledSet(_comparer);
+		using var enumerator = _firstQuery.GetEnumerator();
+
+		var count = TNumber.Zero;
+
+		while (enumerator.MoveNext())
+		{
+			if (set.Add(enumerator.Current) && @operator.Eval(enumerator.Current))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public TNumber Count<TNumber>(Func<T, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		var count = TNumber.Zero;
+
+		using var set = _secondQuery.ToPooledSet(_comparer);
+		using var enumerator = _firstQuery.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			if (set.Add(enumerator.Current) && predicate(enumerator.Current))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public int Count(Func<T, bool> predicate)
+	{
+		return Count<int>(predicate);
+	}
+
+	public long CountLong(Func<T, bool> predicate)
+	{
+		return Count<long>(predicate);
+	}
+
 	public bool TryGetElementAt<TIndex>(TIndex index, out T item) where TIndex : IBinaryInteger<TIndex>
 	{
 		if (TIndex.IsPositive(index))
 		{
-			using var set = GetSet();
+			using var set = _secondQuery.ToPooledSet(_comparer);
 			using var enumerator = _firstQuery.GetEnumerator();
 
 			while (enumerator.MoveNext())
 			{
-				if (set.AddIfNotPresent(enumerator.Current))
+				if (set.Add(enumerator.Current))
 				{
 					if (index == TIndex.Zero)
 					{
@@ -238,12 +283,12 @@ public partial struct ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery> : IOp
 
 	public bool TryGetFirst(out T item)
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		while (enumerator.MoveNext())
 		{
-			if (set.AddIfNotPresent(enumerator.Current))
+			if (set.Add(enumerator.Current))
 			{
 				item = enumerator.Current;
 				return true;
@@ -273,14 +318,14 @@ public partial struct ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery> : IOp
 	public Task ForAll<TAction>(TAction @operator = default, CancellationToken token = default) where TAction : struct, IAction<T>
 	{
 		var schedulerPair = new ConcurrentExclusiveSchedulerPair(TaskScheduler.Default, Environment.ProcessorCount);
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		var count = 0;
 
 		while (enumerator.MoveNext())
 		{
-			if (set.AddIfNotPresent(enumerator.Current))
+			if (set.Add(enumerator.Current))
 			{
 				Task.Factory.StartNew(x => @operator.Do((T)x), enumerator.Current, token, TaskCreationOptions.None, schedulerPair.ConcurrentScheduler);
 				count++;
@@ -295,14 +340,14 @@ public partial struct ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery> : IOp
 
 	public void ForEach<TAction>(TAction @operator = default) where TAction : struct, IAction<T>
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		var count = 0;
 
 		while (enumerator.MoveNext())
 		{
-			if (set.AddIfNotPresent(enumerator.Current))
+			if (set.Add(enumerator.Current))
 			{
 				@operator.Do(enumerator.Current);
 				_count++;
@@ -314,7 +359,7 @@ public partial struct ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery> : IOp
 
 	public bool TryGetLast(out T item)
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		item = default!;
@@ -322,7 +367,7 @@ public partial struct ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery> : IOp
 
 		while (enumerator.MoveNext())
 		{
-			if (set.AddIfNotPresent(enumerator.Current))
+			if (set.Add(enumerator.Current))
 			{
 				item = enumerator.Current;
 				count++;
@@ -341,7 +386,7 @@ public partial struct ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery> : IOp
 
 		while (enumerator.MoveNext())
 		{
-			if (set.AddIfNotPresent(enumerator.Current))
+			if (set.Add(enumerator.Current))
 			{
 				item = enumerator.Current;
 				count++;
@@ -371,24 +416,24 @@ public partial struct ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery> : IOp
 
 	public T Max()
 	{
-		return EnumerableHelper.Max<T, ExceptEnumerator<T, TComparer>>(GetEnumerator());
+		return EnumerableHelper.Max<T, ExceptEnumerator<T, TFirstEnumerator, TComparer>>(GetEnumerator());
 	}
 
 	public T Min()
 	{
-		return EnumerableHelper.Min<T, ExceptEnumerator<T, TComparer>>(GetEnumerator());
+		return EnumerableHelper.Min<T, ExceptEnumerator<T, TFirstEnumerator, TComparer>>(GetEnumerator());
 	}
 
 	public bool TryGetSingle(out T item)
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		item = default!;
 
 		while (enumerator.MoveNext())
 		{
-			if (set.AddIfNotPresent(enumerator.Current))
+			if (set.Add(enumerator.Current))
 			{
 				item = enumerator.Current;
 				break;
@@ -430,24 +475,24 @@ public partial struct ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery> : IOp
 
 	public T[] ToArray()
 	{
-		return EnumerableHelper.ToArray<T, ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery>, ExceptEnumerator<T, TComparer>>(this, out _count);
+		return EnumerableHelper.ToArray<T, ExceptQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, ExceptEnumerator<T, TFirstEnumerator, TComparer>>(this, out _count);
 	}
 
 	public T[] ToArray(out int length)
 	{
-		return EnumerableHelper.ToArray<T, ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery>, ExceptEnumerator<T, TComparer>>(this, out length);
+		return EnumerableHelper.ToArray<T, ExceptQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, ExceptEnumerator<T, TFirstEnumerator, TComparer>>(this, out length);
 	}
 
 	public HashSet<T> ToHashSet(IEqualityComparer<T>? comparer = default)
 	{
 		var result = new HashSet<T>(comparer);
 
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		while (enumerator.MoveNext())
 		{
-			if (set.AddIfNotPresent(enumerator.Current))
+			if (set.Add(enumerator.Current))
 			{
 				result.Add(enumerator.Current);
 			}
@@ -458,7 +503,75 @@ public partial struct ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery> : IOp
 
 	public List<T> ToList()
 	{
-		return EnumerableHelper.ToList<T, ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery>, ExceptEnumerator<T, TComparer>>(this, out _count);
+		return EnumerableHelper.ToList<T, ExceptQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, ExceptEnumerator<T, TFirstEnumerator, TComparer>>(this, out _count);
+	}
+
+	public PooledList<T> ToPooledList()
+	{
+		var list = new PooledList<T>();
+
+		using var set = _secondQuery.ToPooledSet(_comparer);
+		using var enumerator = _firstQuery.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			if (set.Add(enumerator.Current))
+			{
+				list.Add(enumerator.Current);
+			}
+		}
+
+		return list;
+	}
+
+	public PooledQueue<T> ToPooledQueue()
+	{
+		var queue = new PooledQueue<T>();
+
+		using var set = _secondQuery.ToPooledSet(_comparer);
+		using var enumerator = _firstQuery.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			if (set.Add(enumerator.Current))
+			{
+				queue.Enqueue(enumerator.Current);
+			}
+		}
+
+		return queue;
+	}
+
+	public PooledStack<T> ToPooledStack()
+	{
+		var stack = new PooledStack<T>();
+
+		using var set = _secondQuery.ToPooledSet(_comparer);
+		using var enumerator = _firstQuery.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			if (set.Add(enumerator.Current))
+			{
+				stack.Push(enumerator.Current);
+			}
+		}
+
+		return stack;
+	}
+
+	public PooledSet<T, TComparer1> ToPooledSet<TComparer1>(TComparer1 comparer) where TComparer1 : IEqualityComparer<T>
+	{
+		var set = _secondQuery.ToPooledSet(comparer);
+
+		using var enumerator = _firstQuery.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			set.Add(enumerator.Current);
+		}
+
+		return set;
 	}
 
 	public bool TryGetNonEnumeratedCount(out int length)
@@ -479,25 +592,11 @@ public partial struct ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery> : IOp
 		return false;
 	}
 
-	public ExceptEnumerator<T, TComparer> GetEnumerator()
+	public ExceptEnumerator<T, TFirstEnumerator, TComparer> GetEnumerator()
 	{
-		return new ExceptEnumerator<T, TComparer>(_firstQuery.GetEnumerator(), GetSet());
+		return new ExceptEnumerator<T, TFirstEnumerator, TComparer>(_firstQuery.GetEnumerator(), _secondQuery.ToPooledSet(_comparer));
 	}
 
-	IOptiEnumerator<T> IOptiQuery<T>.GetEnumerator() => GetEnumerator();
-
-	private PooledSet<T, TComparer> GetSet()
-	{
-		_secondQuery.TryGetNonEnumeratedCount(out var length);
-		var set = new PooledSet<T, TComparer>(Math.Max(length, 4), _comparer);
-
-		using var enumerator = _secondQuery.GetEnumerator();
-
-		while (enumerator.MoveNext())
-		{
-			set.AddIfNotPresent(enumerator.Current);
-		}
-
-		return set;
-	}
+	IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

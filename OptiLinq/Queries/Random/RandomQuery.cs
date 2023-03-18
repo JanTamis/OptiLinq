@@ -1,6 +1,7 @@
+using System.Collections;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using OptiLinq.Helpers;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 using Exception = System.Exception;
 
@@ -50,10 +51,10 @@ public partial struct RandomQuery : IOptiQuery<int, RandomEnumerator>
 
 	public IEnumerable<int> AsEnumerable()
 	{
-		return new QueryAsEnumerable<int, RandomQuery, RandomEnumerator>(this);
+		return this;
 	}
 
-	public bool Contains<TComparer>(int item, TComparer comparer) where TComparer : IEqualityComparer<int>
+	public bool Contains<TComparer>(in int item, TComparer comparer) where TComparer : IEqualityComparer<int>
 	{
 		var rng = GetRandom();
 
@@ -66,7 +67,7 @@ public partial struct RandomQuery : IOptiQuery<int, RandomEnumerator>
 		}
 	}
 
-	public bool Contains(int item)
+	public bool Contains(in int item)
 	{
 		var rng = GetRandom();
 
@@ -104,12 +105,32 @@ public partial struct RandomQuery : IOptiQuery<int, RandomEnumerator>
 
 	public int Count()
 	{
-		return Count<int>();
+		throw ThrowHelper.CreateInfiniteException();
 	}
 
 	public long LongCount()
 	{
-		return Count<long>();
+		throw ThrowHelper.CreateInfiniteException();
+	}
+
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<int, bool>
+	{
+		throw ThrowHelper.CreateInfiniteException();
+	}
+
+	public TNumber Count<TNumber>(Func<int, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		throw ThrowHelper.CreateInfiniteException();
+	}
+
+	public int Count(Func<int, bool> predicate)
+	{
+		throw ThrowHelper.CreateInfiniteException();
+	}
+
+	public long CountLong(Func<int, bool> predicate)
+	{
+		throw ThrowHelper.CreateInfiniteException();
 	}
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out int item) where TIndex : IBinaryInteger<TIndex>
@@ -246,6 +267,26 @@ public partial struct RandomQuery : IOptiQuery<int, RandomEnumerator>
 		throw ThrowHelper.CreateInfiniteException();
 	}
 
+	public PooledList<int> ToPooledList()
+	{
+		throw ThrowHelper.CreateInfiniteException();
+	}
+
+	public PooledQueue<int> ToPooledQueue()
+	{
+		throw ThrowHelper.CreateInfiniteException();
+	}
+
+	public PooledStack<int> ToPooledStack()
+	{
+		throw ThrowHelper.CreateInfiniteException();
+	}
+
+	public PooledSet<int, TComparer> ToPooledSet<TComparer>(TComparer comparer) where TComparer : IEqualityComparer<int>
+	{
+		throw ThrowHelper.CreateInfiniteException();
+	}
+
 	public bool TryGetNonEnumeratedCount(out int length)
 	{
 		length = 0;
@@ -263,7 +304,8 @@ public partial struct RandomQuery : IOptiQuery<int, RandomEnumerator>
 		return new RandomEnumerator(GetRandom());
 	}
 
-	IOptiEnumerator<int> IOptiQuery<int>.GetEnumerator() => GetEnumerator();
+	IEnumerator<int> IEnumerable<int>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
 	private Random GetRandom()
 	{

@@ -2,8 +2,8 @@ namespace OptiLinq;
 
 public partial struct ListQuery<T>
 {
-	public DefaultIfEmptyQuery<T, ListQuery<T>, ListEnumerator<T>> DefaultIfEmpty(in T defaultValue = default)
+	public DefaultIfEmptyQuery<T, ListQuery<T>, List<T>.Enumerator> DefaultIfEmpty(in T defaultValue = default)
 	{
-		return new DefaultIfEmptyQuery<T, ListQuery<T>, ListEnumerator<T>>(ref this, defaultValue);
+		return new DefaultIfEmptyQuery<T, ListQuery<T>, List<T>.Enumerator>(ref this, defaultValue);
 	}
 }

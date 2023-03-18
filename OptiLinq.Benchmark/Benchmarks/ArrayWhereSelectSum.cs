@@ -19,10 +19,12 @@ public class ArrayWhereSelectSum
 	[Benchmark(Baseline = true)]
 	public int HandmadedCode()
 	{
-		int sum = 0;
-		for (int i = 0; i < array.Length; i++)
+		var sum = 0;
+
+		for (var i = 0; i < array.Length; i++)
 		{
 			var elt = array[i];
+			
 			if ((elt & 1) == 0)
 			{
 				var mult = elt * 2;
@@ -34,17 +36,23 @@ public class ArrayWhereSelectSum
 	}
 
 	[Benchmark]
-	public int SysLinq() => array
-		.Where(x => (x & 1) == 0)
-		.Select(x => x * 2)
-		.Sum();
+	public int SysLinq()
+	{
+		return array
+			.Where(w => (w & 1) == 0)
+			.Select(s => s * 2)
+			.Sum();
+	}
 
 	[Benchmark]
-	public int OptiRangeWhereSelectSumWithDelegate() => array
-		.AsOptiQuery()
-		.Where(x => (x & 1) == 0)
-		.Select(x => x * 2)
-		.Sum(x => x);
+	public int OptiRangeWhereSelectSumWithDelegate()
+	{
+		return array
+			.AsOptiQuery()
+			.Where(w => (w & 1) == 0)
+			.Select(s => s * 2)
+			.Sum();
+	}
 
 	[Benchmark]
 	public int OptiRangeWhereSelectSum()

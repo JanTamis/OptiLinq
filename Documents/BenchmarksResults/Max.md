@@ -14,9 +14,9 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|     Method |           Mean |       Error |      StdDev |          Ratio | RatioSD | Allocated | Alloc Ratio |
-|----------- |---------------:|------------:|------------:|---------------:|--------:|----------:|------------:|
-| StructLINQ |      0.0110 ns |   0.0073 ns |   0.0057 ns |             NA |      NA |         - |          NA |
-|  Handmaded |  2,360.6866 ns |  23.9731 ns |  21.2515 ns |       baseline |         |         - |          NA |
-|       LINQ | 35,103.7936 ns | 252.0012 ns | 223.3925 ns | 14.872x slower |   0.20x |      40 B |          NA |
-| ConvertMin | 35,244.5282 ns | 472.3098 ns | 418.6903 ns | 14.931x slower |   0.26x |      40 B |          NA |
+|            Method |        Mean |     Error |    StdDev |         Ratio | RatioSD |   Gen0 | Allocated | Alloc Ratio |
+|------------------ |------------:|----------:|----------:|--------------:|--------:|-------:|----------:|------------:|
+| OptiLinqOptimized |    534.5 ns |   3.89 ns |   3.45 ns | 11.42x faster |   0.15x | 0.0029 |      24 B |          NA |
+|              LINQ |  1,078.0 ns |   1.14 ns |   1.01 ns |  5.66x faster |   0.05x |      - |         - |          NA |
+|         Handmaded |  6,103.2 ns |  66.25 ns |  58.73 ns |      baseline |         |      - |         - |          NA |
+|          OptiLinq | 18,344.6 ns | 129.68 ns | 121.30 ns |  3.00x slower |   0.03x |      - |         - |          NA |

@@ -3,29 +3,29 @@ using OptiLinq.Operators;
 
 namespace OptiLinq;
 
-public partial struct ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery>
+public partial struct ExceptQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>
 {
-	public SelectManyQuery<T, TResult, TOperator, ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery>, ExceptEnumerator<T, TComparer>, IOptiQuery<TResult>> SelectMany<TOperator, TResult>(TOperator @operator = default)
+	public SelectManyQuery<T, TResult, TOperator, ExceptQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, ExceptEnumerator<T, TFirstEnumerator, TComparer>, IOptiQuery<TResult>> SelectMany<TOperator, TResult>(TOperator @operator = default)
 		where TOperator : struct, IFunction<T, IOptiQuery<TResult>>
 	{
-		return new SelectManyQuery<T, TResult, TOperator, ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery>, ExceptEnumerator<T, TComparer>, IOptiQuery<TResult>>(ref this, @operator);
+		return new SelectManyQuery<T, TResult, TOperator, ExceptQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, ExceptEnumerator<T, TFirstEnumerator, TComparer>, IOptiQuery<TResult>>(ref this, @operator);
 	}
 
-	public SelectManyQuery<T, TResult, FuncAsIFunction<T, IOptiQuery<TResult>>, ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery>, ExceptEnumerator<T, TComparer>, IOptiQuery<TResult>> SelectMany<TResult>(Func<T, IOptiQuery<TResult>> @operator)
+	public SelectManyQuery<T, TResult, FuncAsIFunction<T, IOptiQuery<TResult>>, ExceptQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, ExceptEnumerator<T, TFirstEnumerator, TComparer>, IOptiQuery<TResult>> SelectMany<TResult>(Func<T, IOptiQuery<TResult>> @operator)
 	{
-		return new SelectManyQuery<T, TResult, FuncAsIFunction<T, IOptiQuery<TResult>>, ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery>, ExceptEnumerator<T, TComparer>, IOptiQuery<TResult>>(ref this, new FuncAsIFunction<T, IOptiQuery<TResult>>(@operator));
+		return new SelectManyQuery<T, TResult, FuncAsIFunction<T, IOptiQuery<TResult>>, ExceptQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, ExceptEnumerator<T, TFirstEnumerator, TComparer>, IOptiQuery<TResult>>(ref this, new FuncAsIFunction<T, IOptiQuery<TResult>>(@operator));
 	}
 
-	public SelectManyQuery<T, TResult, TOperator, ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery>, ExceptEnumerator<T, TComparer>, TSubQuery> SelectMany<TOperator, TSubQuery, TResult>(TOperator @operator = default)
+	public SelectManyQuery<T, TResult, TOperator, ExceptQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, ExceptEnumerator<T, TFirstEnumerator, TComparer>, TSubQuery> SelectMany<TOperator, TSubQuery, TResult>(TOperator @operator = default)
 		where TOperator : struct, IFunction<T, TSubQuery>
 		where TSubQuery : struct, IOptiQuery<TResult>
 	{
-		return new SelectManyQuery<T, TResult, TOperator, ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery>, ExceptEnumerator<T, TComparer>, TSubQuery>(ref this, @operator);
+		return new SelectManyQuery<T, TResult, TOperator, ExceptQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, ExceptEnumerator<T, TFirstEnumerator, TComparer>, TSubQuery>(ref this, @operator);
 	}
 
-	public SelectManyQuery<T, TResult, FuncAsIFunction<T, TSubQuery>, ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery>, ExceptEnumerator<T, TComparer>, TSubQuery> SelectMany<TSubQuery, TResult>(Func<T, TSubQuery> @operator)
+	public SelectManyQuery<T, TResult, FuncAsIFunction<T, TSubQuery>, ExceptQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, ExceptEnumerator<T, TFirstEnumerator, TComparer>, TSubQuery> SelectMany<TSubQuery, TResult>(Func<T, TSubQuery> @operator)
 		where TSubQuery : struct, IOptiQuery<TResult>
 	{
-		return new SelectManyQuery<T, TResult, FuncAsIFunction<T, TSubQuery>, ExceptQuery<T, TComparer, TFirstQuery, TSecondQuery>, ExceptEnumerator<T, TComparer>, TSubQuery>(ref this, new FuncAsIFunction<T, TSubQuery>(@operator));
+		return new SelectManyQuery<T, TResult, FuncAsIFunction<T, TSubQuery>, ExceptQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, ExceptEnumerator<T, TFirstEnumerator, TComparer>, TSubQuery>(ref this, new FuncAsIFunction<T, TSubQuery>(@operator));
 	}
 }

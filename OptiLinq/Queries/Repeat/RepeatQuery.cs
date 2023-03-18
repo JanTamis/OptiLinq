@@ -1,6 +1,7 @@
+using System.Collections;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using OptiLinq.Helpers;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
@@ -43,15 +44,15 @@ public partial struct RepeatQuery<T> : IOptiQuery<T, RepeatEnumerator<T>>
 
 	public IEnumerable<T> AsEnumerable()
 	{
-		return new QueryAsEnumerable<T, RepeatQuery<T>, RepeatEnumerator<T>>(this);
+		return this;
 	}
 
-	public bool Contains<TComparer>(T item, TComparer comparer) where TComparer : IEqualityComparer<T>
+	public bool Contains<TComparer>(in T item, TComparer comparer) where TComparer : IEqualityComparer<T>
 	{
 		return comparer.Equals(item, _element);
 	}
 
-	public bool Contains(T item)
+	public bool Contains(in T item)
 	{
 		return EqualityComparer<T>.Default.Equals(item, _element);
 	}
@@ -77,6 +78,36 @@ public partial struct RepeatQuery<T> : IOptiQuery<T, RepeatEnumerator<T>>
 	public long LongCount()
 	{
 		return Count<long>();
+	}
+
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<T, bool>
+	{
+		if (@operator.Eval(in _element))
+		{
+			return TNumber.CreateSaturating(UInt128.MaxValue);
+		}
+
+		return TNumber.Zero;
+	}
+
+	public TNumber Count<TNumber>(Func<T, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		if (predicate(_element))
+		{
+			return TNumber.CreateSaturating(UInt128.MaxValue);
+		}
+
+		return TNumber.Zero;
+	}
+
+	public int Count(Func<T, bool> predicate)
+	{
+		return Count<int>(predicate);
+	}
+
+	public long CountLong(Func<T, bool> predicate)
+	{
+		return Count<long>(predicate);
 	}
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out T item) where TIndex : IBinaryInteger<TIndex>
@@ -158,7 +189,7 @@ public partial struct RepeatQuery<T> : IOptiQuery<T, RepeatEnumerator<T>>
 
 	public T Single()
 	{
-		throw new Exception("Sequence contains contains to much elements");
+		throw ThrowHelper.CreateInfiniteException();
 	}
 
 	public T SingleOrDefault()
@@ -168,12 +199,12 @@ public partial struct RepeatQuery<T> : IOptiQuery<T, RepeatEnumerator<T>>
 
 	public T[] ToArray()
 	{
-		throw new Exception("Sequence contains contains to much elements");
+		throw ThrowHelper.CreateInfiniteException();
 	}
 
 	public T[] ToArray(out int length)
 	{
-		throw new Exception("Sequence contains contains to much elements");
+		throw ThrowHelper.CreateInfiniteException();
 	}
 
 	public HashSet<T> ToHashSet(IEqualityComparer<T>? comparer = default)
@@ -186,7 +217,30 @@ public partial struct RepeatQuery<T> : IOptiQuery<T, RepeatEnumerator<T>>
 
 	public List<T> ToList()
 	{
-		throw new Exception("Sequence contains contains to much elements");
+		throw ThrowHelper.CreateInfiniteException();
+	}
+
+	public PooledList<T> ToPooledList()
+	{
+		throw ThrowHelper.CreateInfiniteException();
+	}
+
+	public PooledQueue<T> ToPooledQueue()
+	{
+		throw ThrowHelper.CreateInfiniteException();
+	}
+
+	public PooledStack<T> ToPooledStack()
+	{
+		throw ThrowHelper.CreateInfiniteException();
+	}
+
+	public PooledSet<T, TComparer> ToPooledSet<TComparer>(TComparer comparer) where TComparer : IEqualityComparer<T>
+	{
+		var set = new PooledSet<T, TComparer>(1, comparer);
+		set.Add(_element);
+
+		return set;
 	}
 
 	public bool TryGetNonEnumeratedCount(out int length)
@@ -206,5 +260,6 @@ public partial struct RepeatQuery<T> : IOptiQuery<T, RepeatEnumerator<T>>
 		return new RepeatEnumerator<T>(_element);
 	}
 
-	IOptiEnumerator<T> IOptiQuery<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

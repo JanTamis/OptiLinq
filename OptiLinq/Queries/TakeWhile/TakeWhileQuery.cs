@@ -1,14 +1,15 @@
+using System.Collections;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using OptiLinq.Helpers;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
 public partial struct TakeWhileQuery<T, TOperator, TBaseQuery, TBaseEnumerator> : IOptiQuery<T, TakeWhileEnumerator<T, TOperator, TBaseEnumerator>>
 	where TOperator : struct, IFunction<T, bool>
+	where TBaseEnumerator : IEnumerator<T>
 	where TBaseQuery : struct, IOptiQuery<T, TBaseEnumerator>
-	where TBaseEnumerator : struct, IOptiEnumerator<T>
 {
 	private TBaseQuery _baseQuery;
 	private TOperator _operator;
@@ -92,10 +93,10 @@ public partial struct TakeWhileQuery<T, TOperator, TBaseQuery, TBaseEnumerator> 
 
 	public IEnumerable<T> AsEnumerable()
 	{
-		return new QueryAsEnumerable<T, TakeWhileQuery<T, TOperator, TBaseQuery, TBaseEnumerator>, TakeWhileEnumerator<T, TOperator, TBaseEnumerator>>(this);
+		return this;
 	}
 
-	public bool Contains<TComparer>(T item, TComparer comparer) where TComparer : IEqualityComparer<T>
+	public bool Contains<TComparer>(in T item, TComparer comparer) where TComparer : IEqualityComparer<T>
 	{
 		using var enumerator = _baseQuery.GetEnumerator();
 
@@ -110,7 +111,7 @@ public partial struct TakeWhileQuery<T, TOperator, TBaseQuery, TBaseEnumerator> 
 		return false;
 	}
 
-	public bool Contains(T item)
+	public bool Contains(in T item)
 	{
 		using var enumerator = _baseQuery.GetEnumerator();
 
@@ -166,6 +167,50 @@ public partial struct TakeWhileQuery<T, TOperator, TBaseQuery, TBaseEnumerator> 
 	public long LongCount()
 	{
 		return Count<long>();
+	}
+
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<T, bool>
+	{
+		var count = TNumber.Zero;
+
+		using var enumerator = GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			if (@operator.Eval(enumerator.Current))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public TNumber Count<TNumber>(Func<T, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		var count = TNumber.Zero;
+
+		using var enumerator = GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			if (predicate(enumerator.Current))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public int Count(Func<T, bool> predicate)
+	{
+		return Count<int>(predicate);
+	}
+
+	public long CountLong(Func<T, bool> predicate)
+	{
+		return Count<long>(predicate);
 	}
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out T item) where TIndex : IBinaryInteger<TIndex>
@@ -466,6 +511,66 @@ public partial struct TakeWhileQuery<T, TOperator, TBaseQuery, TBaseEnumerator> 
 		return list;
 	}
 
+	public PooledList<T> ToPooledList()
+	{
+		var list = new PooledList<T>(Math.Min(_count, 4));
+
+		using var enumerator = _baseQuery.GetEnumerator();
+
+		while (enumerator.MoveNext() && _operator.Eval(enumerator.Current))
+		{
+			list.Add(enumerator.Current);
+		}
+
+		_count = list.Count;
+		return list;
+	}
+
+	public PooledQueue<T> ToPooledQueue()
+	{
+		var queue = new PooledQueue<T>(Math.Min(_count, 4));
+
+		using var enumerator = _baseQuery.GetEnumerator();
+
+		while (enumerator.MoveNext() && _operator.Eval(enumerator.Current))
+		{
+			queue.Enqueue(enumerator.Current);
+		}
+
+		_count = queue.Count;
+		return queue;
+	}
+
+	public PooledStack<T> ToPooledStack()
+	{
+		var stack = new PooledStack<T>(Math.Min(_count, 4));
+
+		using var enumerator = _baseQuery.GetEnumerator();
+
+		while (enumerator.MoveNext() && _operator.Eval(enumerator.Current))
+		{
+			stack.Push(enumerator.Current);
+		}
+
+		_count = stack.Count;
+		return stack;
+	}
+
+	public PooledSet<T, TComparer> ToPooledSet<TComparer>(TComparer comparer) where TComparer : IEqualityComparer<T>
+	{
+		var set = new PooledSet<T, TComparer>(comparer);
+
+		using var enumerator = _baseQuery.GetEnumerator();
+
+		while (enumerator.MoveNext() && _operator.Eval(enumerator.Current))
+		{
+			set.Add(enumerator.Current);
+		}
+
+		_count = set.Count;
+		return set;
+	}
+
 	public bool TryGetNonEnumeratedCount(out int length)
 	{
 		if (_count >= 0)
@@ -500,5 +605,6 @@ public partial struct TakeWhileQuery<T, TOperator, TBaseQuery, TBaseEnumerator> 
 		return new TakeWhileEnumerator<T, TOperator, TBaseEnumerator>(_baseQuery.GetEnumerator(), _operator);
 	}
 
-	IOptiEnumerator<T> IOptiQuery<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

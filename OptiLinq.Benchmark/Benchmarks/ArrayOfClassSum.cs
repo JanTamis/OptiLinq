@@ -21,8 +21,9 @@ public class ArrayOfClassSum
 	[Benchmark]
 	public int Handmaded()
 	{
-		int sum = 0;
-		for (int i = 0; i < Count; i++)
+		var sum = 0;
+
+		for (var i = 0; i < Count; i++)
 		{
 			sum += array[i].Element;
 		}
@@ -39,6 +40,13 @@ public class ArrayOfClassSum
 		return array.AsOptiQuery()
 			.Select(x => x.Element)
 			.Sum();
+	}
+
+	[Benchmark]
+	public int DelegateWithoutSelectSum()
+	{
+		return array.AsOptiQuery()
+			.Sum(s => s.Element);
 	}
 
 	[Benchmark]

@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-namespace OptiLinq.Helpers;
+namespace OptiLinq.Collections;
 
 internal static partial class HashHelpers
 {

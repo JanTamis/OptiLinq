@@ -4,13 +4,13 @@ namespace OptiLinq;
 
 public partial struct ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery>
 {
-	public DistinctQuery<T, ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery>, ConcatEnumerator<T, TFirstEnumerator, IOptiEnumerator<T>>, EqualityComparer<T>> Distinct()
+	public DistinctQuery<T, ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery>, ConcatEnumerator<T, TFirstEnumerator, IEnumerator<T>>, EqualityComparer<T>> Distinct()
 	{
-		return new DistinctQuery<T, ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery>, ConcatEnumerator<T, TFirstEnumerator, IOptiEnumerator<T>>, EqualityComparer<T>>(ref this, EqualityComparer<T>.Default);
+		return new DistinctQuery<T, ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery>, ConcatEnumerator<T, TFirstEnumerator, IEnumerator<T>>, EqualityComparer<T>>(ref this, EqualityComparer<T>.Default);
 	}
 
-	public DistinctQuery<T, ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery>, ConcatEnumerator<T, TFirstEnumerator, IOptiEnumerator<T>>, TComparer> Distinct<TComparer>(TComparer comparer) where TComparer : IEqualityComparer<T>
+	public DistinctQuery<T, ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery>, ConcatEnumerator<T, TFirstEnumerator, IEnumerator<T>>, TComparer> Distinct<TComparer>(TComparer comparer) where TComparer : IEqualityComparer<T>
 	{
-		return new DistinctQuery<T, ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery>, ConcatEnumerator<T, TFirstEnumerator, IOptiEnumerator<T>>, TComparer>(ref this, comparer);
+		return new DistinctQuery<T, ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery>, ConcatEnumerator<T, TFirstEnumerator, IEnumerator<T>>, TComparer>(ref this, comparer);
 	}
 }

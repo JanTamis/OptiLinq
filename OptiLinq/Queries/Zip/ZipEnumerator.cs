@@ -1,11 +1,12 @@
+using System.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public struct ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, TSecondEnumerator> : IOptiEnumerator<TResult>
+public struct ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, TSecondEnumerator> : IEnumerator<TResult>
 	where TOperator : struct, IFunction<T, T, TResult>
-	where TFirstEnumerator : struct, IOptiEnumerator<T>
-	where TSecondEnumerator : IOptiEnumerator<T>
+	where TFirstEnumerator : IEnumerator<T>
+	where TSecondEnumerator : IEnumerator<T>
 {
 	private TOperator _operator;
 	private TFirstEnumerator _firstEnumerator;
@@ -20,6 +21,8 @@ public struct ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, TSecondEnum
 		_secondEnumerator = secondEnumerator;
 	}
 
+	object IEnumerator.Current => Current;
+
 	public TResult Current => _current;
 
 	public bool MoveNext()
@@ -31,6 +34,12 @@ public struct ZipEnumerator<T, TResult, TOperator, TFirstEnumerator, TSecondEnum
 		}
 
 		return false;
+	}
+
+	public void Reset()
+	{
+		_firstEnumerator.Reset();
+		_secondEnumerator.Reset();
 	}
 
 	public void Dispose()

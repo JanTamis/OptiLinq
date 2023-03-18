@@ -2,8 +2,8 @@ namespace OptiLinq;
 
 public partial struct HashSetQuery<T>
 {
-	public ReverseQuery<T, HashSetQuery<T>, HashSetEnumerator<T>> Reverse()
+	public ReverseQuery<T, HashSetQuery<T>, HashSet<T>.Enumerator> Reverse()
 	{
-		return new ReverseQuery<T, HashSetQuery<T>, HashSetEnumerator<T>>(ref this);
+		return new ReverseQuery<T, HashSetQuery<T>, HashSet<T>.Enumerator>(ref this);
 	}
 }

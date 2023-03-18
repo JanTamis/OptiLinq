@@ -1,5 +1,7 @@
+using System.Collections;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
@@ -40,15 +42,15 @@ public partial struct SingletonQuery<T> : IOptiQuery<T, SingletonEnumerator<T>>
 
 	public IEnumerable<T> AsEnumerable()
 	{
-		return new QueryAsEnumerable<T, SingletonQuery<T>, SingletonEnumerator<T>>(this);
+		return this;
 	}
 
-	public bool Contains<TComparer>(T item, TComparer comparer) where TComparer : IEqualityComparer<T>
+	public bool Contains<TComparer>(in T item, TComparer comparer) where TComparer : IEqualityComparer<T>
 	{
 		return comparer.Equals(item, _element);
 	}
 
-	public bool Contains(T item)
+	public bool Contains(in T item)
 	{
 		return EqualityComparer<T>.Default.Equals(item, _element);
 	}
@@ -78,6 +80,30 @@ public partial struct SingletonQuery<T> : IOptiQuery<T, SingletonEnumerator<T>>
 	public long LongCount()
 	{
 		return Count<long>();
+	}
+
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<T, bool>
+	{
+		return @operator.Eval(_element)
+			? TNumber.One
+			: TNumber.Zero;
+	}
+
+	public TNumber Count<TNumber>(Func<T, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		return predicate(_element)
+			? TNumber.One
+			: TNumber.Zero;
+	}
+
+	public int Count(Func<T, bool> predicate)
+	{
+		return Count<int>(predicate);
+	}
+
+	public long CountLong(Func<T, bool> predicate)
+	{
+		return Count<long>(predicate);
 	}
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out T item) where TIndex : IBinaryInteger<TIndex>
@@ -207,6 +233,42 @@ public partial struct SingletonQuery<T> : IOptiQuery<T, SingletonEnumerator<T>>
 		};
 	}
 
+	public PooledList<T> ToPooledList()
+	{
+		var list = new PooledList<T>(1);
+
+		list.Add(_element);
+
+		return list;
+	}
+
+	public PooledQueue<T> ToPooledQueue()
+	{
+		var queue = new PooledQueue<T>(1);
+
+		queue.Enqueue(_element);
+
+		return queue;
+	}
+
+	public PooledStack<T> ToPooledStack()
+	{
+		var stack = new PooledStack<T>(1);
+
+		stack.Push(_element);
+
+		return stack;
+	}
+
+	public PooledSet<T, TComparer> ToPooledSet<TComparer>(TComparer comparer) where TComparer : IEqualityComparer<T>
+	{
+		var set = new PooledSet<T, TComparer>(1, comparer);
+
+		set.Add(_element);
+
+		return set;
+	}
+
 	public bool TryGetNonEnumeratedCount(out int length)
 	{
 		length = 1;
@@ -224,5 +286,6 @@ public partial struct SingletonQuery<T> : IOptiQuery<T, SingletonEnumerator<T>>
 		return new SingletonEnumerator<T>(_element);
 	}
 
-	IOptiEnumerator<T> IOptiQuery<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

@@ -1,10 +1,10 @@
+using System.Collections;
 using System.Numerics;
-using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public struct SkipEnumerator<TCount, T, TBaseEnumerator> : IOptiEnumerator<T>
-	where TBaseEnumerator : IOptiEnumerator<T>
+public struct SkipEnumerator<TCount, T, TBaseEnumerator> : IEnumerator<T>
+	where TBaseEnumerator : IEnumerator<T>
 	where TCount : IBinaryInteger<TCount>
 {
 	private TBaseEnumerator _enumerator;
@@ -16,6 +16,8 @@ public struct SkipEnumerator<TCount, T, TBaseEnumerator> : IOptiEnumerator<T>
 		_enumerator = enumerator;
 		_count = count;
 	}
+
+	object IEnumerator.Current => Current;
 
 	public T Current => _enumerator.Current;
 
@@ -29,6 +31,12 @@ public struct SkipEnumerator<TCount, T, TBaseEnumerator> : IOptiEnumerator<T>
 		}
 
 		return _enumerator.MoveNext();
+	}
+
+	public void Reset()
+	{
+		_enumerator.Reset();
+		_initialized = false;
 	}
 	
 	public void Dispose()

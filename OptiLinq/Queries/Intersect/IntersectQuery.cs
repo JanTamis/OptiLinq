@@ -1,12 +1,14 @@
+using System.Collections;
 using System.Numerics;
-using OptiLinq.Helpers;
+using OptiLinq.Collections;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public partial struct IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery> : IOptiQuery<T, IntersectEnumerator<T, TComparer>>
+public partial struct IntersectQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery> : IOptiQuery<T, IntersectEnumerator<T, TFirstEnumerator, TComparer>>
 	where TComparer : IEqualityComparer<T>
-	where TFirstQuery : struct, IOptiQuery<T>
+	where TFirstQuery : struct, IOptiQuery<T, TFirstEnumerator>
+	where TFirstEnumerator : IEnumerator<T>
 	where TSecondQuery : struct, IOptiQuery<T>
 {
 	private TComparer _comparer;
@@ -24,7 +26,7 @@ public partial struct IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery> : 
 
 	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate> where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		var count = 0;
@@ -44,7 +46,7 @@ public partial struct IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery> : 
 
 	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		var count = 0;
@@ -64,7 +66,7 @@ public partial struct IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery> : 
 
 	public bool All<TAllOperator>(TAllOperator @operator = default) where TAllOperator : struct, IFunction<T, bool>
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		while (enumerator.MoveNext())
@@ -80,7 +82,7 @@ public partial struct IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery> : 
 
 	public bool Any()
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		while (enumerator.MoveNext())
@@ -96,7 +98,7 @@ public partial struct IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery> : 
 
 	public bool Any<TAnyOperator>(TAnyOperator @operator = default) where TAnyOperator : struct, IFunction<T, bool>
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		while (enumerator.MoveNext())
@@ -112,12 +114,12 @@ public partial struct IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery> : 
 
 	public IEnumerable<T> AsEnumerable()
 	{
-		return new QueryAsEnumerable<T, IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery>, IntersectEnumerator<T, TComparer>>(this);
+		return this;
 	}
 
-	public bool Contains<TComparer1>(T item, TComparer1 comparer) where TComparer1 : IEqualityComparer<T>
+	public bool Contains<TComparer1>(in T item, TComparer1 comparer) where TComparer1 : IEqualityComparer<T>
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		while (enumerator.MoveNext())
@@ -131,9 +133,9 @@ public partial struct IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery> : 
 		return false;
 	}
 
-	public bool Contains(T item)
+	public bool Contains(in T item)
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		while (enumerator.MoveNext())
@@ -149,7 +151,7 @@ public partial struct IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery> : 
 
 	public int CopyTo(Span<T> data)
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		var index = 0;
@@ -167,7 +169,7 @@ public partial struct IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery> : 
 
 	public TNumber Count<TNumber>() where TNumber : INumberBase<TNumber>
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		var count = TNumber.Zero;
@@ -194,11 +196,57 @@ public partial struct IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery> : 
 		return Count<long>();
 	}
 
+	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<T, bool>
+	{
+		var count = TNumber.Zero;
+
+		using var set = _secondQuery.ToPooledSet(_comparer);
+		using var enumerator = _firstQuery.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			if (set.Remove(enumerator.Current) && @operator.Eval(enumerator.Current))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public TNumber Count<TNumber>(Func<T, bool> predicate) where TNumber : INumberBase<TNumber>
+	{
+		var count = TNumber.Zero;
+
+		using var set = _secondQuery.ToPooledSet(_comparer);
+		using var enumerator = _firstQuery.GetEnumerator();
+
+		while (enumerator.MoveNext())
+		{
+			if (set.Remove(enumerator.Current) && predicate(enumerator.Current))
+			{
+				count++;
+			}
+		}
+
+		return count;
+	}
+
+	public int Count(Func<T, bool> predicate)
+	{
+		return Count<int>(predicate);
+	}
+
+	public long CountLong(Func<T, bool> predicate)
+	{
+		return Count<long>(predicate);
+	}
+
 	public bool TryGetElementAt<TIndex>(TIndex index, out T item) where TIndex : IBinaryInteger<TIndex>
 	{
 		if (TIndex.IsPositive(index))
 		{
-			using var set = GetSet();
+			using var set = _secondQuery.ToPooledSet(_comparer);
 			using var enumerator = _firstQuery.GetEnumerator();
 
 			while (enumerator.MoveNext())
@@ -238,7 +286,7 @@ public partial struct IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery> : 
 
 	public bool TryGetFirst(out T item)
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		while (enumerator.MoveNext())
@@ -273,7 +321,7 @@ public partial struct IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery> : 
 	public Task ForAll<TAction>(TAction @operator = default, CancellationToken token = default) where TAction : struct, IAction<T>
 	{
 		var schedulerPair = new ConcurrentExclusiveSchedulerPair(TaskScheduler.Default, Environment.ProcessorCount);
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		var count = 0;
@@ -295,7 +343,7 @@ public partial struct IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery> : 
 
 	public void ForEach<TAction>(TAction @operator = default) where TAction : struct, IAction<T>
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		var count = 0;
@@ -314,7 +362,7 @@ public partial struct IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery> : 
 
 	public bool TryGetLast(out T item)
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		item = default!;
@@ -371,7 +419,7 @@ public partial struct IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery> : 
 
 	public bool TryGetSingle(out T item)
 	{
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		item = default!;
@@ -407,19 +455,19 @@ public partial struct IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery> : 
 
 	public T[] ToArray()
 	{
-		return EnumerableHelper.ToArray<T, IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery>, IntersectEnumerator<T, TComparer>>(this, out _count);
+		return EnumerableHelper.ToArray<T, IntersectQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, IntersectEnumerator<T, TFirstEnumerator, TComparer>>(this, out _count);
 	}
 
 	public T[] ToArray(out int length)
 	{
-		return EnumerableHelper.ToArray<T, IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery>, IntersectEnumerator<T, TComparer>>(this, out length);
+		return EnumerableHelper.ToArray<T, IntersectQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, IntersectEnumerator<T, TFirstEnumerator, TComparer>>(this, out length);
 	}
 
 	public HashSet<T> ToHashSet(IEqualityComparer<T>? comparer = default)
 	{
 		var result = new HashSet<T>(comparer);
 
-		using var set = GetSet();
+		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
 		while (enumerator.MoveNext())
@@ -435,7 +483,79 @@ public partial struct IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery> : 
 
 	public List<T> ToList()
 	{
-		return EnumerableHelper.ToList<T, IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery>, IntersectEnumerator<T, TComparer>>(this, out _count);
+		return EnumerableHelper.ToList<T, IntersectQuery<T, TComparer, TFirstQuery, TFirstEnumerator, TSecondQuery>, IntersectEnumerator<T, TFirstEnumerator, TComparer>>(this, out _count);
+	}
+
+	public PooledList<T> ToPooledList()
+	{
+		using var set = _secondQuery.ToPooledSet(_comparer);
+		using var enumerator = _firstQuery.GetEnumerator();
+
+		var result = new PooledList<T>();
+
+		while (enumerator.MoveNext())
+		{
+			if (set.Remove(enumerator.Current))
+			{
+				result.Add(enumerator.Current);
+			}
+		}
+
+		return result;
+	}
+
+	public PooledQueue<T> ToPooledQueue()
+	{
+		using var set = _secondQuery.ToPooledSet(_comparer);
+		using var enumerator = _firstQuery.GetEnumerator();
+
+		var result = new PooledQueue<T>();
+
+		while (enumerator.MoveNext())
+		{
+			if (set.Remove(enumerator.Current))
+			{
+				result.Enqueue(enumerator.Current);
+			}
+		}
+
+		return result;
+	}
+
+	public PooledStack<T> ToPooledStack()
+	{
+		using var set = _secondQuery.ToPooledSet(_comparer);
+		using var enumerator = _firstQuery.GetEnumerator();
+
+		var result = new PooledStack<T>();
+
+		while (enumerator.MoveNext())
+		{
+			if (set.Remove(enumerator.Current))
+			{
+				result.Push(enumerator.Current);
+			}
+		}
+
+		return result;
+	}
+
+	public PooledSet<T, TComparer1> ToPooledSet<TComparer1>(TComparer1 comparer) where TComparer1 : IEqualityComparer<T>
+	{
+		using var set = _secondQuery.ToPooledSet(_comparer);
+		using var enumerator = _firstQuery.GetEnumerator();
+
+		var result = new PooledSet<T, TComparer1>(comparer);
+
+		while (enumerator.MoveNext())
+		{
+			if (set.Remove(enumerator.Current))
+			{
+				result.Add(enumerator.Current);
+			}
+		}
+
+		return result;
 	}
 
 	public bool TryGetNonEnumeratedCount(out int length)
@@ -456,24 +576,11 @@ public partial struct IntersectQuery<T, TComparer, TFirstQuery, TSecondQuery> : 
 		return false;
 	}
 
-	public IntersectEnumerator<T, TComparer> GetEnumerator()
+	public IntersectEnumerator<T, TFirstEnumerator, TComparer> GetEnumerator()
 	{
-		return new IntersectEnumerator<T, TComparer>(_firstQuery.GetEnumerator(), _secondQuery.GetEnumerator(), _comparer, _count);
+		return new IntersectEnumerator<T, TFirstEnumerator, TComparer>(_firstQuery.GetEnumerator(), _secondQuery.ToPooledSet(_comparer));
 	}
 
-	IOptiEnumerator<T> IOptiQuery<T>.GetEnumerator() => GetEnumerator();
-
-	private PooledSet<T, TComparer> GetSet()
-	{
-		var set = new PooledSet<T, TComparer>(_comparer);
-
-		using var enumerator = _secondQuery.GetEnumerator();
-
-		while (enumerator.MoveNext())
-		{
-			set.Remove(enumerator.Current);
-		}
-
-		return set;
-	}
+	IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

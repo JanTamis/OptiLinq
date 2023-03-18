@@ -18,8 +18,9 @@ public class Sum
 	[Benchmark(Baseline = true)]
 	public int ForSum()
 	{
-		int sum = 0;
-		for (int i = 0; i < Count; i++)
+		var sum = 0;
+
+		for (var i = 0; i < Count; i++)
 		{
 			sum += i;
 		}
