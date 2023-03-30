@@ -16,12 +16,12 @@ public partial struct RandomQuery : IOptiQuery<int, RandomEnumerator>
 		_seed = seed;
 	}
 
-	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, int, TAccumulate> where TResultSelector : struct, IFunction<TAccumulate, TResult>
+	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TAccumulate seed, TFunc func = default, TResultSelector selector = default) where TFunc : struct, IAggregateFunction<TAccumulate, int, TAccumulate> where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
 		throw ThrowHelper.CreateInfiniteException();
 	}
 
-	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, int, TAccumulate>
+	public TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, int, TAccumulate>
 	{
 		throw ThrowHelper.CreateInfiniteException();
 	}
@@ -191,8 +191,11 @@ public partial struct RandomQuery : IOptiQuery<int, RandomEnumerator>
 
 		while (true)
 		{
-			Task.Factory.StartNew(x => @operator.Do(Unsafe.Unbox<int>(x)), rng.Next(), token, TaskCreationOptions.None, schedulerPair.ConcurrentScheduler);
+			Task.Factory.StartNew(x => @operator.Do(Unsafe.Unbox<int>(x!)), rng.Next(), token, TaskCreationOptions.None, schedulerPair.ConcurrentScheduler);
 		}
+
+		schedulerPair.Complete();
+		return schedulerPair.Completion;
 	}
 
 	public void ForEach<TAction>(TAction @operator = default) where TAction : struct, IAction<int>

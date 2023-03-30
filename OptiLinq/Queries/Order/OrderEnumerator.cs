@@ -1,43 +1,34 @@
-using System.Buffers;
 using System.Collections;
-using System.Runtime.CompilerServices;
 using OptiLinq.Collections;
-using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public struct OrderEnumerator<T, TComparer, TBaseEnumerator> : IEnumerator<T>
-	where TBaseEnumerator : IEnumerator<T>
-	where TComparer : IComparer<T>
+public struct OrderEnumerator<T> : IEnumerator<T>
 {
-	private readonly T[] _data;
-	private readonly int _count = 0;
 	private int _index = -1;
 
-	private ArrayPool<T> _arrayPool;
+	private PooledList<T> _data;
 
-	internal OrderEnumerator(TBaseEnumerator enumerator, TComparer comparer, int initialCount)
+	public OrderEnumerator(PooledList<T> data)
 	{
-		_arrayPool = ArrayPool<T>.Shared;
-
-		_data = EnumerableHelper.ToArray(enumerator, _arrayPool, initialCount, out _count);
-		_data.AsSpan(0, _count).Sort(comparer);
-
-		enumerator.Dispose();
+		_data = data;
 	}
 
 	object IEnumerator.Current => Current;
 
-	public T Current => _data[_index];
+	public T Current { get; private set; } = default!;
 
 	public bool MoveNext()
 	{
-		if (_index < _data.Length - 1)
+		_index++;
+
+		if (_index < _data.Count)
 		{
-			_index++;
+			Current = _data.GetRef(_index);
 			return true;
 		}
 
+		Current = default!;
 		return false;
 	}
 
@@ -48,13 +39,6 @@ public struct OrderEnumerator<T, TComparer, TBaseEnumerator> : IEnumerator<T>
 
 	public void Dispose()
 	{
-		try
-		{
-			_arrayPool.Return(_data, RuntimeHelpers.IsReferenceOrContainsReferences<T>());
-		}
-		catch (Exception e)
-		{
-			// ignored
-		}
+		_data.Dispose();
 	}
 }

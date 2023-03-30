@@ -17,14 +17,14 @@ public partial struct GenerateQuery<T, TOperator> : IOptiQuery<T, GenerateEnumer
 		_operator = @operator;
 	}
 
-	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default)
+	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TAccumulate seed, TFunc func = default, TResultSelector selector = default)
 		where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 		where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
 		throw ThrowHelper.CreateInfiniteException();
 	}
 
-	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
+	public TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 	{
 		throw ThrowHelper.CreateInfiniteException();
 	}
@@ -95,7 +95,7 @@ public partial struct GenerateQuery<T, TOperator> : IOptiQuery<T, GenerateEnumer
 
 		for (var i = 0; i < data.Length; i++)
 		{
-			data[i] = current = _operator.Eval(current);
+			data[i] = current = _operator.Eval(in current);
 		}
 
 		return data.Length;
@@ -260,12 +260,6 @@ public partial struct GenerateQuery<T, TOperator> : IOptiQuery<T, GenerateEnumer
 	public T[] ToArray()
 	{
 		throw ThrowHelper.CreateInfiniteException();
-	}
-
-	public T[] ToArray(out int length)
-	{
-		length = 0;
-		return Array.Empty<T>();
 	}
 
 	public HashSet<T> ToHashSet(IEqualityComparer<T>? comparer = default)

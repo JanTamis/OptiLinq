@@ -1,5 +1,4 @@
 using System.Collections;
-using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
@@ -21,9 +20,11 @@ public struct RangeEnumerator : IEnumerator<int>
 
 	public bool MoveNext()
 	{
-		if (_current + 1 <= _end)
+		var current = _current + 1;
+
+		if (current <= _end)
 		{
-			_current++;
+			_current = current;
 			return true;
 		}
 

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq.Benchmark;

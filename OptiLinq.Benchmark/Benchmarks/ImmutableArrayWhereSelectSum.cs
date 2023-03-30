@@ -33,7 +33,7 @@ public class ImmutableArrayWhereSelectSum
 			.AsOptiQuery()
 			.Where(x => (x & 1) == 0)
 			.Select(x => x * 2)
-			.Sum(x => x);
+			.Sum();
 	}
 
 	[Benchmark]
@@ -42,7 +42,7 @@ public class ImmutableArrayWhereSelectSum
 		return array
 			.AsOptiQuery()
 			.Where<IsEven<int>>()
-			.Select<SelectFunction, int>()
-			.Sum(x => x);
+			.Select<SelectFunction>()
+			.Sum();
 	}
 }

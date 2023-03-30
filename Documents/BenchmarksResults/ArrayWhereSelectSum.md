@@ -14,9 +14,9 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|                              Method |      Mean |     Error |    StdDev |        Ratio | RatioSD | Allocated | Alloc Ratio |
-|------------------------------------ |----------:|----------:|----------:|-------------:|--------:|----------:|------------:|
-|                       HandmadedCode |  7.033 μs | 0.1245 μs | 0.1104 μs |     baseline |         |         - |          NA |
-|             OptiRangeWhereSelectSum | 27.354 μs | 0.2152 μs | 0.1797 μs | 3.90x slower |   0.06x |      32 B |          NA |
-|                             SysLinq | 47.427 μs | 0.4039 μs | 0.3372 μs | 6.76x slower |   0.11x |     104 B |          NA |
-| OptiRangeWhereSelectSumWithDelegate | 49.350 μs | 0.7894 μs | 0.6592 μs | 7.04x slower |   0.14x |      40 B |          NA |
+|                              Method |          Mean |       Error |      StdDev |             Ratio | RatioSD | Allocated | Alloc Ratio |
+|------------------------------------ |--------------:|------------:|------------:|------------------:|--------:|----------:|------------:|
+| OptiRangeWhereSelectSumWithDelegate |      4.692 ns |   0.0722 ns |   0.0640 ns | 1,493.327x faster |  29.99x |         - |          NA |
+|             OptiRangeWhereSelectSum |     11.471 ns |   0.0768 ns |   0.0641 ns |   611.115x faster |   5.81x |         - |          NA |
+|                       HandmadedCode |  7,001.519 ns |  85.5860 ns |  80.0572 ns |          baseline |         |         - |          NA |
+|                             SysLinq | 56,013.095 ns | 664.6106 ns | 589.1599 ns |     7.996x slower |   0.09x |     104 B |          NA |

@@ -1,5 +1,3 @@
-using OptiLinq.Interfaces;
-
 namespace OptiLinq;
 
 public partial struct ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery>

@@ -1,6 +1,5 @@
 using System.Collections;
 using OptiLinq.Collections;
-using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 

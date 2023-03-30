@@ -81,12 +81,4 @@ public class ArrayWhereCount
 			.AsOptiQuery()
 			.Count<IsEven<int>, int>();
 	}
-
-	[Benchmark]
-	public int OptiLinqIFunctionOptimized()
-	{
-		return array
-			.AsOptiQuery()
-			.Count<int, int>(x => (x & 1) == 0);
-	}
 }

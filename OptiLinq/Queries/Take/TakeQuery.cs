@@ -21,7 +21,7 @@ public partial struct TakeQuery<TCount, T, TBaseQuery, TBaseEnumerator> : IOptiQ
 		_count = count;
 	}
 
-	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default)
+	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TAccumulate seed, TFunc func = default, TResultSelector selector = default)
 		where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 		where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
@@ -29,19 +29,19 @@ public partial struct TakeQuery<TCount, T, TBaseQuery, TBaseEnumerator> : IOptiQ
 
 		for (var i = TCount.Zero; i < _count && enumerator.MoveNext(); i++)
 		{
-			seed = func.Eval(seed, enumerator.Current);
+			seed = func.Eval(in seed, enumerator.Current);
 		}
 
-		return selector.Eval(seed);
+		return selector.Eval(in seed);
 	}
 
-	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
+	public TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 	{
 		using var enumerator = _baseQuery.GetEnumerator();
-
+		
 		for (var i = TCount.Zero; i < _count && enumerator.MoveNext(); i++)
 		{
-			seed = @operator.Eval(seed, enumerator.Current);
+			seed = @operator.Eval(in seed, enumerator.Current);
 		}
 
 		return seed;
@@ -389,39 +389,14 @@ public partial struct TakeQuery<TCount, T, TBaseQuery, TBaseEnumerator> : IOptiQ
 
 	public T[] ToArray()
 	{
-		using var enumerator = _baseQuery.GetEnumerator();
-
 		var array = new T[Int32.CreateChecked(_count)];
+		var count = _baseQuery.CopyTo(array);
 
-		var i = 0;
-
-		for (; i < array.Length && enumerator.MoveNext(); i++)
+		if (count != array.Length)
 		{
-			array[i] = enumerator.Current;
+			Array.Resize(ref array, count);
 		}
 
-		if (i != array.Length)
-		{
-			return RuntimeHelpers.GetSubArray(array, new Range(0, i));
-		}
-
-		return array;
-	}
-
-	public T[] ToArray(out int length)
-	{
-		using var enumerator = _baseQuery.GetEnumerator();
-
-		var array = new T[Int32.CreateChecked(_count)];
-
-		var i = 0;
-
-		for (; i < array.Length && enumerator.MoveNext(); i++)
-		{
-			array[i] = enumerator.Current;
-		}
-
-		length = i;
 		return array;
 	}
 
@@ -460,7 +435,7 @@ public partial struct TakeQuery<TCount, T, TBaseQuery, TBaseEnumerator> : IOptiQ
 		{
 			list = new List<T>(Int32.CreateChecked(_count));
 
-			while (enumerator.MoveNext())
+			for (var i = TCount.Zero; i < _count && enumerator.MoveNext(); i++)
 			{
 				list.Add(enumerator.Current);
 			}
@@ -474,7 +449,7 @@ public partial struct TakeQuery<TCount, T, TBaseQuery, TBaseEnumerator> : IOptiQ
 		var list = new PooledList<T>(Int32.CreateChecked(_count));
 		using var enumerator = _baseQuery.GetEnumerator();
 
-		while (enumerator.MoveNext())
+		for (var i = TCount.Zero; i < _count && enumerator.MoveNext(); i++)
 		{
 			list.Add(enumerator.Current);
 		}
@@ -487,7 +462,7 @@ public partial struct TakeQuery<TCount, T, TBaseQuery, TBaseEnumerator> : IOptiQ
 		var queue = new PooledQueue<T>(Int32.CreateChecked(_count));
 		using var enumerator = _baseQuery.GetEnumerator();
 
-		while (enumerator.MoveNext())
+		for (var i = TCount.Zero; i < _count && enumerator.MoveNext(); i++)
 		{
 			queue.Enqueue(enumerator.Current);
 		}
@@ -500,7 +475,7 @@ public partial struct TakeQuery<TCount, T, TBaseQuery, TBaseEnumerator> : IOptiQ
 		var stack = new PooledStack<T>(Int32.CreateChecked(_count));
 		using var enumerator = _baseQuery.GetEnumerator();
 
-		while (enumerator.MoveNext())
+		for (var i = TCount.Zero; i < _count && enumerator.MoveNext(); i++)
 		{
 			stack.Push(enumerator.Current);
 		}
@@ -513,7 +488,7 @@ public partial struct TakeQuery<TCount, T, TBaseQuery, TBaseEnumerator> : IOptiQ
 		var set = new PooledSet<T, TComparer>(comparer);
 		using var enumerator = _baseQuery.GetEnumerator();
 
-		while (enumerator.MoveNext())
+		for (var i = TCount.Zero; i < _count && enumerator.MoveNext(); i++)
 		{
 			set.Add(enumerator.Current);
 		}
@@ -535,13 +510,13 @@ public partial struct TakeQuery<TCount, T, TBaseQuery, TBaseEnumerator> : IOptiQ
 
 	public bool TryGetSpan(out ReadOnlySpan<T> span)
 	{
-		if (_baseQuery.TryGetSpan(out var baseSpan))
-		{
-			span = baseSpan.Slice(0, Int32.Min(baseSpan.Length, Int32.CreateChecked(_count)));
-			return true;
-		}
+		// if (_baseQuery.TryGetSpan(out var baseSpan))
+		// {
+		// 	span = baseSpan.Slice(0, Int32.Min(baseSpan.Length, Int32.CreateChecked(_count)));
+		// 	return true;
+		// }
 
-		span = default;
+		span = ReadOnlySpan<T>.Empty;
 		return false;
 	}
 

@@ -1,6 +1,5 @@
 ﻿using System.Buffers;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using OptiLinq.Interfaces;
 
@@ -103,7 +102,7 @@ public static class EnumerableHelper
 	}
 
 	internal static string JoinFormattable<TElement, TEnumerable>(this TEnumerable enumerable, string separator, ReadOnlySpan<char> format, IFormatProvider? provider = null)
-		where TEnumerable : IOptiQuery<TElement>
+		where TEnumerable : IEnumerable<TElement>
 		where TElement : ISpanFormattable
 	{
 		using var enumerator = enumerable.GetEnumerator();

@@ -5,6 +5,12 @@ using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Reports;
 using BenchmarkDotNet.Running;
 
+// Span<int> data = stackalloc int[] { 2, 3, 5, 6, 67, 4, 2, 12, 45, 467, 678, 4322 };
+//
+// Sorter<int, IFuncSorterWithPrevious<int, int, Identity<int>, IFuncSorter<int, bool, IsOdd<int>>>>.Sort(data);
+//
+// return;
+
 foreach (var summary in BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args))
 {
 	SaveSummary(summary);

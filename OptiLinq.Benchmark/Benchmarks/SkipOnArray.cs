@@ -20,6 +20,7 @@ public class SkipOnArray
 	public int Linq()
 	{
 		var sum = 0;
+		
 		foreach (var i in array.Skip(1000))
 		{
 			sum += i;
@@ -32,11 +33,20 @@ public class SkipOnArray
 	public int OptiLinq()
 	{
 		var sum = 0;
+		
 		foreach (var i in array.AsOptiQuery().Skip(1000))
 		{
 			sum += i;
 		}
 
 		return sum;
+	}
+
+	[Benchmark]
+	public int OptiLinqSum()
+	{
+		return array.AsOptiQuery()
+			.Skip(1000)
+			.Sum();
 	}
 }

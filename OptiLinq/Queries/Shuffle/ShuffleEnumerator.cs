@@ -7,7 +7,7 @@ public struct ShuffleEnumerator<T, TBaseEnumerator> : IEnumerator<T>
 	where TBaseEnumerator : IEnumerator<T>
 {
 	private PooledList<T> _list;
-	private int _index = -1;
+	private int _index = 0;
 
 	internal ShuffleEnumerator(PooledList<T> list)
 	{
@@ -16,7 +16,7 @@ public struct ShuffleEnumerator<T, TBaseEnumerator> : IEnumerator<T>
 
 	object IEnumerator.Current => Current;
 
-	public T Current => _list[_index];
+	public T Current { get; private set; }
 
 	public bool MoveNext()
 	{
@@ -24,6 +24,8 @@ public struct ShuffleEnumerator<T, TBaseEnumerator> : IEnumerator<T>
 		{
 			return false;
 		}
+
+		Current = _list[_index];
 
 		_index++;
 

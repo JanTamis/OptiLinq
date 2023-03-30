@@ -1,6 +1,6 @@
 using System.Buffers;
 using System.Runtime.CompilerServices;
-using OptiLinq.Interfaces;
+using System.Runtime.InteropServices;
 
 namespace OptiLinq.Collections;
 
@@ -60,7 +60,12 @@ public struct PooledList<T> : IDisposable
 		}
 	}
 
-	internal Span<T> AsSpan() => Items.AsSpan(0, Count);
+	internal ref T GetRef(int index)
+	{
+		return ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(Items), index);
+	}
+
+	public Span<T> AsSpan() => Items.AsSpan(0, Count);
 
 	public PooledList() : this(4)
 	{
@@ -75,6 +80,13 @@ public struct PooledList<T> : IDisposable
 		this.pool = pool;
 		Items = capacity > 0 ? pool.Rent(capacity) : Array.Empty<T>();
 		_index = -1;
+	}
+
+	public PooledList(ReadOnlySpan<T> data) : this(data.Length)
+	{
+		data.CopyTo(Items);
+
+		_index = data.Length - 1;
 	}
 
 	public void EnsureCapacity(int capacity)

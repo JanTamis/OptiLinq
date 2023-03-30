@@ -29,6 +29,11 @@ public static class OptiQuery
 		return new HashSetQuery<T>(list);
 	}
 
+	public static IListQuery<T> AsOptiQuery<T>(this IList<T> list)
+	{
+		return new IListQuery<T>(list);
+	}
+
 	public static RangeQuery Range(int start, int count)
 	{
 		return new RangeQuery(start, count);
@@ -101,19 +106,19 @@ public static class OptiQuery
 			return Sum(data);
 		}
 
-		return query.Aggregate(new SumOperator<TNumber>(), TNumber.Zero);
+		return query.Aggregate(TNumber.Zero, new SumOperator<TNumber>());
 	}
 
 	public static TNumber Sum<T, TNumber>(this IOptiQuery<T> query, Func<T, TNumber> selector) where TNumber : struct, INumberBase<TNumber>
 	{
-		return query.Aggregate(new SumOperator<T, TNumber>(selector), TNumber.Zero);
+		return query.Aggregate(TNumber.Zero, new SumOperator<T, TNumber>(selector));
 	}
 
 	public static TNumber Sum<T, TNumber, TSelector>(this IOptiQuery<T> query, TSelector selector = default)
 		where TNumber : struct, INumberBase<TNumber>
 		where TSelector : struct, IFunction<T, TNumber>
 	{
-		return query.Aggregate(new SumOperator<T, TNumber, TSelector>(selector), TNumber.Zero);
+		return query.Aggregate(TNumber.Zero, new SumOperator<T, TNumber, TSelector>(selector));
 	}
 
 	public static double Average(this IOptiQuery<int> query) => query.Average<int, double>();
@@ -126,76 +131,37 @@ public static class OptiQuery
 		where TNumber : struct, INumberBase<TNumber>
 		where TResult : struct, INumberBase<TResult>
 	{
-		if (query.TryGetSpan(out var data))
+		if (query.TryGetNonEnumeratedCount(out var count))
 		{
-			return TResult.CreateChecked(Sum(data)) / TResult.CreateChecked(data.Length);
+			return TResult.CreateChecked(query.Sum()) / TResult.CreateChecked(count);
 		}
 
-		var result = query.Aggregate(new AverageOperator<TResult, TNumber>(), (TResult.Zero, TResult.Zero));
+		var result = query.Aggregate((TResult.Zero, TResult.Zero), new AverageOperator<TResult, TNumber>());
 
 		if (result.Item2 == TResult.Zero)
 		{
 			throw new InvalidOperationException("Sequence contains no elements");
 		}
-
+		
 		return result.Item1 / result.Item2;
 	}
 
-	public static string ToString<T>(this IOptiQuery<T> query, string separator, string? format, IFormatProvider? provider = null)
+	public static string ToString<T>(this IEnumerable<T> query, string separator, string? format = null, IFormatProvider? provider = null)
 		where T : ISpanFormattable
 	{
-		return EnumerableHelper.JoinFormattable<T, IOptiQuery<T>>(query, separator, format, provider);
+		return EnumerableHelper.JoinFormattable<T, IEnumerable<T>>(query, separator, format, provider);
 	}
 
-	public static TAccumulate Aggregate<T, TAccumulate>(this IOptiQuery<T> query, Func<TAccumulate, T, TAccumulate> @operator = default, TAccumulate seed = default)
+	public static TNumber Sum<TNumber>(ReadOnlySpan<TNumber> data) where TNumber : struct, INumberBase<TNumber>
 	{
-		return query.Aggregate(new FuncAsIFunction<TAccumulate, T, TAccumulate>(@operator), seed);
-	}
-
-	public static TResult Aggregate<T, TResult, TAccumulate>(this IOptiQuery<T> query, Func<TAccumulate, T, TAccumulate> @operator, Func<TAccumulate, TResult> resultSelector, TAccumulate seed = default)
-	{
-		return query.Aggregate<FuncAsIFunction<TAccumulate, T, TAccumulate>, FuncAsIFunction<TAccumulate, TResult>, TAccumulate, TResult>(new FuncAsIFunction<TAccumulate, T, TAccumulate>(@operator), new FuncAsIFunction<TAccumulate, TResult>(resultSelector), seed);
-	}
-
-	public static bool Any<T>(this IOptiQuery<T> query, Func<T, bool> @operator)
-	{
-		return query.Any(new FuncAsIFunction<T, bool>(@operator));
-	}
-
-	public static bool All<T>(this IOptiQuery<T> query, Func<T, bool> @operator)
-	{
-		return query.All(new FuncAsIFunction<T, bool>(@operator));
-	}
-
-	public static bool Contains<T>(this IOptiQuery<T> query, T element) where T : IEquatable<T>
-	{
-		if (query.TryGetSpan(out var data))
-		{
-			data.Contains(element);
-		}
-
-		return query.Contains(element);
-	}
-
-	public static void ForEach<TQuery, T>(this TQuery query, Action<T> action) where TQuery : IOptiQuery<T>
-	{
-		query.ForEach(new ActionAsIFunction<T>(action));
-	}
-
-	public static TNumber Count<T, TNumber>(this IOptiQuery<T> query, Func<T, bool> action) where TNumber : struct, INumberBase<TNumber>
-	{
-		return query.Count<FuncAsIFunction<T, bool>, TNumber>(new FuncAsIFunction<T, bool>(action));
-	}
-
-	internal static TNumber Sum<TNumber>(ReadOnlySpan<TNumber> data) where TNumber : struct, INumberBase<TNumber>
-	{
+		ref var first = ref MemoryMarshal.GetReference(data);
+		var sum = TNumber.Zero;
+		
 		if (Vector.IsHardwareAccelerated && Vector<TNumber>.IsSupported)
 		{
-			ref var first = ref MemoryMarshal.GetReference(data);
-			ref var last = ref Unsafe.Add(ref first, data.Length);
+			ref var last = ref Unsafe.Add(ref first, data.Length - Vector<TNumber>.Count);
 
-			var vectorSum = Unsafe.As<TNumber, Vector<TNumber>>(ref first);
-			first = ref Unsafe.Add(ref first, Vector<TNumber>.Count);
+			var vectorSum = Vector<TNumber>.Zero;
 
 			while (Unsafe.IsAddressLessThan(ref first, ref Unsafe.Subtract(ref last, Vector<TNumber>.Count)))
 			{
@@ -215,11 +181,12 @@ public static class OptiQuery
 			return Vector.Sum(vectorSum);
 		}
 
-		var sum = TNumber.Zero;
+		ref var end = ref Unsafe.Add(ref first, data.Length);
 
-		for (var i = 0; i < data.Length; i++)
+		while (Unsafe.IsAddressLessThan(ref first, ref end))
 		{
-			sum += data[i];
+			sum += first;
+			first = ref Unsafe.Add(ref first, 1);
 		}
 
 		return sum;

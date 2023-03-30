@@ -14,8 +14,7 @@ Intel Core i9-9880H CPU 2.30GHz, 1 CPU, 16 logical and 8 physical cores
 
 
 ```
-|            Method |       Mean |    Error |   StdDev |        Ratio | RatioSD |   Gen0 | Allocated | Alloc Ratio |
-|------------------ |-----------:|---------:|---------:|-------------:|--------:|-------:|----------:|------------:|
-| OptiLinqOptimized |   371.1 ns |  2.90 ns |  2.57 ns | 9.94x faster |   0.08x |      - |         - |          NA |
-|          OptiLinq |   380.1 ns |  3.72 ns |  3.48 ns | 9.68x faster |   0.09x | 0.0029 |      24 B |          NA |
-|              Linq | 3,689.6 ns | 25.08 ns | 19.58 ns |     baseline |         |      - |         - |          NA |
+|   Method |       Mean |    Error |   StdDev |        Ratio | RatioSD | Allocated | Alloc Ratio |
+|--------- |-----------:|---------:|---------:|-------------:|--------:|----------:|------------:|
+| OptiLinq |   392.9 ns |  7.77 ns |  9.25 ns | 9.89x faster |   0.27x |         - |          NA |
+|     Linq | 3,874.9 ns | 53.86 ns | 44.98 ns |     baseline |         |         - |          NA |

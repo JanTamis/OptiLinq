@@ -28,20 +28,19 @@ public class Aggregate
 	[Benchmark]
 	public int DelegateAggregate()
 	{
-		return _rangeEnumerable.Aggregate((accu, elt) => accu + elt, 0);
+		return _rangeEnumerable.Aggregate(0, (accu, elt) => accu + elt);
 	}
 
 	[Benchmark]
 	public int IFunctionAggregate()
 	{
-		return _rangeEnumerable.Aggregate<Aggregation, int>();
+		return _rangeEnumerable.Aggregate<Aggregation, int>(0);
 	}
-
 
 	[Benchmark]
 	public int ConvertAggregate()
 	{
-		return _enumerable.AsOptiQuery().Aggregate<Aggregation, int>();
+		return _enumerable.AsOptiQuery().Aggregate<Aggregation, int>(0);
 	}
 }
 

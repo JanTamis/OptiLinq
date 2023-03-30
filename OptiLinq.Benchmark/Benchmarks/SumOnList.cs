@@ -26,10 +26,4 @@ public class SumOnList
 	{
 		return list.AsOptiQuery().Sum();
 	}
-
-	[Benchmark]
-	public int OptiLinqOptimized()
-	{
-		return list.AsOptiQuery().Sum<int, ListQuery<int>>();
-	}
 }

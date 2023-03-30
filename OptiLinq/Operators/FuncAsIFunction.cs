@@ -44,6 +44,7 @@ public readonly struct FuncAsIFunction<TOut> : IFunction<TOut>
 		_func = func;
 	}
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public TOut Eval()
 	{
 		return _func();
@@ -59,6 +60,7 @@ public readonly struct ActionAsIFunction<TIn> : IAction<TIn>
 		_action = action;
 	}
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Do(in TIn element)
 	{
 		_action(element);

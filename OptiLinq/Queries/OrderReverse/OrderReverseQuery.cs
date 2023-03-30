@@ -24,16 +24,16 @@ public partial struct OrderReverseQuery<T, TBaseQuery, TBaseEnumerator, TCompare
 		_comparer = comparer;
 	}
 
-	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default)
+	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TAccumulate seed, TFunc func = default, TResultSelector selector = default)
 		where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 		where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
-		return _baseEnumerable.Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(func, selector, seed);
+		return _baseEnumerable.Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(seed, func, selector);
 	}
 
-	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
+	public TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 	{
-		return _baseEnumerable.Aggregate(@operator, seed);
+		return _baseEnumerable.Aggregate(seed, @operator);
 	}
 
 	public bool All<TAllOperator>(TAllOperator @operator = default) where TAllOperator : struct, IFunction<T, bool>
@@ -449,14 +449,4 @@ public partial struct OrderReverseQuery<T, TBaseQuery, TBaseEnumerator, TCompare
 
 	IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
 	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-	private OrderedEnumerable<T, TBaseQuery, TBaseEnumerator> GenerateEnumerable()
-	{
-		if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
-		{
-			return new OrderedEnumerable<T, T, TBaseQuery, TBaseEnumerator>(_baseEnumerable, EnumerableSorter<T>.IdentityFunc, _comparer, false, null);
-		}
-
-		return new OrderedImplicitlyStableEnumerable<T, TBaseQuery, TBaseEnumerator>(_baseEnumerable, false);
-	}
 }

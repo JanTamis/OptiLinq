@@ -33,18 +33,10 @@ public class ForEach
 	}
 
 	[Benchmark]
-	public int WithAction()
-	{
-		OptiQuery.Range(0, Count).ForEach(action);
-		
-		return count;
-	}
-
-	[Benchmark]
 	public int WithStruct()
 	{
 		var countAction = new CountAction<int> { Count = 0 };
-		
+
 		OptiQuery.Range(0, Count).ForEach(countAction);
 
 		return countAction.Count;

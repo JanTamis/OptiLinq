@@ -2,7 +2,6 @@ using System.Buffers;
 using System.Collections;
 using System.Runtime.CompilerServices;
 using OptiLinq.Collections;
-using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 

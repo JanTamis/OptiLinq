@@ -18,7 +18,7 @@ public class AverageOnList
 	[Benchmark(Baseline = true)]
 	public double Linq()
 	{
-		return list.Sum();
+		return list.Average();
 	}
 
 	[Benchmark]

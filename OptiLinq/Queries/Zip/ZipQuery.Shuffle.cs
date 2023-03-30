@@ -1,5 +1,3 @@
-using OptiLinq.Interfaces;
-
 namespace OptiLinq;
 
 public partial struct ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumerator, TSecondQuery>

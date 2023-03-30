@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Numerics;
-using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
@@ -25,7 +24,7 @@ public struct TakeEnumerator<TCount, T, TBaseEnumerator> : IEnumerator<T>
 
 	public bool MoveNext()
 	{
-		return _currentCount-- > TCount.Zero && _baseEnumerator.MoveNext();
+		return _currentCount++ < _count && _baseEnumerator.MoveNext();
 	}
 
 	public void Reset()

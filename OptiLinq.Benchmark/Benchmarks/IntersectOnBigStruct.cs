@@ -25,6 +25,7 @@ public class IntersectOnBigStruct
 	public int Linq()
 	{
 		var sum = 0;
+		
 		foreach (var i in array1.Intersect(array2))
 		{
 			sum += i.Element;
@@ -37,6 +38,7 @@ public class IntersectOnBigStruct
 	public int OptiLinq()
 	{
 		var sum = 0;
+		
 		foreach (var i in array1.AsOptiQuery().Intersect(array2.AsOptiQuery()))
 		{
 			sum += i.Element;
@@ -50,6 +52,7 @@ public class IntersectOnBigStruct
 	{
 		var sum = 0;
 		var comparer = new StructEqualityComparer();
+		
 		foreach (var i in array1.AsOptiQuery().Intersect(array2.AsOptiQuery(), comparer))
 		{
 			sum += i.Element;

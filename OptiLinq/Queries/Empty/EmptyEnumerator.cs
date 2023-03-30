@@ -1,11 +1,10 @@
 using System.Collections;
-using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
 public struct EmptyEnumerator<T> : IEnumerator<T>
 {
-	object IEnumerator.Current => Current;
+	object IEnumerator.Current => Current!;
 
 	public T Current => default!;
 

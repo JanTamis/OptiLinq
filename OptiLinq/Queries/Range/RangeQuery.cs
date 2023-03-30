@@ -22,23 +22,23 @@ public partial struct RangeQuery : IOptiQuery<int, RangeEnumerator>
 		_count = count;
 	}
 
-	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default)
+	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TAccumulate seed, TFunc func = default, TResultSelector selector = default)
 		where TFunc : struct, IAggregateFunction<TAccumulate, int, TAccumulate>
 		where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
 		for (var i = _start; i < _start + _count; i++)
 		{
-			seed = func.Eval(seed, i);
+			seed = func.Eval(in seed, in i);
 		}
 
-		return selector.Eval(seed);
+		return selector.Eval(in seed);
 	}
 
-	public readonly TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, int, TAccumulate>
+	public readonly TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, int, TAccumulate>
 	{
 		for (var i = _start; i < _start + _count; i++)
 		{
-			seed = @operator.Eval(seed, i);
+			seed = @operator.Eval(in seed, in i);
 		}
 
 		return seed;
@@ -48,7 +48,7 @@ public partial struct RangeQuery : IOptiQuery<int, RangeEnumerator>
 	{
 		for (var i = _start; i < _start + _count; i++)
 		{
-			if (!@operator.Eval(i))
+			if (!@operator.Eval(in i))
 			{
 				return false;
 			}
@@ -66,7 +66,7 @@ public partial struct RangeQuery : IOptiQuery<int, RangeEnumerator>
 	{
 		for (var i = _start; i < _start + _count; i++)
 		{
-			if (@operator.Eval(i))
+			if (@operator.Eval(in i))
 			{
 				return true;
 			}
@@ -120,7 +120,7 @@ public partial struct RangeQuery : IOptiQuery<int, RangeEnumerator>
 
 		for (var i = _start; i < _start + _count; i++)
 		{
-			if (@operator.Eval(i))
+			if (@operator.Eval(in i))
 			{
 				count++;
 			}

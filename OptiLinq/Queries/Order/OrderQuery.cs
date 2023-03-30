@@ -1,4 +1,3 @@
-using System.Buffers;
 using System.Collections;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -8,15 +7,13 @@ using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
-public partial struct OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer> : IOptiQuery<T, OrderEnumerator<T, TComparer, TBaseEnumerator>>
+public partial struct OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer> : IOptiQuery<T, OrderEnumerator<T>>
 	where TBaseEnumerator : IEnumerator<T>
 	where TBaseQuery : struct, IOptiQuery<T, TBaseEnumerator>
-	where TComparer : IComparer<T>
+	where TComparer : IOptiComparer<T>
 {
 	private TBaseQuery _baseEnumerable;
 	private readonly TComparer _comparer;
-
-	private int _count = -1;
 
 	internal OrderQuery(ref TBaseQuery baseEnumerable, TComparer comparer)
 	{
@@ -24,16 +21,30 @@ public partial struct OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer> : IO
 		_comparer = comparer;
 	}
 
-	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default)
+	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TAccumulate seed, TFunc func = default, TResultSelector selector = default)
 		where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 		where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
-		return _baseEnumerable.Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(func, selector, seed);
+		using var buffer = ToPooledList();
+
+		foreach (var item in buffer.AsSpan())
+		{
+			seed = func.Eval(in seed, in item);
+		}
+
+		return selector.Eval(in seed);
 	}
 
-	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
+	public TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 	{
-		return _baseEnumerable.Aggregate(@operator, seed);
+		using var buffer = ToPooledList();
+
+		foreach (var item in buffer.AsSpan())
+		{
+			seed = @operator.Eval(in seed, in item);
+		}
+
+		return seed;
 	}
 
 	public bool All<TAllOperator>(TAllOperator @operator = default) where TAllOperator : struct, IFunction<T, bool>
@@ -68,11 +79,11 @@ public partial struct OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer> : IO
 
 	public int CopyTo(Span<T> data)
 	{
-		var length = _baseEnumerable.CopyTo(data);
+		var count = _baseEnumerable.CopyTo(data);
 
-		data.Slice(0, length).Sort(_comparer);
+		Sorter<T, TComparer>.Sort(data.Slice(0, count), _comparer);
 
-		return length;
+		return count;
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -115,23 +126,14 @@ public partial struct OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer> : IO
 	{
 		if (TIndex.IsPositive(index))
 		{
-			TryGetNonEnumeratedCount(out var count);
+			var buffer = _baseEnumerable.ToPooledList();
+			var intIndex = Int32.CreateChecked(index);
 
-			using var enumerator = GetEnumerator();
-			using var list = new PooledList<T>(Math.Max(count, 4));
+			Sorter<T, TComparer>.Sort(buffer.AsSpan(), _comparer);
 
-			while (enumerator.MoveNext())
+			if (intIndex < buffer.Count)
 			{
-				list.Add(enumerator.Current);
-			}
-
-			list.Items.AsSpan(0, list.Count).Sort(_comparer);
-
-			var indexInt = Int32.CreateChecked(index);
-
-			if (indexInt < list.Count)
-			{
-				item = list.Items[indexInt];
+				item = buffer[intIndex];
 				return true;
 			}
 		}
@@ -202,17 +204,15 @@ public partial struct OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer> : IO
 
 	public void ForEach<TAction>(TAction @operator = default) where TAction : struct, IAction<T>
 	{
-		_baseEnumerable.TryGetNonEnumeratedCount(out _count);
-		var data = EnumerableHelper.ToArray(_baseEnumerable.GetEnumerator(), ArrayPool<T>.Shared, Math.Max(4, _count), out _count);
+		using var buffer = _baseEnumerable.ToPooledList();
+		var bufferSpan = buffer.AsSpan();
 
-		data.AsSpan(0, _count).Sort(_comparer);
+		Sorter<T, TComparer>.Sort(bufferSpan, _comparer);
 
-		for (var i = 0; i < _count; i++)
+		for (var i = 0; i < bufferSpan.Length; i++)
 		{
-			@operator.Do(data[i]);
+			@operator.Do(in bufferSpan[i]);
 		}
-
-		ArrayPool<T>.Shared.Return(data, RuntimeHelpers.IsReferenceOrContainsReferences<T>());
 	}
 
 	public bool TryGetLast(out T item)
@@ -266,26 +266,23 @@ public partial struct OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer> : IO
 
 	public bool TryGetSingle(out T item)
 	{
-		TryGetNonEnumeratedCount(out var count);
+		using var enumerator = _baseEnumerable.GetEnumerator();
 
-		using var enumerator = GetEnumerator();
-		using var list = new PooledList<T>(Math.Max(count, 4));
-
-		while (enumerator.MoveNext())
+		if (!enumerator.MoveNext())
 		{
-			list.Add(enumerator.Current);
+			item = default!;
+			return false;
 		}
 
-		list.Items.AsSpan(0, list.Count).Sort(_comparer);
+		item = enumerator.Current;
 
-		if (list.Count == 1)
+		if (enumerator.MoveNext())
 		{
-			item = list.Items[0];
-			return true;
+			item = default!;
+			return false;
 		}
 
-		item = default!;
-		return false;
+		return true;
 	}
 
 	public T Single()
@@ -306,20 +303,11 @@ public partial struct OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer> : IO
 
 	public T[] ToArray()
 	{
-		var array = _baseEnumerable.ToArray();
+		var result = _baseEnumerable.ToArray();
 
-		array.AsSpan().Sort(_comparer);
+		Sorter<T, TComparer>.Sort(result, _comparer);
 
-		return array;
-	}
-
-	public T[] ToArray(out int length)
-	{
-		var array = _baseEnumerable.ToArray(out length);
-
-		array.AsSpan(0, length).Sort(_comparer);
-
-		return array;
+		return result;
 	}
 
 	public HashSet<T> ToHashSet(IEqualityComparer<T>? comparer = default)
@@ -329,33 +317,30 @@ public partial struct OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer> : IO
 
 	public List<T> ToList()
 	{
-		var list = _baseEnumerable.ToList();
+		var result = _baseEnumerable.ToList();
 
-		CollectionsMarshal.AsSpan(list).Sort(_comparer);
+		Sorter<T, TComparer>.Sort(CollectionsMarshal.AsSpan(result), _comparer);
 
-		return list;
+		return result;
 	}
 
 	public PooledList<T> ToPooledList()
 	{
-		var list = _baseEnumerable.ToPooledList();
+		var result = _baseEnumerable.ToPooledList();
 
-		list.Items.AsSpan(0, list.Count).Sort(_comparer);
+		Sorter<T, TComparer>.Sort(result.AsSpan(), _comparer);
 
-		return list;
+		return result;
 	}
 
 	public PooledQueue<T> ToPooledQueue()
 	{
-		using var tempList = _baseEnumerable.ToPooledList();
+		using var buffer = ToPooledList();
+		var result = new PooledQueue<T>(buffer.Count);
 
-		tempList.Items.AsSpan(0, tempList.Count).Sort(_comparer);
-
-		var result = new PooledQueue<T>(tempList.Count);
-
-		for (var i = 0; i < tempList.Count; i++)
+		for (var i = 0; i < buffer.Count; i++)
 		{
-			result.Enqueue(tempList.Items[i]);
+			result.Enqueue(buffer[i]);
 		}
 
 		return result;
@@ -363,15 +348,12 @@ public partial struct OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer> : IO
 
 	public PooledStack<T> ToPooledStack()
 	{
-		using var tempList = _baseEnumerable.ToPooledList();
+		using var buffer = ToPooledList();
+		var result = new PooledStack<T>(buffer.Count);
 
-		tempList.Items.AsSpan(0, tempList.Count).Sort(_comparer);
-
-		var result = new PooledStack<T>(tempList.Count);
-
-		for (var i = 0; i < tempList.Count; i++)
+		for (var i = 0; i < buffer.Count; i++)
 		{
-			result.Push(tempList.Items[i]);
+			result.Push(buffer[i]);
 		}
 
 		return result;
@@ -384,12 +366,6 @@ public partial struct OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer> : IO
 
 	public bool TryGetNonEnumeratedCount(out int length)
 	{
-		if (_count != -1)
-		{
-			length = _count;
-			return true;
-		}
-
 		return _baseEnumerable.TryGetNonEnumeratedCount(out length);
 	}
 
@@ -399,22 +375,11 @@ public partial struct OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer> : IO
 		return false;
 	}
 
-	public OrderEnumerator<T, TComparer, TBaseEnumerator> GetEnumerator()
+	public OrderEnumerator<T> GetEnumerator()
 	{
-		_baseEnumerable.TryGetNonEnumeratedCount(out var count);
-		return new OrderEnumerator<T, TComparer, TBaseEnumerator>(_baseEnumerable.GetEnumerator(), _comparer, Math.Max(4, count));
+		return new OrderEnumerator<T>(ToPooledList());
 	}
 
 	IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
 	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-	private OrderedEnumerable<T, TBaseQuery, TBaseEnumerator> GenerateEnumerable()
-	{
-		if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
-		{
-			return new OrderedEnumerable<T, T, TBaseQuery, TBaseEnumerator>(_baseEnumerable, EnumerableSorter<T>.IdentityFunc, _comparer, false, null);
-		}
-
-		return new OrderedImplicitlyStableEnumerable<T, TBaseQuery, TBaseEnumerator>(_baseEnumerable, false);
-	}
 }

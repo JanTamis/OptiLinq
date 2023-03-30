@@ -21,6 +21,7 @@ public class TakeOnArrayWhere
 	public int Linq()
 	{
 		var sum = 0;
+		
 		foreach (var i in array.Where(x => true).Take(TakeCount))
 		{
 			sum += i;

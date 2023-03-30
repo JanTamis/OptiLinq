@@ -27,20 +27,29 @@ public class SumOnSelectMany
 	[Benchmark]
 	public int OptiLINQ()
 	{
-		return array.AsOptiQuery().SelectMany(x => x.AsOptiQuery()).Sum();
+		return array
+			.AsOptiQuery()
+			.SelectMany(x => x.AsOptiQuery())
+			.Sum();
 	}
 
 	[Benchmark]
 	public int OptiLINQWhereReturnIsOptiQuery()
 	{
-		return array.AsOptiQuery().SelectMany<ArrayQuery<int>, int>(x => x.AsOptiQuery()).Sum(x => x);
+		return array
+			.AsOptiQuery()
+			.SelectMany<ArrayQuery<int>, int>(x => x.AsOptiQuery())
+			.Sum();
 	}
 
 
 	[Benchmark]
 	public int OptiLinqWithFunction()
 	{
-		return array.AsOptiQuery().SelectMany<SelectManyFunction, ArrayQuery<int>, int>().Sum();
+		return array
+			.AsOptiQuery()
+			.SelectMany<SelectManyFunction, ArrayQuery<int>, int>()
+			.Sum();
 	}
 
 	[Benchmark]

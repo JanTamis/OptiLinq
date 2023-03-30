@@ -21,16 +21,16 @@ public partial struct ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery
 		_secondQuery = secondQuery;
 	}
 
-	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default)
+	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TAccumulate seed, TFunc func = default, TResultSelector selector = default)
 		where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 		where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
-		return _secondQuery.Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(func, selector, _firstQuery.Aggregate(func, seed));
+		return _secondQuery.Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(_firstQuery.Aggregate(seed, func), func, selector);
 	}
 
-	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
+	public TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 	{
-		return _secondQuery.Aggregate(@operator, _firstQuery.Aggregate(@operator, seed));
+		return _secondQuery.Aggregate(_firstQuery.Aggregate(seed, @operator), @operator);
 	}
 
 	public bool All<TAllOperator>(TAllOperator @operator = default) where TAllOperator : struct, IFunction<T, bool>
@@ -55,7 +55,7 @@ public partial struct ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery
 
 	public bool Contains<TComparer>(in T item, TComparer comparer) where TComparer : IEqualityComparer<T>
 	{
-		return _firstQuery.Contains(item, comparer) || _secondQuery.Contains(item, comparer);
+		return _firstQuery.Contains(in item, comparer) || _secondQuery.Contains(in item, comparer);
 	}
 
 	public bool Contains(in T item)
@@ -181,11 +181,6 @@ public partial struct ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery
 
 	public T Max()
 	{
-		if (typeof(TFirstQuery) == typeof(TSecondQuery))
-		{
-			_firstQuery.Max();
-		}
-
 		var firstMax = _firstQuery.Max();
 		var secondMax = _secondQuery.Max();
 
@@ -196,11 +191,6 @@ public partial struct ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery
 
 	public T Min()
 	{
-		if (typeof(TFirstQuery) == typeof(TSecondQuery))
-		{
-			_firstQuery.Min();
-		}
-
 		var firstMin = _firstQuery.Min();
 		var secondMin = _secondQuery.Min();
 
@@ -242,98 +232,45 @@ public partial struct ConcatQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery
 
 	public T[] ToArray()
 	{
-		if (typeof(TFirstQuery) == typeof(TSecondQuery))
+		if (_firstQuery.TryGetNonEnumeratedCount(out var firstCount) && _secondQuery.TryGetNonEnumeratedCount(out var secondCount))
 		{
-			if (_firstQuery.TryGetNonEnumeratedCount(out var count))
+			var array = new T[firstCount + secondCount];
+
+			_firstQuery.CopyTo(array);
+			_secondQuery.CopyTo(array.AsSpan(firstCount));
+
+			return array;
+		}
+
+		using var builder = _firstQuery.ToPooledList();
+
+		if (_secondQuery.TryGetNonEnumeratedCount(out var count))
+		{
+			builder.EnsureCapacity(builder.Count + count);
+			_secondQuery.CopyTo(builder.Items.AsSpan(builder.Count - count));
+		}
+		else
+		{
+			using var enumerator = _secondQuery.GetEnumerator();
+
+			while (enumerator.MoveNext())
 			{
-				var array = new T[count * 2];
-				_firstQuery.CopyTo(array);
-				array.AsSpan(0, count).CopyTo(array.AsSpan(count, count));
-
-				return array;
-			}
-			else
-			{
-				var builder = new LargeArrayBuilder<T>();
-
-				using var enumerator = _firstQuery.GetEnumerator();
-
-				while (enumerator.MoveNext())
-				{
-					builder.Add(enumerator.Current);
-				}
-
-				var array = new T[builder.Count * 2];
-				builder.CopyTo(array, 0, builder.Count);
-
-				array.AsSpan(0, builder.Count)
-					.CopyTo(array.AsSpan(builder.Count, builder.Count));
-
-				return array;
+				builder.Add(enumerator.Current);
 			}
 		}
 
-		{
-			var firstCount = 0;
-			var secondCount = 0;
-
-			if (_firstQuery.TryGetNonEnumeratedCount(out firstCount) && _secondQuery.TryGetNonEnumeratedCount(out secondCount))
-			{
-				var array = new T[firstCount + secondCount];
-				_firstQuery.CopyTo(array);
-				_secondQuery.CopyTo(array.AsSpan(firstCount));
-				return array;
-			}
-
-			var builder = new LargeArrayBuilder<T>(firstCount + secondCount);
-
-			using var firstEnumerator = _firstQuery.GetEnumerator();
-			using var secondEnumerator = _secondQuery.GetEnumerator();
-
-			while (firstEnumerator.MoveNext())
-			{
-				builder.Add(firstEnumerator.Current);
-			}
-
-			while (secondEnumerator.MoveNext())
-			{
-				builder.Add(secondEnumerator.Current);
-			}
-
-			return builder.ToArray();
-		}
+		return builder.ToArray();
 	}
-
-	public T[] ToArray(out int length)
-	{
-		var array = ToArray();
-		length = array.Length;
-
-		return array;
-	}
-
 	public HashSet<T> ToHashSet(IEqualityComparer<T>? comparer = default)
 	{
-		comparer ??= EqualityComparer<T>.Default;
-
 		using var firstEnumerator = _firstQuery.GetEnumerator();
-		using var secondEnumerator = _secondQuery.GetEnumerator();
-
-		_firstQuery.TryGetNonEnumeratedCount(out var firstCount);
-		_secondQuery.TryGetNonEnumeratedCount(out var secondCount);
-
-		var set = new HashSet<T>(firstCount + secondCount, comparer);
+		var set = _secondQuery.ToHashSet(comparer);
 
 		while (firstEnumerator.MoveNext())
 		{
 			set.Add(firstEnumerator.Current);
 		}
-
-		while (secondEnumerator.MoveNext())
-		{
-			set.Add(secondEnumerator.Current);
-		}
-
+		
 		return set;
 	}
 

@@ -15,7 +15,7 @@ public struct WhereSelectEnumerator<T, TResult, TWhereOperator, TSelectOperator,
 
 
 	object IEnumerator.Current => Current;
-	public TResult Current { get; private set; } = default!;
+	public TResult Current => _selectOperator.Eval(_baseEnumerator.Current);
 
 	public WhereSelectEnumerator(TBaseEnumerator baseEnumerator, TWhereOperator whereOperator, TSelectOperator selectOperator)
 	{
@@ -30,7 +30,6 @@ public struct WhereSelectEnumerator<T, TResult, TWhereOperator, TSelectOperator,
 		{
 			if (_whereOperator.Eval(_baseEnumerator.Current))
 			{
-				Current = _selectOperator.Eval(_baseEnumerator.Current);
 				return true;
 			}
 		}

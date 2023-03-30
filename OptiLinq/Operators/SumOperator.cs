@@ -1,9 +1,10 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using OptiLinq.Interfaces;
 
 namespace OptiLinq.Operators;
 
-internal readonly struct SumOperator<TAccumulator> : IAggregateFunction<TAccumulator, TAccumulator, TAccumulator>
+public readonly struct SumOperator<TAccumulator> : IAggregateFunction<TAccumulator, TAccumulator, TAccumulator>
 	where TAccumulator : INumberBase<TAccumulator>
 {
 	public TAccumulator Eval(in TAccumulator accumulator, in TAccumulator element)
@@ -12,7 +13,7 @@ internal readonly struct SumOperator<TAccumulator> : IAggregateFunction<TAccumul
 	}
 }
 
-internal readonly struct SumOperator<T, TNumber> : IAggregateFunction<TNumber, T, TNumber>
+public readonly struct SumOperator<T, TNumber> : IAggregateFunction<TNumber, T, TNumber>
 	where TNumber : INumberBase<TNumber>
 {
 	private readonly Func<T, TNumber> _selector;
@@ -28,7 +29,7 @@ internal readonly struct SumOperator<T, TNumber> : IAggregateFunction<TNumber, T
 	}
 }
 
-internal struct SumOperator<T, TNumber, TSelector> : IAggregateFunction<TNumber, T, TNumber>
+public struct SumOperator<T, TNumber, TSelector> : IAggregateFunction<TNumber, T, TNumber>
 	where TNumber : INumberBase<TNumber>
 	where TSelector : struct, IFunction<T, TNumber>
 {

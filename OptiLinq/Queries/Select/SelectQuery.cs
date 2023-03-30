@@ -21,7 +21,7 @@ public partial struct SelectQuery<T, TResult, TOperator, TBaseQuery, TBaseEnumer
 		_operator = @operator;
 	}
 
-	public TResult1 Aggregate<TFunc, TResultSelector, TAccumulate, TResult1>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default)
+	public TResult1 Aggregate<TFunc, TResultSelector, TAccumulate, TResult1>(TAccumulate seed, TFunc func = default, TResultSelector selector = default)
 		where TFunc : struct, IAggregateFunction<TAccumulate, TResult, TAccumulate>
 		where TResultSelector : struct, IFunction<TAccumulate, TResult1>
 	{
@@ -29,13 +29,13 @@ public partial struct SelectQuery<T, TResult, TOperator, TBaseQuery, TBaseEnumer
 
 		while (enumerable.MoveNext())
 		{
-			seed = func.Eval(seed, _operator.Eval(enumerable.Current));
+			seed = func.Eval(in seed, _operator.Eval(enumerable.Current));
 		}
 
-		return selector.Eval(seed);
+		return selector.Eval(in seed);
 	}
 
-	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, TResult, TAccumulate>
+	public TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, TResult, TAccumulate>
 	{
 		using var enumerable = _baseQuery.GetEnumerator();
 

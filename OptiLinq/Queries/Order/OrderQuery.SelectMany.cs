@@ -5,27 +5,27 @@ namespace OptiLinq;
 
 public partial struct OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer>
 {
-	public SelectManyQuery<T, TResult, TOperator, OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, OrderEnumerator<T, TComparer, TBaseEnumerator>, IOptiQuery<TResult>> SelectMany<TOperator, TResult>(TOperator @operator = default)
+	public SelectManyQuery<T, TResult, TOperator, OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, OrderEnumerator<T>, IOptiQuery<TResult>> SelectMany<TOperator, TResult>(TOperator @operator = default)
 		where TOperator : struct, IFunction<T, IOptiQuery<TResult>>
 	{
-		return new SelectManyQuery<T, TResult, TOperator, OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, OrderEnumerator<T, TComparer, TBaseEnumerator>, IOptiQuery<TResult>>(ref this, @operator);
+		return new SelectManyQuery<T, TResult, TOperator, OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, OrderEnumerator<T>, IOptiQuery<TResult>>(ref this, @operator);
 	}
 
-	public SelectManyQuery<T, TResult, FuncAsIFunction<T, IOptiQuery<TResult>>, OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, OrderEnumerator<T, TComparer, TBaseEnumerator>, IOptiQuery<TResult>> SelectMany<TResult>(Func<T, IOptiQuery<TResult>> @operator)
+	public SelectManyQuery<T, TResult, FuncAsIFunction<T, IOptiQuery<TResult>>, OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, OrderEnumerator<T>, IOptiQuery<TResult>> SelectMany<TResult>(Func<T, IOptiQuery<TResult>> @operator)
 	{
-		return new SelectManyQuery<T, TResult, FuncAsIFunction<T, IOptiQuery<TResult>>, OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, OrderEnumerator<T, TComparer, TBaseEnumerator>, IOptiQuery<TResult>>(ref this, new FuncAsIFunction<T, IOptiQuery<TResult>>(@operator));
+		return new SelectManyQuery<T, TResult, FuncAsIFunction<T, IOptiQuery<TResult>>, OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, OrderEnumerator<T>, IOptiQuery<TResult>>(ref this, new FuncAsIFunction<T, IOptiQuery<TResult>>(@operator));
 	}
 
-	public SelectManyQuery<T, TResult, TOperator, OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, OrderEnumerator<T, TComparer, TBaseEnumerator>, TSubQuery> SelectMany<TOperator, TSubQuery, TResult>(TOperator @operator = default)
+	public SelectManyQuery<T, TResult, TOperator, OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, OrderEnumerator<T>, TSubQuery> SelectMany<TOperator, TSubQuery, TResult>(TOperator @operator = default)
 		where TOperator : struct, IFunction<T, TSubQuery>
 		where TSubQuery : struct, IOptiQuery<TResult>
 	{
-		return new SelectManyQuery<T, TResult, TOperator, OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, OrderEnumerator<T, TComparer, TBaseEnumerator>, TSubQuery>(ref this, @operator);
+		return new SelectManyQuery<T, TResult, TOperator, OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, OrderEnumerator<T>, TSubQuery>(ref this, @operator);
 	}
 
-	public SelectManyQuery<T, TResult, FuncAsIFunction<T, TSubQuery>, OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, OrderEnumerator<T, TComparer, TBaseEnumerator>, TSubQuery> SelectMany<TSubQuery, TResult>(Func<T, TSubQuery> @operator)
+	public SelectManyQuery<T, TResult, FuncAsIFunction<T, TSubQuery>, OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, OrderEnumerator<T>, TSubQuery> SelectMany<TSubQuery, TResult>(Func<T, TSubQuery> @operator)
 		where TSubQuery : struct, IOptiQuery<TResult>
 	{
-		return new SelectManyQuery<T, TResult, FuncAsIFunction<T, TSubQuery>, OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, OrderEnumerator<T, TComparer, TBaseEnumerator>, TSubQuery>(ref this, new FuncAsIFunction<T, TSubQuery>(@operator));
+		return new SelectManyQuery<T, TResult, FuncAsIFunction<T, TSubQuery>, OrderQuery<T, TBaseQuery, TBaseEnumerator, TComparer>, OrderEnumerator<T>, TSubQuery>(ref this, new FuncAsIFunction<T, TSubQuery>(@operator));
 	}
 }

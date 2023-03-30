@@ -10,7 +10,6 @@ public struct SelectEnumerator<T, TResult, TOperator, TBaseEnumerator> : IEnumer
 	private TBaseEnumerator _baseEnumerator;
 	private TOperator _operator;
 
-
 	object IEnumerator.Current => Current;
 
 	public TResult Current => _operator.Eval(_baseEnumerator.Current);

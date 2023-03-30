@@ -16,23 +16,23 @@ public partial struct ListQuery<T> : IOptiQuery<T, List<T>.Enumerator>
 		_list = list;
 	}
 
-	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default)
+	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TAccumulate seed, TFunc func = default, TResultSelector selector = default)
 		where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 		where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
-		for (var i = 0; i < _list.Count; i++)
+		foreach (var item in CollectionsMarshal.AsSpan(_list))
 		{
-			seed = func.Eval(seed, _list[i]);
+			seed = func.Eval(in seed, in item);
 		}
 
-		return selector.Eval(seed);
+		return selector.Eval(in seed);
 	}
 
-	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
+	public TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 	{
-		for (var i = 0; i < _list.Count; i++)
+		foreach (var item in CollectionsMarshal.AsSpan(_list))
 		{
-			seed = @operator.Eval(seed, _list[i]);
+			seed = @operator.Eval(in seed, in item);
 		}
 
 		return seed;
@@ -40,9 +40,9 @@ public partial struct ListQuery<T> : IOptiQuery<T, List<T>.Enumerator>
 
 	public bool All<TAllOperator>(TAllOperator @operator = default) where TAllOperator : struct, IFunction<T, bool>
 	{
-		for (var i = 0; i < _list.Count; i++)
+		foreach (var item in CollectionsMarshal.AsSpan(_list))
 		{
-			if (!@operator.Eval(_list[i]))
+			if (!@operator.Eval(in item))
 			{
 				return false;
 			}
@@ -58,9 +58,9 @@ public partial struct ListQuery<T> : IOptiQuery<T, List<T>.Enumerator>
 
 	public bool Any<TAnyOperator>(TAnyOperator @operator = default) where TAnyOperator : struct, IFunction<T, bool>
 	{
-		for (var i = 0; i < _list.Count; i++)
+		foreach (var item in CollectionsMarshal.AsSpan(_list))
 		{
-			if (@operator.Eval(_list[i]))
+			if (@operator.Eval(in item))
 			{
 				return true;
 			}
@@ -76,9 +76,9 @@ public partial struct ListQuery<T> : IOptiQuery<T, List<T>.Enumerator>
 
 	public bool Contains<TComparer>(in T item, TComparer comparer) where TComparer : IEqualityComparer<T>
 	{
-		for (var i = 0; i < _list.Count; i++)
+		foreach (var currentItem in CollectionsMarshal.AsSpan(_list))
 		{
-			if (comparer.Equals(_list[i], item))
+			if (comparer.Equals(currentItem, item))
 			{
 				return false;
 			}
@@ -89,9 +89,9 @@ public partial struct ListQuery<T> : IOptiQuery<T, List<T>.Enumerator>
 
 	public bool Contains(in T item)
 	{
-		for (var i = 0; i < _list.Count; i++)
+		foreach (var currentItem in CollectionsMarshal.AsSpan(_list))
 		{
-			if (EqualityComparer<T>.Default.Equals(_list[i], item))
+			if (EqualityComparer<T>.Default.Equals(currentItem, item))
 			{
 				return false;
 			}
@@ -104,22 +104,7 @@ public partial struct ListQuery<T> : IOptiQuery<T, List<T>.Enumerator>
 	{
 		var length = Math.Min(_list.Count, data.Length);
 
-		switch (_list)
-		{
-			case T[] arr:
-				arr.AsSpan(0, length).CopyTo(data);
-				break;
-			case List<T> list:
-				CollectionsMarshal.AsSpan(list).Slice(0, length).CopyTo(data);
-				break;
-			default:
-				for (var i = 0; i < length; i++)
-				{
-					data[i] = _list[i];
-				}
-
-				break;
-		}
+		CollectionsMarshal.AsSpan(_list).Slice(0, length).CopyTo(data);
 
 		return length;
 	}
@@ -144,9 +129,9 @@ public partial struct ListQuery<T> : IOptiQuery<T, List<T>.Enumerator>
 	{
 		var count = TNumber.Zero;
 
-		for (var i = 0; i < _list.Count; i++)
+		foreach (var currentItem in CollectionsMarshal.AsSpan(_list))
 		{
-			if (@operator.Eval(_list[i]))
+			if (@operator.Eval(in currentItem))
 			{
 				count++;
 			}
@@ -159,9 +144,9 @@ public partial struct ListQuery<T> : IOptiQuery<T, List<T>.Enumerator>
 	{
 		var count = TNumber.Zero;
 
-		for (var i = 0; i < _list.Count; i++)
+		foreach (var currentItem in CollectionsMarshal.AsSpan(_list))
 		{
-			if (predicate(_list[i]))
+			if (predicate(currentItem))
 			{
 				count++;
 			}
@@ -182,20 +167,10 @@ public partial struct ListQuery<T> : IOptiQuery<T, List<T>.Enumerator>
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out T item) where TIndex : IBinaryInteger<TIndex>
 	{
-		if (index >= TIndex.Zero)
+		if (TIndex.IsPositive(index))
 		{
-			using var enumerator = GetEnumerator();
-
-			while (enumerator.MoveNext())
-			{
-				if (index == TIndex.Zero)
-				{
-					item = enumerator.Current;
-					return true;
-				}
-
-				index--;
-			}
+			item = _list[Int32.CreateChecked(index)];
+			return true;
 		}
 
 		item = default!;
@@ -253,12 +228,10 @@ public partial struct ListQuery<T> : IOptiQuery<T, List<T>.Enumerator>
 	public Task ForAll<TAction>(TAction @operator = default, CancellationToken token = default) where TAction : struct, IAction<T>
 	{
 		var schedulerPair = new ConcurrentExclusiveSchedulerPair(TaskScheduler.Default, Environment.ProcessorCount);
-		var count = _list.Count;
 
-		for (var i = 0; i < count; i++)
+		foreach (var item in CollectionsMarshal.AsSpan(_list))
 		{
-			Task.Factory.StartNew(x => @operator.Do(x is null ? default : (T)x), _list[i], token, TaskCreationOptions.None, schedulerPair.ConcurrentScheduler);
-			count = _list.Count;
+			Task.Factory.StartNew(x => @operator.Do(x is null ? default : (T)x), item, token, TaskCreationOptions.None, schedulerPair.ConcurrentScheduler);
 		}
 
 		schedulerPair.Complete();
@@ -267,12 +240,9 @@ public partial struct ListQuery<T> : IOptiQuery<T, List<T>.Enumerator>
 
 	public void ForEach<TAction>(TAction @operator = default) where TAction : struct, IAction<T>
 	{
-		var count = _list.Count;
-
-		for (var i = 0; i < count; i++)
+		foreach (var item in CollectionsMarshal.AsSpan(_list))
 		{
-			@operator.Do(_list[i]);
-			count = _list.Count;
+			@operator.Do(in item);
 		}
 	}
 
@@ -369,9 +339,9 @@ public partial struct ListQuery<T> : IOptiQuery<T, List<T>.Enumerator>
 	{
 		var set = new HashSet<T>(_list.Count, comparer);
 
-		for (var i = 0; i < _list.Count; i++)
+		foreach (var item in CollectionsMarshal.AsSpan(_list))
 		{
-			set.Add(_list[i]);
+			set.Add(item);
 		}
 
 		return set;
@@ -407,9 +377,9 @@ public partial struct ListQuery<T> : IOptiQuery<T, List<T>.Enumerator>
 	{
 		var queue = new PooledQueue<T>(_list.Count);
 
-		for (var i = 0; i < _list.Count; i++)
+		foreach (var item in CollectionsMarshal.AsSpan(_list))
 		{
-			queue.Enqueue(_list[i]);
+			queue.Enqueue(item);
 		}
 
 		return queue;
@@ -419,9 +389,9 @@ public partial struct ListQuery<T> : IOptiQuery<T, List<T>.Enumerator>
 	{
 		var stack = new PooledStack<T>(_list.Count);
 
-		for (var i = 0; i < _list.Count; i++)
+		foreach (var item in CollectionsMarshal.AsSpan(_list))
 		{
-			stack.Push(_list[i]);
+			stack.Push(item);
 		}
 
 		return stack;
@@ -431,9 +401,9 @@ public partial struct ListQuery<T> : IOptiQuery<T, List<T>.Enumerator>
 	{
 		var set = new PooledSet<T, TComparer>(comparer);
 
-		for (var i = 0; i < _list.Count; i++)
+		foreach (var item in CollectionsMarshal.AsSpan(_list))
 		{
-			set.Add(_list[i]);
+			set.Add(item);
 		}
 
 		return set;

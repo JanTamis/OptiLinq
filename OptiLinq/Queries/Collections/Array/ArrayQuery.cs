@@ -16,23 +16,23 @@ public partial struct ArrayQuery<T> : IOptiQuery<T, ArrayEnumerator<T>>
 		_array = list;
 	}
 
-	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default)
+	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TAccumulate seed, TFunc func = default, TResultSelector selector = default)
 		where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 		where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
-		for (var i = 0; i < _array.Length; i++)
+		foreach (var item in _array)
 		{
-			seed = func.Eval(seed, _array[i]);
+			seed = func.Eval(in seed, in item);
 		}
 
-		return selector.Eval(seed);
+		return selector.Eval(in seed);
 	}
 
-	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
+	public TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 	{
-		for (var i = 0; i < _array.Length; i++)
+		foreach (var item in _array)
 		{
-			seed = @operator.Eval(seed, _array[i]);
+			seed = @operator.Eval(in seed, in item);
 		}
 
 		return seed;
@@ -40,9 +40,9 @@ public partial struct ArrayQuery<T> : IOptiQuery<T, ArrayEnumerator<T>>
 
 	public bool All<TAllOperator>(TAllOperator @operator = default) where TAllOperator : struct, IFunction<T, bool>
 	{
-		for (var i = 0; i < _array.Length; i++)
+		foreach (var item in _array)
 		{
-			if (!@operator.Eval(_array[i]))
+			if (!@operator.Eval(in item))
 			{
 				return false;
 			}
@@ -58,9 +58,9 @@ public partial struct ArrayQuery<T> : IOptiQuery<T, ArrayEnumerator<T>>
 
 	public bool Any<TAnyOperator>(TAnyOperator @operator = default) where TAnyOperator : struct, IFunction<T, bool>
 	{
-		for (var i = 0; i < _array.Length; i++)
+		foreach (var item in _array)
 		{
-			if (@operator.Eval(_array[i]))
+			if (@operator.Eval(in item))
 			{
 				return true;
 			}
@@ -127,31 +127,6 @@ public partial struct ArrayQuery<T> : IOptiQuery<T, ArrayEnumerator<T>>
 					Unsafe.As<T, long>(ref Unsafe.AsRef(in item)),
 					_array.Length);
 			}
-
-			ref var searchItem = ref Unsafe.AsRef(in item);
-
-			ref var firstItem = ref MemoryMarshal.GetArrayDataReference(_array);
-			ref var lastItem = ref Unsafe.Add(ref firstItem, _array.Length);
-
-			while (Unsafe.IsAddressLessThan(ref firstItem, ref lastItem))
-			{
-				if (Unsafe.AreSame(ref firstItem, ref searchItem) || EqualityComparer<T>.Default.Equals(firstItem, item))
-				{
-					return true;
-				}
-
-				firstItem = ref Unsafe.Add(ref firstItem, 1);
-			}
-
-			for (var i = 0; i < _array.Length; i++)
-			{
-				if (EqualityComparer<T>.Default.Equals(_array[i], item))
-				{
-					return true;
-				}
-			}
-
-			return false;
 		}
 
 		for (var i = 0; i < _array.Length; i++)
@@ -175,7 +150,7 @@ public partial struct ArrayQuery<T> : IOptiQuery<T, ArrayEnumerator<T>>
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public TNumber Count<TNumber>() where TNumber : INumberBase<TNumber>
+	public readonly TNumber Count<TNumber>() where TNumber : INumberBase<TNumber>
 	{
 		return TNumber.CreateChecked(_array.Length);
 	}
@@ -185,7 +160,7 @@ public partial struct ArrayQuery<T> : IOptiQuery<T, ArrayEnumerator<T>>
 		return _array.Length;
 	}
 
-	public long LongCount()
+	public readonly long LongCount()
 	{
 		return _array.LongLength;
 	}
@@ -312,7 +287,7 @@ public partial struct ArrayQuery<T> : IOptiQuery<T, ArrayEnumerator<T>>
 	{
 		for (var i = 0; i < _array.Length; i++)
 		{
-			@operator.Do(_array[i]);
+			@operator.Do(in _array[i]);
 		}
 	}
 
@@ -391,12 +366,6 @@ public partial struct ArrayQuery<T> : IOptiQuery<T, ArrayEnumerator<T>>
 		return array;
 	}
 
-	public T[] ToArray(out int length)
-	{
-		length = _array.Length;
-		return ToArray();
-	}
-
 	public HashSet<T> ToHashSet(IEqualityComparer<T>? comparer = default)
 	{
 		var set = new HashSet<T>(_array.Length, comparer);
@@ -421,14 +390,7 @@ public partial struct ArrayQuery<T> : IOptiQuery<T, ArrayEnumerator<T>>
 
 	public PooledList<T> ToPooledList()
 	{
-		var list = new PooledList<T>(_array.Length)
-		{
-			Count = _array.Length,
-		};
-
-		_array.CopyTo(list.Items, 0);
-
-		return list;
+		return new PooledList<T>(_array);
 	}
 
 	public PooledQueue<T> ToPooledQueue()

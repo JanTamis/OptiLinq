@@ -23,25 +23,27 @@ public partial struct GroupByQuery<T, TKey, TKeySelector, TBaseQuery, TBaseEnume
 		_comparer = comparer;
 	}
 
-	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, ArrayQuery<T>, TAccumulate> where TResultSelector : struct, IFunction<TAccumulate, TResult>
+	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TAccumulate seed, TFunc func = default, TResultSelector selector = default)
+		where TFunc : struct, IAggregateFunction<TAccumulate, ArrayQuery<T>, TAccumulate>
+		where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
 		using var enumerable = GetEnumerator();
 
 		while (enumerable.MoveNext())
 		{
-			seed = func.Eval(seed, enumerable.Current);
+			seed = func.Eval(in seed, enumerable.Current);
 		}
 
-		return selector.Eval(seed);
+		return selector.Eval(in seed);
 	}
 
-	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, ArrayQuery<T>, TAccumulate>
+	public TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, ArrayQuery<T>, TAccumulate>
 	{
 		using var enumerable = GetEnumerator();
 
 		while (enumerable.MoveNext())
 		{
-			seed = @operator.Eval(seed, enumerable.Current);
+			seed = @operator.Eval(in seed, enumerable.Current);
 		}
 
 		return seed;

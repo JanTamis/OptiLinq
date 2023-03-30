@@ -21,6 +21,7 @@ public class ForEachOnListWithSelect
 	public int LINQ()
 	{
 		var sum = 0;
+		
 		foreach (var i in list.Select(x => x * 2))
 		{
 			sum += i;
@@ -33,19 +34,8 @@ public class ForEachOnListWithSelect
 	public int OptiLinqWithFunc()
 	{
 		var sum = 0;
+		
 		foreach (var i in list.AsOptiQuery().Select(x => x * 2))
-		{
-			sum += i;
-		}
-
-		return sum;
-	}
-
-	[Benchmark]
-	public int OptiLinqWithFuncAsEnumerable()
-	{
-		var sum = 0;
-		foreach (var i in list.AsOptiQuery().Select(x => x * 2).AsEnumerable())
 		{
 			sum += i;
 		}
@@ -58,31 +48,16 @@ public class ForEachOnListWithSelect
 	{
 		var sum = 0;
 
-		foreach (var i in list.AsOptiQuery().Select<Mult2, int>())
+		foreach (var i in list.AsOptiQuery().Select<Mult2>())
 		{
 			sum += i;
 		}
 
 		return sum;
 	}
-
-	[Benchmark]
-	public int OptiLinqWithStructFuncAsEnumerable()
-	{
-		var sum = 0;
-
-		foreach (var i in list.AsOptiQuery().Select<Mult2, int>().AsEnumerable())
-		{
-			sum += i;
-		}
-
-		return sum;
-	}
-
 
 	public readonly struct Mult2 : IFunction<int, int>
 	{
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int Eval(in int element)
 		{
 			return element * 2;

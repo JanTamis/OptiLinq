@@ -23,6 +23,7 @@ public class Concat
 	public int Linq()
 	{
 		var sum = 0;
+		
 		foreach (var i in array1.Concat(array2))
 		{
 			sum += i;

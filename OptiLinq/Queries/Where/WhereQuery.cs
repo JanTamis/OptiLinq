@@ -20,7 +20,7 @@ public partial struct WhereQuery<T, TOperator, TBaseQuery, TBaseEnumerator> : IO
 		_operator = @operator;
 	}
 
-	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default)
+	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TAccumulate seed, TFunc func = default, TResultSelector selector = default)
 		where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 		where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
@@ -30,14 +30,14 @@ public partial struct WhereQuery<T, TOperator, TBaseQuery, TBaseEnumerator> : IO
 		{
 			if (_operator.Eval(enumerable.Current))
 			{
-				seed = func.Eval(seed, enumerable.Current);
+				seed = func.Eval(in seed, enumerable.Current);
 			}
 		}
 
-		return selector.Eval(seed);
+		return selector.Eval(in seed);
 	}
 
-	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
+	public TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 	{
 		using var enumerable = _baseEnumerable.GetEnumerator();
 
@@ -45,7 +45,7 @@ public partial struct WhereQuery<T, TOperator, TBaseQuery, TBaseEnumerator> : IO
 		{
 			if (_operator.Eval(enumerable.Current))
 			{
-				seed = @operator.Eval(seed, enumerable.Current);
+				seed = @operator.Eval(in seed, enumerable.Current);
 			}
 		}
 
@@ -390,9 +390,9 @@ public partial struct WhereQuery<T, TOperator, TBaseQuery, TBaseEnumerator> : IO
 
 	public T[] ToArray()
 	{
-		var builder = TryGetNonEnumeratedCount(out var count)
-			? new LargeArrayBuilder<T>(count)
-			: new LargeArrayBuilder<T>();
+		using var builder = TryGetNonEnumeratedCount(out var count)
+			? new PooledList<T>(count)
+			: new PooledList<T>();
 
 		using var enumerator = _baseEnumerable.GetEnumerator();
 
@@ -405,30 +405,6 @@ public partial struct WhereQuery<T, TOperator, TBaseQuery, TBaseEnumerator> : IO
 		}
 
 		return builder.ToArray();
-	}
-
-	public T[] ToArray(out int length)
-	{
-		if (_baseEnumerable.TryGetNonEnumeratedCount(out var count))
-		{
-			using var enumerator = _baseEnumerable.GetEnumerator();
-			var array = new T[count];
-
-			length = 0;
-
-			for (var i = 0; i < array.Length && enumerator.MoveNext(); i++)
-			{
-				if (_operator.Eval(enumerator.Current))
-				{
-					length++;
-					array[i] = enumerator.Current;
-				}
-			}
-
-			return array;
-		}
-
-		return EnumerableHelper.ToArray<T, WhereQuery<T, TOperator, TBaseQuery, TBaseEnumerator>, WhereEnumerator<T, TOperator, TBaseEnumerator>>(this, out length);
 	}
 
 	public HashSet<T> ToHashSet(IEqualityComparer<T>? comparer = default)

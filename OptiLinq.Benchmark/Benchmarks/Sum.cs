@@ -10,11 +10,6 @@ public class Sum
 {
 	private const int Count = 10000;
 
-	public Sum()
-	{
-	}
-
-
 	[Benchmark(Baseline = true)]
 	public int ForSum()
 	{

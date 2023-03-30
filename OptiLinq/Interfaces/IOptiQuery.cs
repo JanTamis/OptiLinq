@@ -5,11 +5,11 @@ namespace OptiLinq.Interfaces;
 
 public interface IOptiQuery<T> : IEnumerable<T>
 {
-	TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default)
+	TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TAccumulate seed, TFunc func = default, TResultSelector selector = default)
 		where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 		where TResultSelector : struct, IFunction<TAccumulate, TResult>;
 
-	TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>;
+	TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>;
 
 	bool All<TAllOperator>(TAllOperator @operator = default) where TAllOperator : struct, IFunction<T, bool>;
 
@@ -58,7 +58,6 @@ public interface IOptiQuery<T> : IEnumerable<T>
 	T SingleOrDefault();
 
 	T[] ToArray();
-	T[] ToArray(out int length);
 
 	HashSet<T> ToHashSet(IEqualityComparer<T>? comparer = default);
 

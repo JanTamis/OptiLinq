@@ -24,32 +24,62 @@ public partial struct WhereSelectQuery<T, TResult, TWhereOperator, TSelectOperat
 		_selectOperator = selectOperator;
 	}
 
-	public TResult1 Aggregate<TFunc, TResultSelector, TAccumulate, TResult1>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default)
+	public TResult1 Aggregate<TFunc, TResultSelector, TAccumulate, TResult1>(TAccumulate seed, TFunc func = default, TResultSelector selector = default)
 		where TFunc : struct, IAggregateFunction<TAccumulate, TResult, TAccumulate>
 		where TResultSelector : struct, IFunction<TAccumulate, TResult1>
 	{
-		using var enumerator = _baseEnumerable.GetEnumerator();
-
-		while (enumerator.MoveNext())
+		if (_baseEnumerable.TryGetSpan(out var data))
 		{
-			if (_whereOperator.Eval(enumerator.Current))
+			foreach (var item in data)
 			{
-				seed = func.Eval(seed, _selectOperator.Eval(enumerator.Current));
+				if (_whereOperator.Eval(in item))
+				{
+					seed = func.Eval(in seed, _selectOperator.Eval(in item));
+				}
+			}
+		}
+		else
+		{
+			using var enumerator = _baseEnumerable.GetEnumerator();
+
+			while (enumerator.MoveNext())
+			{
+				var current = enumerator.Current;
+
+				if (_whereOperator.Eval(in current))
+				{
+					seed = func.Eval(in seed, _selectOperator.Eval(in current));
+				}
 			}
 		}
 
 		return selector.Eval(seed);
 	}
 
-	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, TResult, TAccumulate>
+	public TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, TResult, TAccumulate>
 	{
-		using var enumerator = _baseEnumerable.GetEnumerator();
-
-		while (enumerator.MoveNext())
+		if (_baseEnumerable.TryGetSpan(out var data))
 		{
-			if (_whereOperator.Eval(enumerator.Current))
+			foreach (var item in data)
 			{
-				seed = @operator.Eval(seed, _selectOperator.Eval(enumerator.Current));
+				if (_whereOperator.Eval(in item))
+				{
+					seed = @operator.Eval(in seed, _selectOperator.Eval(in item));
+				}
+			}
+		}
+		else
+		{
+			using var enumerator = _baseEnumerable.GetEnumerator();
+
+			while (enumerator.MoveNext())
+			{
+				var current = enumerator.Current;
+
+				if (_whereOperator.Eval(in current))
+				{
+					seed = @operator.Eval(in seed, _selectOperator.Eval(in current));
+				}
 			}
 		}
 
@@ -202,13 +232,12 @@ public partial struct WhereSelectQuery<T, TResult, TWhereOperator, TSelectOperat
 	public TNumber Count<TNumber>(Func<TResult, bool> predicate) where TNumber : INumberBase<TNumber>
 	{
 		var count = TNumber.Zero;
-		var tempOperator = _whereOperator;
 
 		using var enumerator = _baseEnumerable.GetEnumerator();
 
 		while (enumerator.MoveNext())
 		{
-			if (tempOperator.Eval(enumerator.Current) && predicate(_selectOperator.Eval(enumerator.Current)))
+			if (_whereOperator.Eval(enumerator.Current) && predicate(_selectOperator.Eval(enumerator.Current)))
 			{
 				count++;
 			}
@@ -219,12 +248,12 @@ public partial struct WhereSelectQuery<T, TResult, TWhereOperator, TSelectOperat
 
 	public int Count(Func<TResult, bool> predicate)
 	{
-		throw new NotImplementedException();
+		return Count<int>(predicate);
 	}
 
 	public long CountLong(Func<TResult, bool> predicate)
 	{
-		throw new NotImplementedException();
+		return Count<long>(predicate);
 	}
 
 	public bool TryGetElementAt<TIndex>(TIndex index, out TResult item) where TIndex : IBinaryInteger<TIndex>

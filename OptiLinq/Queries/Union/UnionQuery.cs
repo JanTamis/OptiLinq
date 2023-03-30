@@ -25,7 +25,9 @@ public partial struct UnionQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery,
 		_comparer = comparer;
 	}
 
-	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate> where TResultSelector : struct, IFunction<TAccumulate, TResult>
+	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TAccumulate seed, TFunc func = default, TResultSelector selector = default)
+		where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
+		where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
 		using var enumerator = _firstQuery.GetEnumerator();
 		using var set = _secondQuery.ToPooledSet(_comparer);
@@ -34,15 +36,15 @@ public partial struct UnionQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery,
 		{
 			if (set.Add(enumerator.Current))
 			{
-				seed = func.Eval(seed, enumerator.Current);
+				seed = func.Eval(in seed, enumerator.Current);
 			}
 		}
 
 		_count = set.Count;
-		return selector.Eval(seed);
+		return selector.Eval(in seed);
 	}
 
-	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
+	public TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 	{
 		using var enumerator = _firstQuery.GetEnumerator();
 		using var set = _secondQuery.ToPooledSet(_comparer);
@@ -51,7 +53,7 @@ public partial struct UnionQuery<T, TFirstQuery, TFirstEnumerator, TSecondQuery,
 		{
 			if (set.Add(enumerator.Current))
 			{
-				seed = @operator.Eval(seed, enumerator.Current);
+				seed = @operator.Eval(in seed, enumerator.Current);
 			}
 		}
 

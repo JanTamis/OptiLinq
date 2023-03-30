@@ -19,19 +19,21 @@ public partial struct AppendQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T
 		_element = element;
 	}
 
-	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate> where TResultSelector : struct, IFunction<TAccumulate, TResult>
+	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TAccumulate seed, TFunc func = default, TResultSelector selector = default)
+		where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
+		where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
-		return selector.Eval(Aggregate(func, seed));
+		return selector.Eval(Aggregate(func.Eval(in seed, in _element), func));
 	}
 
-	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
+	public TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 	{
-		return @operator.Eval(_baseQuery.Aggregate(@operator, seed), _element);
+		return @operator.Eval(_baseQuery.Aggregate(seed, @operator), in _element);
 	}
 
 	public bool All<TAllOperator>(TAllOperator @operator = default) where TAllOperator : struct, IFunction<T, bool>
 	{
-		return _baseQuery.All(@operator) && @operator.Eval(_element);
+		return _baseQuery.All(@operator) && @operator.Eval(in _element);
 	}
 
 	public bool Any()
@@ -41,7 +43,7 @@ public partial struct AppendQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T
 
 	public bool Any<TAnyOperator>(TAnyOperator @operator = default) where TAnyOperator : struct, IFunction<T, bool>
 	{
-		return _baseQuery.Any(@operator) || @operator.Eval(_element);
+		return _baseQuery.Any(@operator) || @operator.Eval(in _element);
 	}
 
 	public IEnumerable<T> AsEnumerable()
@@ -90,12 +92,16 @@ public partial struct AppendQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T
 
 	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<T, bool>
 	{
-		return _baseQuery.Count<TCountOperator, TNumber>(@operator) + (@operator.Eval(_element) ? TNumber.One : TNumber.Zero);
+		return _baseQuery.Count<TCountOperator, TNumber>(@operator) + (@operator.Eval(_element)
+			? TNumber.One
+			: TNumber.Zero);
 	}
 
 	public TNumber Count<TNumber>(Func<T, bool> predicate) where TNumber : INumberBase<TNumber>
 	{
-		return _baseQuery.Count<TNumber>(predicate) + (predicate(_element) ? TNumber.One : TNumber.Zero);
+		return _baseQuery.Count<TNumber>(predicate) + (predicate(_element)
+			? TNumber.One
+			: TNumber.Zero);
 	}
 
 	public int Count(Func<T, bool> predicate)
@@ -268,13 +274,6 @@ public partial struct AppendQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<T
 		list.Add(_element);
 
 		return list.ToArray();
-	}
-
-	public T[] ToArray(out int length)
-	{
-		var array = ToArray();
-		length = array.Length;
-		return array;
 	}
 
 	public HashSet<T> ToHashSet(IEqualityComparer<T>? comparer = default)

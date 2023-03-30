@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Order;
-using OptiLinq.Interfaces;
 
 namespace OptiLinq.Benchmark;
 
@@ -48,6 +47,7 @@ public class ToArrayComparison
 	{
 		var result = new T[size];
 		var i = 0;
+		
 		while (enumerator.MoveNext())
 		{
 			result[i++] = enumerator.Current;

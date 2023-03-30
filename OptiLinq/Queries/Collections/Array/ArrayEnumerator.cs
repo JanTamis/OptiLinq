@@ -1,12 +1,12 @@
 using System.Collections;
-using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 
 public struct ArrayEnumerator<T> : IEnumerator<T>
 {
 	private readonly T[] _array;
-	private int _index;
+	private int _index = 0;
+	private T _current;
 
 	internal ArrayEnumerator(T[] list)
 	{
@@ -14,42 +14,24 @@ public struct ArrayEnumerator<T> : IEnumerator<T>
 		_index = -1;
 	}
 
-
 	object IEnumerator.Current => Current;
 
-	public T Current
-	{
-		get
-		{
-			var index = _index;
-			var array = _array;
-
-			if ((uint)index >= (uint)array.Length)
-			{
-				throw new IndexOutOfRangeException();
-			}
-
-			return array[index];
-		}
-	}
+	public T Current => _current;
 
 	public bool MoveNext()
 	{
-		var index = _index + 1;
-
-		if ((uint)index >= (uint)_array.Length)
+		if ((uint)_index < (uint)_array.Length)
 		{
-			_index = _array.Length;
-			return false;
+			_current = _array[_index++];
+			return true;
 		}
 
-		_index = index;
-		return true;
+		return false;
 	}
 
 	public void Reset()
 	{
-		_index = -1;
+		_index = 0;
 	}
 
 	public void Dispose()

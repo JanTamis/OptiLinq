@@ -19,24 +19,26 @@ public partial struct DefaultIfEmptyQuery<T, TBaseQuery, TBaseEnumerator> : IOpt
 		_defaultValue = defaultValue;
 	}
 
-	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate> where TResultSelector : struct, IFunction<TAccumulate, TResult>
+	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TAccumulate seed, TFunc func = default, TResultSelector selector = default)
+		where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
+		where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
 		if (_baseQuery.Any())
 		{
-			return _baseQuery.Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(func, selector, seed);
+			return _baseQuery.Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(seed, func, selector);
 		}
 
 		return selector.Eval(func.Eval(seed, _defaultValue));
 	}
 
-	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
+	public TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 	{
 		if (_baseQuery.Any())
 		{
-			return _baseQuery.Aggregate(@operator, seed);
+			return _baseQuery.Aggregate(seed, @operator);
 		}
 
-		return @operator.Eval(seed, _defaultValue);
+		return @operator.Eval(in seed, in _defaultValue);
 	}
 
 	public bool All<TAllOperator>(TAllOperator @operator = default) where TAllOperator : struct, IFunction<T, bool>
@@ -61,7 +63,7 @@ public partial struct DefaultIfEmptyQuery<T, TBaseQuery, TBaseEnumerator> : IOpt
 			return _baseQuery.Any(@operator);
 		}
 
-		return @operator.Eval(_defaultValue);
+		return @operator.Eval(in _defaultValue);
 	}
 
 	public IEnumerable<T> AsEnumerable()
@@ -73,7 +75,7 @@ public partial struct DefaultIfEmptyQuery<T, TBaseQuery, TBaseEnumerator> : IOpt
 	{
 		if (_baseQuery.Any())
 		{
-			return _baseQuery.Contains(item, comparer);
+			return _baseQuery.Contains(in item, comparer);
 		}
 
 		return comparer.Equals(item, _defaultValue);
@@ -83,7 +85,7 @@ public partial struct DefaultIfEmptyQuery<T, TBaseQuery, TBaseEnumerator> : IOpt
 	{
 		if (_baseQuery.Any())
 		{
-			return _baseQuery.Contains(item);
+			return _baseQuery.Contains(in item);
 		}
 
 		return EqualityComparer<T>.Default.Equals(item, _defaultValue);
@@ -95,7 +97,7 @@ public partial struct DefaultIfEmptyQuery<T, TBaseQuery, TBaseEnumerator> : IOpt
 
 		if (count == 0 && data.Length > 0)
 		{
-			data[0] = default!;
+			data[0] = _defaultValue;
 			count = 1;
 		}
 
@@ -139,7 +141,14 @@ public partial struct DefaultIfEmptyQuery<T, TBaseQuery, TBaseEnumerator> : IOpt
 
 	public TNumber Count<TNumber>(Func<T, bool> predicate) where TNumber : INumberBase<TNumber>
 	{
-		return TNumber.MaxMagnitude(_baseQuery.Count<TNumber>(), TNumber.One);
+		var count = _baseQuery.Count<TNumber>(predicate);
+
+		if (TNumber.IsZero(count))
+		{
+			count = TNumber.One;
+		}
+
+		return count;
 	}
 
 	public int Count(Func<T, bool> predicate)
@@ -225,8 +234,7 @@ public partial struct DefaultIfEmptyQuery<T, TBaseQuery, TBaseEnumerator> : IOpt
 		}
 		else
 		{
-			var defaultValue = _defaultValue;
-			Task.Factory.StartNew(() => @operator.Do(defaultValue), token, TaskCreationOptions.None, schedulerPair.ConcurrentScheduler);
+			Task.Factory.StartNew(x => @operator.Do((T)x), _defaultValue, token, TaskCreationOptions.None, schedulerPair.ConcurrentScheduler);
 		}
 
 		schedulerPair.Complete();
@@ -239,8 +247,10 @@ public partial struct DefaultIfEmptyQuery<T, TBaseQuery, TBaseEnumerator> : IOpt
 		{
 			_baseQuery.ForEach(@operator);
 		}
-
-		@operator.Do(_defaultValue);
+		else
+		{
+			@operator.Do(_defaultValue);
+		}
 	}
 
 	public bool TryGetLast(out T item)
@@ -307,49 +317,38 @@ public partial struct DefaultIfEmptyQuery<T, TBaseQuery, TBaseEnumerator> : IOpt
 
 	public T[] ToArray()
 	{
-		if (_baseQuery.Any())
+		var array = _baseQuery.ToArray();
+
+		if (array.Length == 0)
 		{
-			return _baseQuery.ToArray();
+			array = new[] { _defaultValue };
 		}
 
-		return new[] { _defaultValue };
-	}
-
-	public T[] ToArray(out int length)
-	{
-		if (_baseQuery.Any())
-		{
-			return _baseQuery.ToArray(out length);
-		}
-
-		length = 1;
-		return new[] { _defaultValue };
+		return array;
 	}
 
 	public HashSet<T> ToHashSet(IEqualityComparer<T>? comparer = default)
 	{
-		if (_baseQuery.Any())
+		var set = _baseQuery.ToHashSet(comparer);
+
+		if (set.Count == 0)
 		{
-			return _baseQuery.ToHashSet(comparer);
+			set.Add(_defaultValue);
 		}
 
-		return new HashSet<T>(comparer)
-		{
-			_defaultValue,
-		};
+		return set;
 	}
 
 	public List<T> ToList()
 	{
-		if (_baseQuery.Any())
+		var list = _baseQuery.ToList();
+
+		if (list.Count == 0)
 		{
-			return _baseQuery.ToList();
+			list.Add(_defaultValue);
 		}
 
-		return new List<T>
-		{
-			_defaultValue,
-		};
+		return list;
 	}
 
 	public PooledList<T> ToPooledList()

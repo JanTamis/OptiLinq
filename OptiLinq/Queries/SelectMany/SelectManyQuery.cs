@@ -22,36 +22,42 @@ public partial struct SelectManyQuery<T, TResult, TOperator, TBaseQuery, TBaseEn
 		_selector = selector;
 	}
 
-	public TResult1 Aggregate<TFunc, TResultSelector, TAccumulate, TResult1>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, TResult, TAccumulate> where TResultSelector : struct, IFunction<TAccumulate, TResult1>
+	public TResult1 Aggregate<TFunc, TResultSelector, TAccumulate, TResult1>(TAccumulate seed, TFunc func = default, TResultSelector selector = default) where TFunc : struct, IAggregateFunction<TAccumulate, TResult, TAccumulate> where TResultSelector : struct, IFunction<TAccumulate, TResult1>
 	{
 		using var enumerator = _baseQuery.GetEnumerator();
-
-		var result = seed;
-
+		
 		while (enumerator.MoveNext())
 		{
 			var subQuery = _selector.Eval(enumerator.Current);
 
-			result = subQuery.Aggregate(func, result);
+			seed = subQuery.Aggregate(seed, func);
 		}
 
-		return selector.Eval(result);
+		return selector.Eval(in seed);
 	}
 
-	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, TResult, TAccumulate>
+	public TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, TResult, TAccumulate>
 	{
 		using var enumerator = _baseQuery.GetEnumerator();
-
-		var result = seed;
 
 		while (enumerator.MoveNext())
 		{
 			var subQuery = _selector.Eval(enumerator.Current);
 
-			result = subQuery.Aggregate(@operator, result);
+			if (subQuery.TryGetSpan(out var data))
+			{
+				foreach (var item in data)
+				{
+					seed = @operator.Eval(in seed, in item);
+				}
+			}
+			else
+			{
+				seed = subQuery.Aggregate(seed, @operator);
+			}
 		}
 
-		return result;
+		return seed;
 	}
 
 	public bool All<TAllOperator>(TAllOperator @operator = default) where TAllOperator : struct, IFunction<TResult, bool>

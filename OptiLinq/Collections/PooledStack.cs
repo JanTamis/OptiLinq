@@ -7,6 +7,7 @@ namespace OptiLinq.Collections;
 
 public struct PooledStack<T>
 {
+	private ArrayPool<T> _pool;
 	internal T[] _array; // Storage for stack elements. Do not rename (binary serialization)
 	private int _size; // Number of items in the stack. Do not rename (binary serialization)
 
@@ -17,6 +18,7 @@ public struct PooledStack<T>
 	public PooledStack()
 	{
 		_array = Array.Empty<T>();
+		_pool = ArrayPool<T>.Shared;
 	}
 
 	// Create a stack with a specific initial capacity.  The initial capacity
@@ -28,7 +30,16 @@ public struct PooledStack<T>
 			throw new ArgumentOutOfRangeException(nameof(capacity));
 		}
 
-		_array = new T[capacity];
+		_pool = ArrayPool<T>.Shared;
+
+		if (capacity == 0)
+		{
+			_array = Array.Empty<T>();
+		}
+		else
+		{
+			_array = _pool.Rent(capacity);
+		}
 	}
 
 	public int Count
@@ -214,10 +225,10 @@ public struct PooledStack<T>
 		// Capacities exceeding Array.MaxLength will be surfaced as OutOfMemoryException by Array.Resize.
 		if (newcapacity < capacity) newcapacity = capacity;
 
-		var newArray = ArrayPool<T>.Shared.Rent(newcapacity);
+		var newArray = _pool.Rent(newcapacity);
 		_array.CopyTo(newArray, 0);
 
-		ArrayPool<T>.Shared.Return(_array);
+		_pool.Return(_array);
 	}
 
 	// Copies the Stack to an array, in the same order Pop would return the items.

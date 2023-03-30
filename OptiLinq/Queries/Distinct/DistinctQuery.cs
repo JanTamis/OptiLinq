@@ -24,41 +24,37 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 		_comparer = comparer;
 	}
 
-	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate> where TResultSelector : struct, IFunction<TAccumulate, TResult>
+	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TAccumulate seed, TFunc func = default, TResultSelector selector = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate> where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
 		using var enumerator = _baseQuery.GetEnumerator();
 		using var set = GetSet();
-		_count = 0;
 
 		while (enumerator.MoveNext())
 		{
 			if (set.Add(enumerator.Current))
 			{
-				seed = func.Eval(seed, enumerator.Current);
-				_count++;
+				seed = func.Eval(in seed, enumerator.Current);
 			}
 		}
 
+		_count = set.Count;
 		return selector.Eval(seed);
 	}
 
-	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
+	public TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 	{
 		using var enumerator = _baseQuery.GetEnumerator();
 		using var set = GetSet();
-
-		_count = 0;
 
 		while (enumerator.MoveNext())
 		{
 			if (set.Add(enumerator.Current))
 			{
-				seed = @operator.Eval(seed, enumerator.Current);
-
-				_count++;
+				seed = @operator.Eval(in seed, enumerator.Current);
 			}
 		}
 
+		_count = set.Count;
 		return seed;
 	}
 
@@ -75,6 +71,7 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 			}
 		}
 
+		_count = set.Count;
 		return true;
 	}
 
@@ -140,11 +137,6 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 		using var enumerator = _baseQuery.GetEnumerator();
 		using var set = new PooledSet<T, TComparer>(Math.Max(_count, 0), _comparer);
 
-		if (typeof(TNumber) == typeof(int) || typeof(TNumber) == typeof(long))
-		{
-			_count = 0;
-		}
-
 		while (enumerator.MoveNext())
 		{
 			if (set.Add(enumerator.Current))
@@ -153,11 +145,7 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 			}
 		}
 
-		if (typeof(TNumber) == typeof(int) || typeof(TNumber) == typeof(long))
-		{
-			_count = Int32.CreateChecked(length);
-		}
-
+		_count = set.Count;
 		return length;
 	}
 
@@ -186,8 +174,6 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 			}
 		}
 
-		_count = set.Count;
-
 		return length;
 	}
 
@@ -205,8 +191,6 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 				count++;
 			}
 		}
-
-		_count = set.Count;
 
 		return count;
 	}
@@ -264,17 +248,15 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 		using var enumerator = _baseQuery.GetEnumerator();
 		using var set = new PooledSet<T, TComparer>(Math.Max(_count, 0), _comparer);
 
-		_count = 0;
-
 		while (enumerator.MoveNext())
 		{
 			if (set.Add(enumerator.Current))
 			{
 				Task.Factory.StartNew(x => @operator.Do((T)x), enumerator.Current, token, TaskCreationOptions.None, schedulerPair.ConcurrentScheduler);
-
-				_count++;
 			}
 		}
+
+		_count = set.Count;
 
 		schedulerPair.Complete();
 		return schedulerPair.Completion;
@@ -285,15 +267,11 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 		using var enumerator = _baseQuery.GetEnumerator();
 		using var set = new PooledSet<T, TComparer>(Math.Max(_count, 0), _comparer);
 
-		_count = 0;
-
 		while (enumerator.MoveNext())
 		{
 			if (set.Add(enumerator.Current))
 			{
 				@operator.Do(enumerator.Current);
-
-				_count++;
 			}
 		}
 	}
@@ -379,33 +357,6 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 			return array;
 		}
 
-		if (_baseQuery.TryGetNonEnumeratedCount(out count))
-		{
-			using var enumerator = _baseQuery.GetEnumerator();
-			using var set = new PooledSet<T, TComparer>(Math.Max(_count, 0), _comparer);
-
-			var index = 0;
-			var array = ArrayPool<T>.Shared.Rent(count);
-
-			ref var first = ref MemoryMarshal.GetArrayDataReference(array);
-
-			while (enumerator.MoveNext())
-			{
-				if (set.Add(enumerator.Current))
-				{
-					Unsafe.Add(ref first, index++) = enumerator.Current;
-				}
-			}
-
-			var result = GC.AllocateUninitializedArray<T>(index);
-			array.AsSpan(0, index).CopyTo(result);
-
-			ArrayPool<T>.Shared.Return(array);
-
-			return result;
-		}
-
-
 		return EnumerableHelper.ToArray(GetEnumerator(), ArrayPool<T>.Shared, count, out _);
 	}
 
@@ -423,16 +374,12 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 
 		using var enumerator = _baseQuery.GetEnumerator();
 
-		_count = 0;
-
 		while (enumerator.MoveNext())
 		{
-			if (hashSet.Add(enumerator.Current))
-			{
-				_count++;
-			}
+			hashSet.Add(enumerator.Current);
 		}
 
+		_count = hashSet.Count;
 		return hashSet;
 	}
 
@@ -443,17 +390,15 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 		using var enumerator = _baseQuery.GetEnumerator();
 		using var set = new PooledSet<T, TComparer>(Math.Max(_count, 0), _comparer);
 
-		_count = 0;
-
 		while (enumerator.MoveNext())
 		{
 			if (set.Add(enumerator.Current))
 			{
 				list.Add(enumerator.Current);
-				_count++;
 			}
 		}
 
+		_count = list.Count;
 		return list;
 	}
 
@@ -517,7 +462,6 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 	public PooledSet<T, TComparer1> ToPooledSet<TComparer1>(TComparer1 comparer) where TComparer1 : IEqualityComparer<T>
 	{
 		var set = new PooledSet<T, TComparer1>(Math.Max(_count, 4), comparer);
-
 		using var enumerator = _baseQuery.GetEnumerator();
 
 		while (enumerator.MoveNext())
@@ -534,6 +478,12 @@ public partial struct DistinctQuery<T, TBaseQuery, TBaseEnumerator, TComparer> :
 		if (_count != -1)
 		{
 			length = _count;
+			return true;
+		}
+
+		if (_baseQuery.TryGetNonEnumeratedCount(out length))
+		{
+			_count = length;
 			return true;
 		}
 

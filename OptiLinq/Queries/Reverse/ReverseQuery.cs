@@ -19,16 +19,32 @@ public partial struct ReverseQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 		_baseQuery = baseQuery;
 	}
 
-	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default)
+	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TAccumulate seed, TFunc func = default, TResultSelector selector = default)
 		where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 		where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
-		return _baseQuery.Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(func, selector, seed);
+		using var list = _baseQuery.ToPooledList();
+		list.AsSpan().Reverse();
+
+		foreach (var item in list.AsSpan())
+		{
+			seed = func.Eval(in seed, in item);
+		}
+
+		return selector.Eval(in seed);
 	}
 
-	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
+	public TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 	{
-		return _baseQuery.Aggregate(@operator, seed);
+		using var list = _baseQuery.ToPooledList();
+		list.AsSpan().Reverse();
+
+		foreach (var item in list.AsSpan())
+		{
+			seed = @operator.Eval(in seed, in item);
+		}
+
+		return seed;
 	}
 
 	public bool All<TAllOperator>(TAllOperator @operator = default) where TAllOperator : struct, IFunction<T, bool>
@@ -208,14 +224,6 @@ public partial struct ReverseQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery<
 	{
 		var array = _baseQuery.ToArray();
 		Array.Reverse(array);
-
-		return array;
-	}
-
-	public T[] ToArray(out int length)
-	{
-		var array = _baseQuery.ToArray(out length);
-		Array.Reverse(array, 0, length);
 
 		return array;
 	}

@@ -18,7 +18,7 @@ public partial struct EnumerableQuery<T> : IOptiQuery<T, IEnumerator<T>>
 		_enumerable = enumerable;
 	}
 
-	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default)
+	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TAccumulate seed, TFunc func = default, TResultSelector selector = default)
 		where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 		where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
@@ -26,19 +26,19 @@ public partial struct EnumerableQuery<T> : IOptiQuery<T, IEnumerator<T>>
 
 		while (enumerable.MoveNext())
 		{
-			seed = func.Eval(seed, enumerable.Current);
+			seed = func.Eval(in seed, enumerable.Current);
 		}
 
-		return selector.Eval(seed);
+		return selector.Eval(in seed);
 	}
 
-	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
+	public TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 	{
 		using var enumerable = _enumerable.GetEnumerator();
 
 		while (enumerable.MoveNext())
 		{
-			seed = @operator.Eval(seed, enumerable.Current);
+			seed = @operator.Eval(in seed, enumerable.Current);
 		}
 
 		return seed;
@@ -256,7 +256,7 @@ public partial struct EnumerableQuery<T> : IOptiQuery<T, IEnumerator<T>>
 
 	public T FirstOrDefault()
 	{
-		return _enumerable.FirstOrDefault();
+		return _enumerable.FirstOrDefault()!;
 	}
 
 	public Task ForAll<TAction>(TAction @operator = default, CancellationToken token = default) where TAction : struct, IAction<T>

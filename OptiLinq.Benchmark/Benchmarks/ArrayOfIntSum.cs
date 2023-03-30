@@ -22,11 +22,10 @@ public class ArrayOfIntSum
 	public int Handmaded()
 	{
 		var sum = 0;
-		var enumerable = array;
 
-		for (var i = 0; i < Count; i++)
+		for (var i = 0; i < array.Length; i++)
 		{
-			sum += enumerable[i];
+			sum += array[i];
 		}
 
 		return sum;
@@ -39,5 +38,14 @@ public class ArrayOfIntSum
 	public int ArrayLINQ() => array.Sum();
 
 	[Benchmark]
-	public int OptiLinq() => array.AsOptiQuery().Sum<int, ArrayQuery<int>>();
+	public int OptiLinq()
+	{
+		return array.AsOptiQuery().Sum();
+	}
+
+	[Benchmark]
+	public int OptiLinqOptimized()
+	{
+		return array.AsOptiQuery().Sum<int, ArrayQuery<int>>();
+	}
 }

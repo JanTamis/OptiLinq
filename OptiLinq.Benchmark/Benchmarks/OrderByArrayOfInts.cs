@@ -13,47 +13,40 @@ public class OrderByArrayOfInt
 
 	public OrderByArrayOfInt()
 	{
-		var rand = new Random(42);
-		var list = new List<int>();
-		for (int i = 0; i < Count; i++)
-		{
-			list.Add(rand.Next());
-		}
+		array = new int[Count];
 
-		array = list.ToArray();
+		OptiQuery.Random(42)
+			.CopyTo(array);
 	}
 
 	[Benchmark(Baseline = true)]
 	public int LINQ()
 	{
 		var sum = 0;
-		foreach (var i in array.OrderBy(x => x))
+
+		foreach (var i in array.OrderBy(Int32.IsOddInteger).ThenBy(x => x))
 		{
 			sum += i;
 		}
 
 		return sum;
+	}
+
+	[Benchmark]
+	public int LINQSum()
+	{
+		return array
+			.OrderBy(Int32.IsOddInteger)
+			.ThenBy(x => x)
+			.Sum();
 	}
 
 	[Benchmark]
 	public int OptiLinqOrder()
 	{
 		var sum = 0;
-		foreach (var i in array.AsOptiQuery().Order())
-		{
-			sum += i;
-		}
 
-		return sum;
-	}
-
-
-	[Benchmark]
-	public int OptiLinqOrderComparer()
-	{
-		var sum = 0;
-
-		foreach (var i in array.AsOptiQuery().Order(new IntComparer()))
+		foreach (var i in array.AsOptiQuery().OrderBy<bool, IsOdd<int>>().ThenBy<int, Identity<int>>())
 		{
 			sum += i;
 		}
@@ -64,6 +57,33 @@ public class OrderByArrayOfInt
 	[Benchmark]
 	public int OptiLinqOrderSum()
 	{
-		return array.AsOptiQuery().Order().Sum();
+		return array
+			.AsOptiQuery()
+			.OrderBy<bool, IsOdd<int>>()
+			.ThenBy<int, Identity<int>>()
+			.Sum();
+	}
+
+	[Benchmark]
+	public int OptiLinqOrderFunc()
+	{
+		var sum = 0;
+
+		foreach (var i in array.AsOptiQuery().OrderBy(Int32.IsOddInteger).ThenBy(x => x))
+		{
+			sum += i;
+		}
+
+		return sum;
+	}
+
+	[Benchmark]
+	public int OptiLinqOrderFuncSum()
+	{
+		return array
+			.AsOptiQuery()
+			.OrderBy(Int32.IsOddInteger)
+			.ThenBy(x => x)
+			.Sum();
 	}
 }

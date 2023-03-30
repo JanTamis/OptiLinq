@@ -21,25 +21,27 @@ public partial struct TakeLastQuery<T, TBaseQuery, TBaseEnumerator> : IOptiQuery
 		_count = count;
 	}
 
-	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate> where TResultSelector : struct, IFunction<TAccumulate, TResult>
+	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TAccumulate seed, TFunc func = default, TResultSelector selector = default)
+		where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
+		where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
 		using var queue = ToPooledQueue();
 
 		while (queue.TryDequeue(out var result))
 		{
-			seed = func.Eval(seed, result);
+			seed = func.Eval(in seed, in result);
 		}
 
-		return selector.Eval(seed);
+		return selector.Eval(in seed);
 	}
 
-	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
+	public TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 	{
 		using var queue = ToPooledQueue();
 
 		while (queue.TryDequeue(out var result))
 		{
-			seed = @operator.Eval(seed, result);
+			seed = @operator.Eval(in seed, in result);
 		}
 
 		return seed;

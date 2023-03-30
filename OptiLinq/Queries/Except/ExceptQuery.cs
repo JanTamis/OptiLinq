@@ -11,7 +11,7 @@ public partial struct ExceptQuery<T, TComparer, TFirstQuery, TFirstEnumerator, T
 	where TFirstEnumerator : IEnumerator<T>
 	where TSecondQuery : struct, IOptiQuery<T>
 {
-	private TComparer _comparer;
+	private readonly TComparer _comparer;
 	private TFirstQuery _firstQuery;
 	private TSecondQuery _secondQuery;
 
@@ -24,40 +24,47 @@ public partial struct ExceptQuery<T, TComparer, TFirstQuery, TFirstEnumerator, T
 		_comparer = comparer;
 	}
 
-	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate> where TResultSelector : struct, IFunction<TAccumulate, TResult>
+	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TAccumulate seed, TFunc func = default, TResultSelector selector = default)
+		where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
+		where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
 		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
+		var count = set.Count;
+
 		while (enumerator.MoveNext())
 		{
-			if (set.Add(enumerator.Current))
+			var current = enumerator.Current;
+
+			if (set.Add(current))
 			{
-				seed = func.Eval(seed, enumerator.Current);
+				seed = func.Eval(in seed, in current);
 			}
 		}
 
-		_count = set.Count;
-		return selector.Eval(seed);
+		_count = set.Count - count;
+		return selector.Eval(in seed);
 	}
 
-	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
+	public TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 	{
 		using var set = _secondQuery.ToPooledSet(_comparer);
 		using var enumerator = _firstQuery.GetEnumerator();
 
-		var count = 0;
+		var count = set.Count;
 
 		while (enumerator.MoveNext())
 		{
-			if (set.Add(enumerator.Current))
+			var current = enumerator.Current;
+
+			if (set.Add(current))
 			{
-				seed = @operator.Eval(seed, enumerator.Current);
-				count++;
+				seed = @operator.Eval(in seed, in current);
 			}
 		}
 
-		_count = count;
+		_count = set.Count - count;
 		return seed;
 	}
 

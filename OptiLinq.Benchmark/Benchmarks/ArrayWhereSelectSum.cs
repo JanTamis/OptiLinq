@@ -1,5 +1,6 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Order;
+using OptiLinq.Operators;
 
 namespace OptiLinq.Benchmark;
 
@@ -8,7 +9,7 @@ namespace OptiLinq.Benchmark;
 [Config(typeof(BenchmarkConfig))]
 public class ArrayWhereSelectSum
 {
-	private const int Count = 10000;
+	private const int Count = 10_000;
 	private readonly int[] array;
 
 	public ArrayWhereSelectSum()
@@ -24,11 +25,10 @@ public class ArrayWhereSelectSum
 		for (var i = 0; i < array.Length; i++)
 		{
 			var elt = array[i];
-			
-			if ((elt & 1) == 0)
+
+			if (Int32.IsEvenInteger(elt))
 			{
-				var mult = elt * 2;
-				sum += mult;
+				sum += elt * 2;
 			}
 		}
 
@@ -39,7 +39,7 @@ public class ArrayWhereSelectSum
 	public int SysLinq()
 	{
 		return array
-			.Where(w => (w & 1) == 0)
+			.Where(Int32.IsEvenInteger)
 			.Select(s => s * 2)
 			.Sum();
 	}
@@ -49,7 +49,7 @@ public class ArrayWhereSelectSum
 	{
 		return array
 			.AsOptiQuery()
-			.Where(w => (w & 1) == 0)
+			.Where(Int32.IsEvenInteger)
 			.Select(s => s * 2)
 			.Sum();
 	}
@@ -60,7 +60,7 @@ public class ArrayWhereSelectSum
 		return array
 			.AsOptiQuery()
 			.Where<IsEven<int>>()
-			.Select<SelectFunction, int>()
+			.Select<SelectFunction>()
 			.Sum();
 	}
 }

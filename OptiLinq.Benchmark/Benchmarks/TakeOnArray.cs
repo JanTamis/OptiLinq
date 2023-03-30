@@ -10,11 +10,11 @@ public class TakeOnArray
 {
 	private const int Count = 10000;
 	private const int TakeCount = 5000;
-	public int[] array;
+	private readonly int[] _array;
 
 	public TakeOnArray()
 	{
-		array = Enumerable.Range(0, Count).ToArray();
+		_array = Enumerable.Range(0, Count).ToArray();
 	}
 
 	[Benchmark(Baseline = true)]
@@ -22,7 +22,7 @@ public class TakeOnArray
 	{
 		var sum = 0;
 
-		foreach (var i in array.Take(TakeCount))
+		foreach (var i in _array.Take(TakeCount))
 		{
 			sum += i;
 		}
@@ -33,7 +33,7 @@ public class TakeOnArray
 	[Benchmark]
 	public int LinqSum()
 	{
-		return array.Take(TakeCount).Sum();
+		return _array.Take(TakeCount).Sum();
 	}
 
 	[Benchmark]
@@ -41,7 +41,7 @@ public class TakeOnArray
 	{
 		var sum = 0;
 
-		foreach (var i in array.AsOptiQuery().Take(TakeCount))
+		foreach (var i in _array.AsOptiQuery().Take(TakeCount))
 		{
 			sum += i;
 		}
@@ -52,6 +52,6 @@ public class TakeOnArray
 	[Benchmark]
 	public int OptiLinqSum()
 	{
-		return array.AsOptiQuery().Take(TakeCount).Sum();
+		return _array.AsOptiQuery().Take(TakeCount).Sum();
 	}
 }

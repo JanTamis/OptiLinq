@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Collections;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -15,7 +16,7 @@ public struct PooledDictionary<TKey, TValue, TComparer> : IDisposable
 	private readonly TComparer _comparer;
 
 	private int[] _buckets;
-	private Slot[] _slots;
+	internal Slot[] _slots;
 	private int _size;
 
 	private int _count;
@@ -269,6 +270,8 @@ public struct PooledDictionary<TKey, TValue, TComparer> : IDisposable
 
 	public bool Add(TKey key, TValue value) => AddIfNotPresent(key, value, out _);
 
+	public Enumerator GetEnumerator() => new Enumerator(_slots, _count);
+
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private bool AddIfNotPresent(TKey key, TValue value, out int location)
 	{
@@ -323,11 +326,59 @@ public struct PooledDictionary<TKey, TValue, TComparer> : IDisposable
 		return true;
 	}
 
-	private struct Slot
+	internal struct Slot
 	{
 		internal int HashCode;
 		internal int Next;
 		internal TKey Key;
 		internal TValue Value;
+	}
+
+	public struct Enumerator : IEnumerator<KeyValuePair<TKey, TValue>>
+	{
+		private readonly Slot[] _slots;
+		private readonly int _size;
+		private int _index;
+		private KeyValuePair<TKey, TValue> _current;
+
+		internal Enumerator(Slot[] slots, int size)
+		{
+			_slots = slots;
+			_size = size;
+			_index = 0;
+			_current = default;
+		}
+
+		public bool MoveNext()
+		{
+			while (_index < _size)
+			{
+				ref var slot = ref _slots[_index];
+				_index++;
+
+				if (slot.HashCode >= 0)
+				{
+					_current = new KeyValuePair<TKey, TValue>(slot.Key, slot.Value);
+					return true;
+				}
+			}
+
+			_current = default;
+			return false;
+		}
+
+		public KeyValuePair<TKey, TValue> Current => _current;
+
+		object IEnumerator.Current => Current;
+
+		public void Dispose()
+		{
+		}
+
+		void IEnumerator.Reset()
+		{
+			_index = 0;
+			_current = default;
+		}
 	}
 }

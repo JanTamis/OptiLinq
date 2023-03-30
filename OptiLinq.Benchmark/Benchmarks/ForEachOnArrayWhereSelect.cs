@@ -21,9 +21,11 @@ public class ForEachOnArrayWhereSelect
 	public int SysLinq()
 	{
 		var enumerable = array
-			.Where(x => (x & 1) == 0)
+			.Where(Int32.IsEvenInteger)
 			.Select(x => x * 2);
+		
 		var sum = 0;
+		
 		foreach (var i in enumerable)
 		{
 			sum += i;
@@ -37,28 +39,12 @@ public class ForEachOnArrayWhereSelect
 	{
 		var enumerable = array
 			.AsOptiQuery()
-			.Where(x => (x & 1) == 0)
+			.Where(Int32.IsEvenInteger)
 			.Select(x => x * 2);
 
 		var sum = 0;
+		
 		foreach (var i in enumerable)
-		{
-			sum += i;
-		}
-
-		return sum;
-	}
-
-	[Benchmark]
-	public int OptiLinqWithDelegateAsEnumerable()
-	{
-		var enumerable = array
-			.AsOptiQuery()
-			.Where(x => (x & 1) == 0)
-			.Select(x => x * 2);
-
-		var sum = 0;
-		foreach (var i in enumerable.AsEnumerable())
 		{
 			sum += i;
 		}
@@ -75,24 +61,8 @@ public class ForEachOnArrayWhereSelect
 			.Select<SelectFunction>();
 
 		var sum = 0;
+		
 		foreach (var i in enumerable)
-		{
-			sum += i;
-		}
-
-		return sum;
-	}
-
-	[Benchmark]
-	public int OptiLinqAsEnumerable()
-	{
-		var enumerable = array
-			.AsOptiQuery()
-			.Where<IsEven<int>>()
-			.Select<SelectFunction>();
-
-		var sum = 0;
-		foreach (var i in enumerable.AsEnumerable())
 		{
 			sum += i;
 		}

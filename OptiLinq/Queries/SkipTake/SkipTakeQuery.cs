@@ -23,7 +23,7 @@ public partial struct SkipTakeQuery<TSkipCount, TTakeCount, T, TBaseQuery, TBase
 		_takeCount = takeCount;
 	}
 
-	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default)
+	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TAccumulate seed, TFunc func = default, TResultSelector selector = default)
 		where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 		where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
@@ -35,13 +35,13 @@ public partial struct SkipTakeQuery<TSkipCount, TTakeCount, T, TBaseQuery, TBase
 
 		for (var i = TTakeCount.Zero; i < _takeCount && enumerator.MoveNext(); i++)
 		{
-			seed = func.Eval(seed, enumerator.Current);
+			seed = func.Eval(in seed, enumerator.Current);
 		}
 
-		return selector.Eval(seed);
+		return selector.Eval(in seed);
 	}
 
-	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
+	public TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 	{
 		using var enumerator = _baseEnumerable.GetEnumerator();
 
@@ -51,7 +51,7 @@ public partial struct SkipTakeQuery<TSkipCount, TTakeCount, T, TBaseQuery, TBase
 
 		for (var i = TTakeCount.Zero; i < _takeCount && enumerator.MoveNext(); i++)
 		{
-			seed = @operator.Eval(seed, enumerator.Current);
+			seed = @operator.Eval(in seed, enumerator.Current);
 		}
 
 		return seed;
@@ -451,7 +451,7 @@ public partial struct SkipTakeQuery<TSkipCount, TTakeCount, T, TBaseQuery, TBase
 
 	public T[] ToArray()
 	{
-		LargeArrayBuilder<T> builder = new();
+		using var builder = new PooledList<T>();
 		using var enumerator = _baseEnumerable.GetEnumerator();
 
 		for (var i = TTakeCount.Zero; i < _takeCount && enumerator.MoveNext(); i++)
@@ -460,32 +460,6 @@ public partial struct SkipTakeQuery<TSkipCount, TTakeCount, T, TBaseQuery, TBase
 		}
 
 		return builder.ToArray();
-	}
-
-	public T[] ToArray(out int length)
-	{
-		if (_baseEnumerable.TryGetNonEnumeratedCount(out var count))
-		{
-			using var enumerator = _baseEnumerable.GetEnumerator();
-			length = 0;
-
-			for (var i = TSkipCount.Zero; i < _skipCount && enumerator.MoveNext(); i++)
-			{
-				length++;
-			}
-
-			var array = new T[Int32.Min(count, Int32.CreateChecked(_takeCount))];
-
-			for (var i = 0; i < array.Length && enumerator.MoveNext(); i++)
-			{
-				length++;
-				array[i] = enumerator.Current;
-			}
-
-			return array;
-		}
-
-		return EnumerableHelper.ToArray<T, SkipTakeQuery<TSkipCount, TTakeCount, T, TBaseQuery, TBaseEnumerator>, SkipTakeEnumerator<TSkipCount, TTakeCount, T, TBaseEnumerator>>(this, out length);
 	}
 
 	public HashSet<T> ToHashSet(IEqualityComparer<T>? comparer = default)

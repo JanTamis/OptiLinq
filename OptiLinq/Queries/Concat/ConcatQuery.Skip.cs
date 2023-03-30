@@ -1,5 +1,4 @@
 using System.Numerics;
-using OptiLinq.Interfaces;
 
 namespace OptiLinq;
 

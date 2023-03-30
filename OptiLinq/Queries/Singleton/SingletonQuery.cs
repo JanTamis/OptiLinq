@@ -15,19 +15,19 @@ public partial struct SingletonQuery<T> : IOptiQuery<T, SingletonEnumerator<T>>
 		_element = element;
 	}
 
-	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate> where TResultSelector : struct, IFunction<TAccumulate, TResult>
+	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TAccumulate seed, TFunc func = default, TResultSelector selector = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate> where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
-		return selector.Eval(func.Eval(seed, _element));
+		return selector.Eval(func.Eval(in seed, in _element));
 	}
 
-	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
+	public TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 	{
-		return @operator.Eval(seed, _element);
+		return @operator.Eval(in seed, in _element);
 	}
 
 	public bool All<TAllOperator>(TAllOperator @operator = default) where TAllOperator : struct, IFunction<T, bool>
 	{
-		return @operator.Eval(_element);
+		return @operator.Eval(in _element);
 	}
 
 	public bool Any()
@@ -37,7 +37,7 @@ public partial struct SingletonQuery<T> : IOptiQuery<T, SingletonEnumerator<T>>
 
 	public bool Any<TAnyOperator>(TAnyOperator @operator = default) where TAnyOperator : struct, IFunction<T, bool>
 	{
-		return @operator.Eval(_element);
+		return @operator.Eval(in _element);
 	}
 
 	public IEnumerable<T> AsEnumerable()
@@ -84,7 +84,7 @@ public partial struct SingletonQuery<T> : IOptiQuery<T, SingletonEnumerator<T>>
 
 	public TNumber Count<TCountOperator, TNumber>(TCountOperator @operator = default) where TNumber : INumberBase<TNumber> where TCountOperator : struct, IFunction<T, bool>
 	{
-		return @operator.Eval(_element)
+		return @operator.Eval(in _element)
 			? TNumber.One
 			: TNumber.Zero;
 	}
@@ -161,7 +161,7 @@ public partial struct SingletonQuery<T> : IOptiQuery<T, SingletonEnumerator<T>>
 
 	public void ForEach<TAction>(TAction @operator = default) where TAction : struct, IAction<T>
 	{
-		@operator.Do(_element);
+		@operator.Do(in _element);
 	}
 
 	public bool TryGetLast(out T item)

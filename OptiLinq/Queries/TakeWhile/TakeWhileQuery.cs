@@ -22,35 +22,35 @@ public partial struct TakeWhileQuery<T, TOperator, TBaseQuery, TBaseEnumerator> 
 		_operator = @operator;
 	}
 
-	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate> where TResultSelector : struct, IFunction<TAccumulate, TResult>
+	public TResult Aggregate<TFunc, TResultSelector, TAccumulate, TResult>(TAccumulate seed, TFunc func = default, TResultSelector selector = default)
+		where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
+		where TResultSelector : struct, IFunction<TAccumulate, TResult>
 	{
 		var count = 0;
 		using var enumerator = _baseQuery.GetEnumerator();
 
 		while (enumerator.MoveNext() && _operator.Eval(enumerator.Current))
 		{
-			seed = func.Eval(seed, enumerator.Current);
+			seed = func.Eval(in seed, enumerator.Current);
 			count++;
 		}
 
 		_count = count;
-
-		return selector.Eval(seed);
+		return selector.Eval(in seed);
 	}
 
-	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
+	public TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, T, TAccumulate>
 	{
 		var count = 0;
 		using var enumerator = _baseQuery.GetEnumerator();
 
 		while (enumerator.MoveNext() && _operator.Eval(enumerator.Current))
 		{
-			seed = @operator.Eval(seed, enumerator.Current);
+			seed = @operator.Eval(in seed, enumerator.Current);
 			count++;
 		}
 
 		_count = count;
-
 		return seed;
 	}
 

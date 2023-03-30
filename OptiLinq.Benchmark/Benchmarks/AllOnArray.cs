@@ -47,7 +47,6 @@ public class AllOnArray
 
 	private struct AllFunction : IFunction<int, bool>
 	{
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Eval(in int element)
 		{
 			return element < Count / 2;

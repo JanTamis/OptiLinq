@@ -23,7 +23,7 @@ public partial struct ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumera
 		_secondQuery = secondQuery;
 	}
 
-	public TResult1 Aggregate<TFunc, TResultSelector, TAccumulate, TResult1>(TFunc func = default, TResultSelector selector = default, TAccumulate seed = default)
+	public TResult1 Aggregate<TFunc, TResultSelector, TAccumulate, TResult1>(TAccumulate seed, TFunc func = default, TResultSelector selector = default)
 		where TFunc : struct, IAggregateFunction<TAccumulate, TResult, TAccumulate>
 		where TResultSelector : struct, IFunction<TAccumulate, TResult1>
 	{
@@ -31,19 +31,19 @@ public partial struct ZipQuery<T, TResult, TOperator, TFirstQuery, TFirstEnumera
 
 		while (enumerator.MoveNext())
 		{
-			seed = func.Eval(seed, enumerator.Current);
+			seed = func.Eval(in seed, enumerator.Current);
 		}
 
-		return selector.Eval(seed);
+		return selector.Eval(in seed);
 	}
 
-	public TAccumulate Aggregate<TFunc, TAccumulate>(TFunc @operator = default, TAccumulate seed = default) where TFunc : struct, IAggregateFunction<TAccumulate, TResult, TAccumulate>
+	public TAccumulate Aggregate<TFunc, TAccumulate>(TAccumulate seed, TFunc @operator = default) where TFunc : struct, IAggregateFunction<TAccumulate, TResult, TAccumulate>
 	{
 		using var enumerator = GetEnumerator();
 
 		while (enumerator.MoveNext())
 		{
-			seed = @operator.Eval(seed, enumerator.Current);
+			seed = @operator.Eval(in seed, enumerator.Current);
 		}
 
 		return seed;

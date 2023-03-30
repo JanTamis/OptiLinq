@@ -20,6 +20,7 @@ public class IList
 	public int Linq()
 	{
 		var sum = 0;
+		
 		foreach (var i in list)
 		{
 			sum += i;
@@ -32,6 +33,7 @@ public class IList
 	public int OptiLinq()
 	{
 		var sum = 0;
+		
 		foreach (var i in list.AsOptiQuery())
 		{
 			sum += i;
